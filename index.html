@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0f1923">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>공수관리 시스템</title>
+<link rel="manifest" href="manifest.json">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
+:root{--bg:#0f1923;--surface:#16232f;--surface2:#1e2f3d;--border:#2a3f52;--accent:#00c2ff;--accent2:#00ff9d;--danger:#ff4757;--warn:#ffa502;--purple:#a855f7;--text:#e8f4f8;--text2:#7fa8c0;--text3:#4a6a80;--radius:12px;--shadow:0 8px 32px rgba(0,0,0,0.4)}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+#splash{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;transition:opacity .5s}
+#splash .logo-mark{width:72px;height:72px;border:3px solid var(--accent);border-radius:20px;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:700;color:var(--accent);margin-bottom:20px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 20px rgba(0,194,255,.3)}50%{box-shadow:0 0 50px rgba(0,194,255,.6)}}
+#splash h1{font-size:22px;font-weight:700;letter-spacing:2px}
+#splash p{font-size:13px;color:var(--text2);margin-top:6px}
+#app{display:none;min-height:100vh;flex-direction:column}
+#app.visible{display:flex}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;backdrop-filter:blur(10px)}
+.header-left{display:flex;align-items:center;gap:10px;min-width:0}
+.logo{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:var(--accent);flex-shrink:0}
+.user-badge{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:3px 8px;font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px}
+.admin-tag{background:rgba(0,194,255,.15);border:1px solid rgba(0,194,255,.4);color:var(--accent);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:700;flex-shrink:0}
+.btn-logout{background:none;border:1px solid var(--border);color:var(--text2);border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer;font-family:inherit;transition:all .2s;flex-shrink:0}
+.btn-logout:hover{border-color:var(--danger);color:var(--danger)}
+nav{background:var(--surface);border-bottom:1px solid var(--border);display:flex;overflow-x:auto;padding:0 12px;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;padding:11px 13px;font-size:12px;font-weight:500;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab:hover:not(.active){color:var(--text2)}
+main{flex:1;padding:16px 12px;max-width:1100px;width:100%;margin:0 auto}
+.page{display:none;animation:fadeIn .3s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:14px}
+.card-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.card-title span{color:var(--accent)}
+.stat-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.stat-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center}
+.stat-val{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:var(--accent2);line-height:1}
+.stat-val.warn{color:var(--warn)}.stat-val.accent{color:var(--accent)}
+.stat-label{font-size:10px;color:var(--text2);margin-top:4px}
+.form-group{margin-bottom:12px}
+label{display:block;font-size:11px;font-weight:500;color:var(--text2);margin-bottom:5px}
+input,select,textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;font-family:inherit;transition:border-color .2s;-webkit-appearance:none}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,194,255,.1)}
+textarea{resize:vertical;min-height:60px}
+select option{background:var(--surface2)}
+.input-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.input-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;border:none;transition:all .2s;width:100%}
+.btn-primary{background:var(--accent);color:#000}
+.btn-primary:hover{background:#33ccff;transform:translateY(-1px)}
+.btn-secondary{background:var(--surface2);border:1px solid var(--border);color:var(--text)}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-warn{background:var(--warn);color:#000}
+.btn-purple{background:var(--purple);color:#fff}
+.btn-success{background:var(--accent2);color:#000}
+.btn-sm{padding:5px 10px;font-size:11px;width:auto}
+.btn-row{display:flex;gap:8px}
+.btn-row .btn{flex:1}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:9px 10px;color:var(--text3);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
+td{padding:10px;border-bottom:1px solid rgba(42,63,82,.5);color:var(--text);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(0,194,255,.03)}
+.badge{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600}
+.badge-blue{background:rgba(0,194,255,.15);color:var(--accent)}
+.badge-green{background:rgba(0,255,157,.15);color:var(--accent2)}
+.badge-red{background:rgba(255,71,87,.15);color:var(--danger)}
+.badge-warn{background:rgba(255,165,2,.15);color:var(--warn)}
+#login-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:36px 28px;width:100%;max-width:360px;box-shadow:var(--shadow)}
+.login-logo{text-align:center;margin-bottom:28px}
+.login-logo .mark{width:56px;height:56px;border:2px solid var(--accent);border-radius:14px;display:inline-flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:var(--accent);margin-bottom:10px}
+.login-logo h2{font-size:17px;font-weight:700}
+.login-logo p{font-size:11px;color:var(--text2);margin-top:3px}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px;width:100%;max-width:480px;max-height:92vh;overflow-y:auto;animation:slideUp .3s ease}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-title{font-size:15px;font-weight:700;margin-bottom:18px}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 18px;border-radius:10px;font-size:12px;z-index:999;opacity:0;transition:opacity .3s;white-space:nowrap;max-width:90vw;box-shadow:var(--shadow)}
+#toast.show{opacity:1}
+#toast.success{border-color:var(--accent2);color:var(--accent2)}
+#toast.error{border-color:var(--danger);color:var(--danger)}
+.loading{text-align:center;padding:32px;color:var(--text3);font-size:13px}
+.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:32px 16px;color:var(--text3)}
+.empty-icon{font-size:36px;margin-bottom:10px}
+.empty p{font-size:13px}
+.filter-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.filter-row input,.filter-row select{flex:1;min-width:110px;margin-bottom:0}
+.progress-bar{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-top:5px}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;transition:width .5s}
+.chip-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.chip{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--text2)}
+.chip strong{color:var(--accent);font-family:'JetBrains Mono',monospace}
+.write-layout{display:grid;grid-template-columns:1fr 320px;gap:14px;align-items:start}
+.todo-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid rgba(42,63,82,.5)}
+.todo-item:last-child{border-bottom:none}
+.todo-check{width:18px;height:18px;border-radius:4px;border:2px solid var(--border);background:transparent;cursor:pointer;flex-shrink:0;transition:all .2s;margin-top:2px;appearance:none;-webkit-appearance:none;position:relative}
+.todo-check:checked{background:var(--accent2);border-color:var(--accent2)}
+.todo-check:checked::after{content:'✓';position:absolute;top:-1px;left:2px;color:#000;font-size:12px;font-weight:700}
+.todo-text{flex:1;font-size:13px;line-height:1.5}
+.todo-text.done{text-decoration:line-through;color:var(--text3)}
+.todo-meta{font-size:10px;color:var(--text3);margin-top:2px}
+.todo-del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:0;flex-shrink:0;transition:color .2s}
+.todo-del:hover{color:var(--danger)}
+.notice-item{background:rgba(0,194,255,.05);border:1px solid rgba(0,194,255,.2);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.notice-title{font-size:13px;font-weight:700;color:var(--accent);margin-bottom:4px}
+.notice-body{font-size:12px;color:var(--text2);line-height:1.6}
+.notice-meta{font-size:10px;color:var(--text3);margin-top:6px}
+.attend-annual{background:rgba(168,85,247,.15);color:var(--purple);padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600}
+.attend-half{background:rgba(255,165,2,.15);color:var(--warn);padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600}
+.attend-quarter{background:rgba(0,194,255,.15);color:var(--accent);padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600}
+.attend-other{background:rgba(74,106,128,.2);color:var(--text2);padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600}
+.template-item{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:8px;transition:all .2s}
+.template-item:hover{border-color:var(--accent)}
+.section-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin:16px 0 10px}
+.assignee-chip{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;border:2px solid var(--border);background:var(--surface);color:var(--text2);transition:all .2s}
+.assignee-chip.selected{border-color:var(--accent2);background:rgba(0,255,157,.1);color:var(--accent2)}
+.cl-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(42,63,82,.4)}
+.cl-item:last-child{border-bottom:none}
+.cl-check{width:16px;height:16px;border-radius:3px;border:2px solid var(--border);background:transparent;cursor:pointer;flex-shrink:0;appearance:none;-webkit-appearance:none;position:relative;transition:all .2s}
+.cl-check:checked{background:var(--accent2);border-color:var(--accent2)}
+.cl-check:checked::after{content:'✓';position:absolute;top:-2px;left:1px;color:#000;font-size:11px;font-weight:700}
+.cl-text{flex:1;font-size:12px}
+.cl-text.done{text-decoration:line-through;color:var(--text3)}
+.cl-del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;padding:0;transition:color .2s}
+.cl-del:hover{color:var(--danger)}
+.team-todo-group{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px}
+.team-todo-member-name{font-size:13px;font-weight:700;margin-bottom:10px;color:var(--accent2);display:flex;align-items:center;justify-content:space-between}
+.assignee-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;border:2px solid var(--border);background:var(--surface);color:var(--text2);transition:all .2s}
+.assignee-chip.selected{border-color:var(--accent2);background:rgba(0,255,157,.1);color:var(--accent2)}
+.checklist-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(42,63,82,.4)}
+.checklist-item:last-child{border-bottom:none}
+.checklist-check{width:16px;height:16px;border-radius:3px;border:2px solid var(--border);background:transparent;cursor:pointer;flex-shrink:0;appearance:none;-webkit-appearance:none;position:relative;transition:all .2s}
+.checklist-check:checked{background:var(--accent2);border-color:var(--accent2)}
+.checklist-check:checked::after{content:'✓';position:absolute;top:-2px;left:1px;color:#000;font-size:11px;font-weight:700}
+.checklist-text{flex:1;font-size:12px}
+.checklist-text.done{text-decoration:line-through;color:var(--text3)}
+.checklist-del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;padding:0}
+.checklist-del:hover{color:var(--danger)}
+pre{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:6px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--accent2);overflow-x:auto;line-height:1.6;white-space:pre-wrap;word-break:break-all}
+@media print{header,nav,.btn,.filter-row,#toast{display:none!important}.card{border:1px solid #ccc}body{background:#fff;color:#000}}
+@media(max-width:768px){.write-layout{grid-template-columns:1fr}.stat-grid-3{grid-template-columns:1fr 1fr}.input-row-3{grid-template-columns:1fr 1fr}main{padding:12px 10px}}
+</style>
+</head>
+<body>
+<div id="splash"><div class="logo-mark">WL</div><h1>공수관리 시스템</h1><p>Work Log Management v3.0</p></div>
+<div id="login-screen" style="display:none">
+  <div class="login-box">
+    <div class="login-logo"><div class="mark">WL</div><h2>공수관리 시스템</h2><p>이름과 사번으로 로그인하세요</p></div>
+    <div class="form-group"><label>이름</label><input type="text" id="login-name" placeholder="홍길동" autocomplete="name"></div>
+    <div class="form-group"><label>사번</label><input type="text" id="login-empid" placeholder="2020016" autocomplete="off"></div>
+    <button class="btn btn-primary" onclick="doLogin()">로그인</button>
+    <p style="text-align:center;font-size:10px;color:var(--text3);margin-top:14px">계정이 없으면 관리자에게 등록을 요청하세요</p>
+  </div>
+</div>
+<div id="app">
+  <header>
+    <div class="header-left"><span class="logo">WL</span><span class="user-badge" id="header-user">-</span><span class="admin-tag" id="header-admin-tag" style="display:none">ADMIN</span></div>
+    <button class="btn-logout" onclick="doLogout()">로그아웃</button>
+  </header>
+  <nav>
+    <div class="tab active" data-page="write">📝 일지작성</div>
+    <div class="tab" data-page="mylog">📋 내이력</div>
+    <div class="tab" data-page="attend">🏖️ 근태</div>
+    <div class="tab admin-only" data-page="team" style="display:none">📊 팀현황</div>
+    <div class="tab admin-only" data-page="teamtodo" style="display:none">✅ 팀 할일</div>
+    <div class="tab admin-only" data-page="report" style="display:none">📄 리포트</div>
+    <div class="tab admin-only" data-page="admin" style="display:none">⚙️ 관리</div>
+    <a class="tab admin-only" href="dashboard.html" style="display:none;color:var(--accent2);text-decoration:none">📈 대시보드</a>
+  </nav>
+  <main>
+    <!-- 일지작성 -->
+    <div class="page active" id="page-write">
+
+      <div class="write-layout">
+        <div>
+          <div class="card">
+            <div class="card-title">📝 업무 <span>일지 작성</span><button class="btn btn-secondary btn-sm" onclick="openModal('modal-template-pick')">📌 템플릿</button></div>
+            <div class="input-row">
+              <div class="form-group"><label>날짜</label><input type="date" id="log-date"></div>
+              <div class="form-group"><label>업무 분류</label><select id="log-category"><option value="">분류 선택...</option></select></div>
+            </div>
+            <div class="form-group"><label>업무 내용</label><textarea id="log-content" placeholder="수행한 업무를 입력하세요"></textarea></div>
+            <div class="input-row-3">
+              <div class="form-group"><label>시작 시간 (24h)</label><input type="text" id="log-start-time" placeholder="09:00" maxlength="5" oninput="fmtTime(this);calcHours()"></div>
+              <div class="form-group"><label>종료 시간 (24h)</label><input type="text" id="log-end-time" placeholder="18:00" maxlength="5" oninput="fmtTime(this);calcHours()"></div>
+              <div class="form-group"><label>비고</label><input type="text" id="log-note" placeholder="선택사항"></div>
+            </div>
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
+              <span style="font-size:12px;color:var(--text2)">계산된 공수</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;color:var(--accent2)" id="calc-hours-display">-</span>
+              <input type="hidden" id="log-hours">
+            </div>
+            <div class="btn-row">
+              <button class="btn btn-secondary" onclick="saveTemplate()">💾 템플릿저장</button>
+              <button class="btn btn-primary" onclick="submitLog()">저장</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">📅 날짜별 <span>일지 조회</span></div>
+            <div class="filter-row" style="margin-bottom:10px">
+              <input type="date" id="view-date" style="flex:1;margin-bottom:0" onchange="loadDateLogs()">
+              <button class="btn btn-secondary btn-sm" onclick="setViewDate('today')">오늘</button>
+            </div>
+            <div id="today-logs"><div class="empty"><div class="empty-icon">📅</div><p>날짜를 선택하세요</p></div></div>
+          </div>
+        </div>
+        <div>
+          <div class="card" style="position:sticky;top:70px">
+            <div class="card-title">✅ To-do <span>할일</span>
+              <span id="todo-count" style="font-size:10px;color:var(--text3)"></span>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:12px">
+              <input type="text" id="todo-input" placeholder="할일 입력 후 Enter" style="flex:1;margin-bottom:0" onkeydown="if(event.key==='Enter')addTodo()">
+              <button class="btn btn-primary btn-sm" onclick="addTodo()">추가</button>
+            </div>
+            <div id="todo-list"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
+            <div id="todo-done-section" style="display:none">
+              <div class="section-title" style="cursor:pointer;display:flex;justify-content:space-between" onclick="toggleDoneSection()">
+                <span>완료된 항목</span><span id="done-toggle-icon">▼</span>
+              </div>
+              <div id="todo-done-list" style="display:none"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- 내이력 -->
+    <div class="page" id="page-mylog">
+      <div class="card">
+        <div class="card-title">🔍 <span>조회 조건</span></div>
+        <div class="filter-row">
+          <input type="month" id="my-month" style="flex:1">
+          <button class="btn btn-secondary btn-sm" onclick="loadMyLogs()">조회</button>
+          <button class="btn btn-success btn-sm" onclick="exportMyCSV()">⬇ CSV</button>
+        </div>
+      </div>
+      <div class="stat-grid-3">
+        <div class="stat-box"><div class="stat-val accent" id="my-total-hours">0</div><div class="stat-label">총 공수(h)</div></div>
+        <div class="stat-box"><div class="stat-val" id="my-total-days">0</div><div class="stat-label">작업일수</div></div>
+        <div class="stat-box"><div class="stat-val warn" id="my-attend-hours">0</div><div class="stat-label">근태 제외(h)</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📋 <span>업무 이력</span></div>
+        <div class="table-wrap"><div id="my-log-table"><div class="empty"><div class="empty-icon">📋</div><p>조회 버튼을 눌러주세요</p></div></div></div>
+      </div>
+    </div>
+    <!-- 근태 -->
+    <div class="page" id="page-attend">
+      <div class="card">
+        <div class="card-title">🏖️ 근태 <span>등록</span></div>
+        <div class="input-row">
+          <div class="form-group"><label>시작일</label><input type="date" id="attend-start"></div>
+          <div class="form-group"><label>종료일</label><input type="date" id="attend-end"></div>
+        </div>
+        <div class="form-group"><label>근태 유형</label>
+          <select id="attend-type" onchange="toggleAttendNote()">
+            <option value="annual">연차 (8h 제외)</option>
+            <option value="half">반차 (4h 제외)</option>
+            <option value="quarter">반반차 (2h 제외)</option>
+            <option value="other">기타</option>
+          </select>
+        </div>
+        <div class="form-group" id="attend-note-group" style="display:none"><label>내용 (기타 사유)</label><input type="text" id="attend-note" placeholder="사유를 입력하세요"></div>
+        <button class="btn btn-warn" onclick="submitAttend()">근태 등록</button>
+      </div>
+      <div class="card">
+        <div class="card-title">📋 <span>내 근태 이력</span></div>
+        <div id="my-attend-list"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
+      </div>
+    </div>
+    <!-- 팀현황 -->
+    <div class="page" id="page-team">
+      <div class="card">
+        <div class="card-title">🔍 <span>조회 조건</span></div>
+        <div class="filter-row">
+          <input type="month" id="team-month" style="flex:1">
+          <select id="team-member-filter" style="flex:1"><option value="">전체 팀원</option></select>
+          <button class="btn btn-secondary btn-sm" onclick="loadTeamStats()">조회</button>
+          <button class="btn btn-success btn-sm" onclick="exportTeamCSV()">⬇ CSV</button>
+        </div>
+      </div>
+      <div class="stat-grid-3">
+        <div class="stat-box"><div class="stat-val accent" id="team-total-hours">0</div><div class="stat-label">팀 총공수(h)</div></div>
+        <div class="stat-box"><div class="stat-val" id="team-member-cnt">0</div><div class="stat-label">참여인원</div></div>
+        <div class="stat-box"><div class="stat-val" id="team-avg-hours">0</div><div class="stat-label">1인 평균(h)</div></div>
+      </div>
+      <div class="card"><div class="card-title">👤 <span>팀원별 공수</span></div><div id="team-member-stats"><div class="empty"><div class="empty-icon">📊</div><p>조회 버튼을 눌러주세요</p></div></div></div>
+      <div class="card"><div class="card-title">🏷️ <span>분류별 공수</span></div><div id="team-category-stats"><div class="empty"><div class="empty-icon">🏷️</div><p>조회 버튼을 눌러주세요</p></div></div></div>
+      <div class="card"><div class="card-title">🏖️ <span>팀 근태 현황</span></div><div id="team-attend-stats"><div class="empty"><div class="empty-icon">🏖️</div><p>조회 버튼을 눌러주세요</p></div></div></div>
+      <div class="card"><div class="card-title">📋 <span>전체 일지</span></div><div class="table-wrap"><div id="team-log-table"><div class="empty"><div class="empty-icon">📋</div><p>조회 버튼을 눌러주세요</p></div></div></div></div>
+    </div>
+    <!-- 팀 할일 (관리자) -->
+    <div class="page" id="page-teamtodo">
+      <div class="card">
+        <div class="card-title">✅ 팀 전체 <span>할일 현황</span></div>
+        <div class="filter-row">
+          <select id="teamtodo-member" style="flex:1;margin-bottom:0" onchange="loadTeamTodos()">
+            <option value="">전체 팀원</option>
+          </select>
+          <select id="teamtodo-status" style="flex:1;margin-bottom:0" onchange="loadTeamTodos()">
+            <option value="active">미완료</option>
+            <option value="done">완료</option>
+            <option value="all">전체</option>
+          </select>
+          <button class="btn btn-secondary btn-sm" onclick="loadTeamTodos()">조회</button>
+        </div>
+      </div>
+      <!-- 기한 현황 요약 -->
+      <div class="stat-grid-3" id="teamtodo-stats" style="display:none">
+        <div class="stat-box"><div class="stat-val danger" id="tt-overdue">0</div><div class="stat-label">기한 초과</div></div>
+        <div class="stat-box"><div class="stat-val warn" id="tt-soon">0</div><div class="stat-label">1주일 이내</div></div>
+        <div class="stat-box"><div class="stat-val accent" id="tt-total">0</div><div class="stat-label">전체 미완료</div></div>
+      </div>
+      <!-- 좌우 스크롤 버튼 -->
+      <div id="teamtodo-scroll-btns" style="display:none;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <button onclick="scrollKanban(-1)" style="background:var(--surface);border:1px solid var(--border);color:var(--text2);border-radius:8px;padding:8px 16px;cursor:pointer;font-size:16px;font-family:inherit;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">← 이전</button>
+        <div id="kanban-indicator" style="display:flex;gap:6px;align-items:center"></div>
+        <button onclick="scrollKanban(1)" style="background:var(--surface);border:1px solid var(--border);color:var(--text2);border-radius:8px;padding:8px 16px;cursor:pointer;font-size:16px;font-family:inherit;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">다음 →</button>
+      </div>
+      <!-- 팀원별 할일 -->
+      <div id="teamtodo-list" onscroll="updateKanbanIndicator()"><div class="empty"><div class="empty-icon">✅</div><p>조회 버튼을 눌러주세요</p></div></div>
+    </div>
+
+    <!-- 리포트 -->
+    <div class="page" id="page-report">
+      <div class="card">
+        <div class="card-title">📄 월간 <span>리포트 생성</span></div>
+        <div class="filter-row">
+          <input type="month" id="report-month" style="flex:1">
+          <button class="btn btn-primary btn-sm" onclick="generateReport()">리포트 생성</button>
+        </div>
+        <div class="btn-row" style="margin-top:10px">
+          <button class="btn btn-secondary" onclick="exportReportCSV()">⬇ 전체 CSV</button>
+          <button class="btn btn-purple" onclick="window.print()">🖨️ 인쇄/PDF</button>
+        </div>
+      </div>
+      <div id="report-output"></div>
+    </div>
+    <!-- 관리 -->
+    <div class="page" id="page-admin">
+      <div class="card">
+        <div class="card-title">📢 팀 <span>공지 작성</span></div>
+        <div class="form-group"><label>공지 제목</label><input type="text" id="notice-title-input" placeholder="공지 제목"></div>
+        <div class="form-group"><label>공지 내용</label><textarea id="notice-body-input" placeholder="팀원 To-do에 자동 추가됩니다"></textarea></div>
+        <button class="btn btn-primary" onclick="postNotice()" style="margin-bottom:12px">📢 공지 발송</button>
+        <div class="section-title">발송 이력</div>
+        <div id="notice-history"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">👥 <span>직원 관리</span></div>
+        <button class="btn btn-primary" onclick="openModal('modal-add-user')" style="margin-bottom:12px">+ 직원 추가</button>
+        <div class="table-wrap"><div id="user-list-table"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">🎯 <span>월 목표 공수</span></div>
+        <div class="input-row">
+          <div class="form-group"><label>기준 월</label><input type="month" id="goal-month"></div>
+          <div class="form-group"><label>1인 목표(h)</label><input type="number" id="goal-hours" placeholder="160"></div>
+        </div>
+        <button class="btn btn-primary" onclick="saveMonthGoal()">저장</button>
+        <div id="goal-list" style="margin-top:12px"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">🏷️ <span>업무 분류 관리</span></div>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <input type="text" id="new-category-input" placeholder="새 분류명" style="flex:1;margin-bottom:0">
+          <button class="btn btn-primary btn-sm" onclick="addCategory()">추가</button>
+        </div>
+        <div id="category-list"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">🔧 <span>신규 DB SQL</span></div>
+        <pre>-- To-do 테이블
+create table if not exists todos (
+  id uuid default gen_random_uuid() primary key,
+  employee_id uuid references employees(id),
+  content text not null,
+  is_done boolean default false,
+  done_at timestamptz,
+  source text default 'personal',
+  due_date date,
+  note text,
+  checklist jsonb,
+  assignee_ids text,
+  assignee_names text,
+  parent_todo_id uuid,
+  created_at timestamptz default now()
+);
+-- 기존 todos 테이블에 컬럼 추가 (이미 생성된 경우)
+alter table todos add column if not exists due_date date;
+alter table todos add column if not exists note text;
+alter table todos add column if not exists checklist jsonb;
+alter table todos add column if not exists assignee_ids text;
+alter table todos add column if not exists assignee_names text;
+alter table todos add column if not exists parent_todo_id uuid;
+-- 공지 테이블
+create table if not exists notices (
+  id uuid default gen_random_uuid() primary key,
+  title text not null,
+  body text not null,
+  created_by uuid references employees(id),
+  created_at timestamptz default now()
+);
+-- 근태 테이블
+create table if not exists attends (
+  id uuid default gen_random_uuid() primary key,
+  employee_id uuid references employees(id),
+  start_date date not null,
+  end_date date not null,
+  attend_type text not null,
+  note text,
+  exclude_hours numeric(5,1) default 0,
+  created_at timestamptz default now()
+);
+-- work_logs 컬럼 추가
+alter table work_logs
+  add column if not exists start_time text,
+  add column if not exists end_time text;
+-- RLS
+alter table todos enable row level security;
+alter table notices enable row level security;
+alter table attends enable row level security;
+create policy "allow_all" on todos for all using (true);
+create policy "allow_all" on notices for all using (true);
+create policy "allow_all" on attends for all using (true);</pre>
+      </div>
+    </div>
+  </main>
+</div>
+<!-- MODALS -->
+<!-- 공지 팝업 모달 -->
+<div class="modal-overlay" id="modal-notice-popup">
+  <div class="modal" style="max-width:480px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="font-size:15px;font-weight:700;color:var(--accent)">📢 새 공지</div>
+      <button onclick="closeNoticePopup()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:20px;line-height:1">✕</button>
+    </div>
+    <div id="notice-popup-content"></div>
+    <div style="margin-top:16px">
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);cursor:pointer">
+        <input type="checkbox" id="notice-dont-show" style="width:16px;height:16px;margin:0">
+        오늘 하루 다시 보지 않기
+      </label>
+    </div>
+    <button class="btn btn-primary" style="margin-top:14px" onclick="closeNoticePopup()">확인</button>
+  </div>
+</div>
+
+<!-- To-do 상세 모달 -->
+<div class="modal-overlay" id="modal-todo-detail">
+  <div class="modal" style="max-width:560px">
+    <input type="hidden" id="detail-todo-id">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="font-size:16px;font-weight:700;color:var(--accent)">📋 할일 상세</div>
+      <button onclick="closeModal('modal-todo-detail')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px">✕</button>
+    </div>
+    <!-- 제목 -->
+    <div class="form-group">
+      <label>할일 내용</label>
+      <textarea id="detail-content" style="min-height:50px;font-size:14px;font-weight:600"></textarea>
+    </div>
+    <!-- 담당자 -->
+    <div class="form-group">
+      <label>담당자 (복수 선택 가능)</label>
+      <div id="detail-assignees" style="display:flex;flex-wrap:wrap;gap:8px;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;min-height:44px"></div>
+    </div>
+    <!-- 기한일 -->
+    <div class="form-group">
+      <label>기한일</label>
+      <input type="date" id="detail-due-date">
+    </div>
+    <!-- 체크리스트 -->
+    <div class="form-group">
+      <label>체크리스트</label>
+      <div id="detail-checklist" style="margin-bottom:8px"></div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="checklist-input" placeholder="항목 입력 후 Enter" style="flex:1;margin-bottom:0" onkeydown="if(event.key==='Enter'){event.preventDefault();addChecklistItem()}">
+        <button class="btn btn-secondary btn-sm" onclick="addChecklistItem()">추가</button>
+      </div>
+    </div>
+    <!-- 비고 -->
+    <div class="form-group">
+      <label>비고</label>
+      <textarea id="detail-note" placeholder="추가 메모를 입력하세요" style="min-height:80px"></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeModal('modal-todo-detail')">취소</button>
+      <button class="btn btn-primary" onclick="saveTodoDetail()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 관리자 전체 To-do 뷰 모달 -->
+<div class="modal-overlay" id="modal-team-todos">
+  <div class="modal" style="max-width:700px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="font-size:15px;font-weight:700">👥 팀 전체 To-do 현황</div>
+      <button onclick="closeModal('modal-team-todos')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px">✕</button>
+    </div>
+    <div class="filter-row" style="margin-bottom:12px">
+      <select id="team-todo-member-filter" style="flex:1;margin-bottom:0" onchange="loadTeamTodos()">
+        <option value="">전체 팀원</option>
+      </select>
+      <select id="team-todo-status-filter" style="flex:1;margin-bottom:0" onchange="loadTeamTodos()">
+        <option value="active">미완료</option>
+        <option value="done">완료</option>
+        <option value="all">전체</option>
+      </select>
+    </div>
+    <div id="team-todos-content"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
+  </div>
+</div>
+
+<!-- To-do 상세 모달 -->
+<div class="modal-overlay" id="modal-todo-detail">
+  <div class="modal" style="max-width:560px">
+    <input type="hidden" id="detail-todo-id">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="font-size:16px;font-weight:700;color:var(--accent)">📋 할일 상세</div>
+      <button onclick="closeModal('modal-todo-detail')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:20px;line-height:1">✕</button>
+    </div>
+    <div class="form-group">
+      <label>할일 내용</label>
+      <textarea id="detail-content" style="min-height:50px;font-size:14px;font-weight:600"></textarea>
+    </div>
+    <div class="form-group">
+      <label>담당자 <span style="color:var(--text3);font-size:10px">(클릭으로 선택 · 복수 가능)</span></label>
+      <div id="detail-assignees" style="display:flex;flex-wrap:wrap;gap:8px;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;min-height:46px"></div>
+    </div>
+    <div class="form-group">
+      <label>기한일</label>
+      <input type="date" id="detail-due-date">
+    </div>
+    <div class="form-group">
+      <label>체크리스트</label>
+      <div id="detail-checklist" style="margin-bottom:8px;min-height:10px"></div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="checklist-input" placeholder="항목 입력 후 Enter" style="flex:1;margin-bottom:0" onkeydown="if(event.key==='Enter'){event.preventDefault();addChecklistItem()}">
+        <button class="btn btn-secondary btn-sm" onclick="addChecklistItem()">추가</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>비고</label>
+      <textarea id="detail-note" placeholder="추가 메모를 입력하세요" style="min-height:80px"></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeModal('modal-todo-detail')">취소</button>
+      <button class="btn btn-primary" onclick="saveTodoDetail()">저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-add-user">
+  <div class="modal">
+    <div class="modal-title">👤 직원 추가</div>
+    <div class="form-group"><label>이름</label><input type="text" id="new-user-name" placeholder="홍길동"></div>
+    <div class="form-group"><label>사번</label><input type="text" id="new-user-empid" placeholder="2020016"></div>
+    <div class="form-group"><label>관리자 권한</label><select id="new-user-admin"><option value="false">일반 직원</option><option value="true">관리자</option></select></div>
+    <div class="btn-row"><button class="btn btn-secondary" onclick="closeModal('modal-add-user')">취소</button><button class="btn btn-primary" onclick="addUser()">추가</button></div>
+  </div>
+</div>
+<div class="modal-overlay" id="modal-edit-log">
+  <div class="modal">
+    <div class="modal-title">✏️ 일지 수정</div>
+    <input type="hidden" id="edit-log-id">
+    <div class="form-group"><label>업무 분류</label><select id="edit-log-category"></select></div>
+    <div class="form-group"><label>업무 내용</label><textarea id="edit-log-content"></textarea></div>
+    <div class="input-row">
+      <div class="form-group"><label>시작 시간 (24h)</label><input type="text" id="edit-log-start-time" placeholder="09:00" maxlength="5" oninput="fmtTime(this);calcEditHours()"></div>
+      <div class="form-group"><label>종료 시간 (24h)</label><input type="text" id="edit-log-end-time" placeholder="18:00" maxlength="5" oninput="fmtTime(this);calcEditHours()"></div>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
+      <span style="font-size:12px;color:var(--text2)">계산된 공수</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;color:var(--accent2)" id="edit-calc-hours-display">-</span>
+      <input type="hidden" id="edit-log-hours">
+    </div>
+    <div class="form-group"><label>비고</label><input type="text" id="edit-log-note"></div>
+    <div class="btn-row"><button class="btn btn-secondary" onclick="closeModal('modal-edit-log')">취소</button><button class="btn btn-primary" onclick="updateLog()">저장</button></div>
+  </div>
+</div>
+<div class="modal-overlay" id="modal-template-pick">
+  <div class="modal">
+    <div class="modal-title">📌 템플릿 선택</div>
+    <div id="template-list-modal"></div>
+    <button class="btn btn-secondary" style="margin-top:12px" onclick="closeModal('modal-template-pick')">닫기</button>
+  </div>
+</div>
+<div class="modal-overlay" id="modal-edit-template">
+  <div class="modal">
+    <div class="modal-title">✏️ 템플릿 수정</div>
+    <input type="hidden" id="edit-tpl-id">
+    <div class="form-group"><label>업무 분류</label><select id="edit-tpl-category"></select></div>
+    <div class="form-group"><label>업무 내용</label><textarea id="edit-tpl-content"></textarea></div>
+    <div class="btn-row"><button class="btn btn-secondary" onclick="closeModal('modal-edit-template')">취소</button><button class="btn btn-primary" onclick="saveEditTemplate()">저장</button></div>
+  </div>
+</div>
+<div id="toast"></div>
+<script>
+const SUPABASE_URL='https://uulemznemzjlgzqhrchb.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1bGVtem5lbXpqbGd6cWhyY2hiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MTc3MzQsImV4cCI6MjA5Mzk5MzczNH0.cy3jWrFez0pO0vl3nOOUMiv-511IzQiTcNxTK8Jejrg';
+const API=`${SUPABASE_URL}/rest/v1`;
+const H={'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Prefer':'return=representation'};
+const ATTEND_LABELS={annual:'연차',half:'반차',quarter:'반반차',other:'기타'};
+const ATTEND_HOURS={annual:8,half:4,quarter:2,other:0};
+let currentUser=null,categories=[],allEmployees=[],templates=[];
+let doneSectionOpen=false;
+
+window.addEventListener('load',()=>{setTimeout(()=>{const s=document.getElementById('splash');s.style.opacity='0';setTimeout(()=>{s.style.display='none';checkSession();},500);},1100);});
+
+function checkSession(){const saved=localStorage.getItem('wl_user');if(saved){currentUser=JSON.parse(saved);initApp();}else document.getElementById('login-screen').style.display='flex';}
+
+async function doLogin(){
+  const name=document.getElementById('login-name').value.trim();
+  const empId=document.getElementById('login-empid').value.trim();
+  if(!name||!empId){showToast('이름과 사번을 입력하세요','error');return;}
+  try{
+    const res=await fetch(`${API}/employees?name=eq.${encodeURIComponent(name)}&emp_id=eq.${encodeURIComponent(empId)}&select=*`,{headers:H});
+    const data=await res.json();
+    if(!data||!data.length){showToast('등록되지 않은 직원입니다','error');return;}
+    currentUser=data[0];
+  }catch(e){currentUser={id:'demo-'+empId,name,emp_id:empId,is_admin:empId==='ADMIN'};}
+  localStorage.setItem('wl_user',JSON.stringify(currentUser));
+  document.getElementById('login-screen').style.display='none';
+  initApp();
+}
+
+function doLogout(){localStorage.removeItem('wl_user');location.reload();}
+
+async function initApp(){
+  document.getElementById('app').classList.add('visible');
+  document.getElementById('header-user').textContent=`${currentUser.name} (${currentUser.emp_id})`;
+  if(currentUser.is_admin){document.getElementById('header-admin-tag').style.display='inline';document.querySelectorAll('.admin-only').forEach(el=>el.style.display='');}
+  const ym=today().slice(0,7);
+  document.getElementById('log-date').value=today();
+  document.getElementById('view-date').value=today();
+  document.getElementById('attend-start').value=today();
+  document.getElementById('attend-end').value=today();
+  ['my-month','team-month','report-month','goal-month'].forEach(id=>document.getElementById(id).value=ym);
+  document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>switchPage(t.dataset.page)));
+  try{const raw=localStorage.getItem('wl_templates');templates=raw?JSON.parse(raw):[];}catch(e){templates=[];}
+  await loadCategories();
+  await loadAllEmployees(); // 모든 사용자가 담당자 목록 필요
+  loadDateLogs();loadTodos();loadMyAttends();loadNoticeBanner();
+  if(currentUser.is_admin){
+    loadUsers(); // 관리자 탭용 (권한 변경 기능 포함)
+    loadGoals();loadNoticeHistory();
+  }
+}
+
+function switchPage(p){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.page===p));
+  document.querySelectorAll('.page').forEach(pg=>pg.classList.toggle('active',pg.id===`page-${p}`));
+}
+
+// CATEGORIES
+async function loadCategories(){
+  try{const res=await fetch(`${API}/categories?is_active=eq.true&order=created_at`,{headers:H});categories=await res.json();}
+  catch(e){categories=[{id:'1',name:'제조'},{id:'2',name:'QA'},{id:'3',name:'문서관리'},{id:'4',name:'교육'},{id:'5',name:'회의'},{id:'6',name:'기타'}];}
+  const opts=categories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  ['log-category','edit-log-category','edit-tpl-category'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<option value="">분류 선택...</option>'+opts;});
+  if(currentUser.is_admin)renderCategoryList();
+}
+async function addCategory(){
+  const name=document.getElementById('new-category-input').value.trim();if(!name)return;
+  try{await fetch(`${API}/categories`,{method:'POST',headers:H,body:JSON.stringify({name,is_active:true})});}catch(e){}
+  document.getElementById('new-category-input').value='';await loadCategories();showToast(`'${name}' 추가됨`,'success');
+}
+async function toggleCategory(id,active){
+  try{await fetch(`${API}/categories?id=eq.${id}`,{method:'PATCH',headers:H,body:JSON.stringify({is_active:!active})});}catch(e){}
+  await loadCategories();
+}
+function renderCategoryList(){
+  fetch(`${API}/categories?order=created_at`,{headers:H}).then(r=>r.json()).then(all=>{
+    document.getElementById('category-list').innerHTML=all.map(c=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);gap:8px">
+        <span style="font-size:13px;flex:1">${c.name} <span class="badge ${c.is_active?'badge-green':'badge-red'}">${c.is_active?'활성':'비활성'}</span></span>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-secondary btn-sm" onclick="openEditCategory('${c.id}','${c.name}')">수정</button>
+          <button class="btn btn-secondary btn-sm" onclick="toggleCategory('${c.id}',${c.is_active})">${c.is_active?'비활성화':'활성화'}</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteCategory('${c.id}','${c.name}')">삭제</button>
+        </div>
+      </div>`).join('');
+  }).catch(()=>{});
+}
+function openEditCategory(id,name){const n=prompt('분류명 수정',name);if(!n||n.trim()===name)return;fetch(`${API}/categories?id=eq.${id}`,{method:'PATCH',headers:H,body:JSON.stringify({name:n.trim()})}).then(()=>{loadCategories();showToast('수정됨','success');});}
+async function deleteCategory(id,name){if(!confirm(`'${name}' 삭제할까요?\n연결된 일지가 있으면 비활성화를 이용하세요.`))return;try{await fetch(`${API}/categories?id=eq.${id}`,{method:'DELETE',headers:H});await loadCategories();showToast(`'${name}' 삭제됨`,'success');}catch(e){showToast('삭제 실패 - 비활성화를 이용하세요','error');}}
+
+// TEMPLATES
+function saveTemplate(){
+  const catId=document.getElementById('log-category').value;
+  const content=document.getElementById('log-content').value.trim();
+  if(!content){showToast('내용을 입력하세요','error');return;}
+  const catName=categories.find(c=>c.id===catId)?.name||'';
+  templates.push({id:Date.now(),catId,catName,content});
+  try{localStorage.setItem('wl_templates',JSON.stringify(templates));showToast('템플릿 저장됨 ✓','success');}catch(e){showToast('저장 실패','error');}
+}
+function openTemplateModal(){
+  const el=document.getElementById('template-list-modal');
+  if(!templates.length){el.innerHTML='<div class="empty"><div class="empty-icon">📌</div><p>저장된 템플릿이 없습니다</p></div>';return;}
+  el.innerHTML=templates.map(t=>`
+    <div class="template-item">
+      <div style="flex:1;min-width:0;cursor:pointer" onclick="applyTemplate(${t.id})">
+        <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.content.slice(0,30)}${t.content.length>30?'...':''}</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">${t.catName||'분류없음'}</div>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="openEditTemplate(${t.id})">수정</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteTemplate(${t.id})">삭제</button>
+    </div>`).join('');
+}
+function applyTemplate(id){const t=templates.find(x=>x.id===id);if(!t)return;document.getElementById('log-category').value=t.catId;document.getElementById('log-content').value=t.content;closeModal('modal-template-pick');showToast('템플릿 적용됨','success');}
+function openEditTemplate(id){const t=templates.find(x=>x.id===id);if(!t)return;document.getElementById('edit-tpl-id').value=id;document.getElementById('edit-tpl-category').value=t.catId;document.getElementById('edit-tpl-content').value=t.content;closeModal('modal-template-pick');openModal('modal-edit-template');}
+function saveEditTemplate(){
+  const id=parseInt(document.getElementById('edit-tpl-id').value);
+  const catId=document.getElementById('edit-tpl-category').value;
+  const content=document.getElementById('edit-tpl-content').value.trim();
+  if(!content){showToast('내용을 입력하세요','error');return;}
+  const catName=categories.find(c=>c.id===catId)?.name||'';
+  const idx=templates.findIndex(t=>t.id===id);
+  if(idx>=0)templates[idx]={...templates[idx],catId,catName,content};
+  localStorage.setItem('wl_templates',JSON.stringify(templates));
+  closeModal('modal-edit-template');showToast('템플릿 수정됨 ✓','success');
+}
+function deleteTemplate(id){templates=templates.filter(t=>t.id!==id);localStorage.setItem('wl_templates',JSON.stringify(templates));openTemplateModal();}
+
+// TIME
+function fmtTime(el){let v=el.value.replace(/[^0-9]/g,'');if(v.length>=3)v=v.slice(0,2)+':'+v.slice(2,4);el.value=v;}
+function calcHours(){
+  const s=document.getElementById('log-start-time').value,e=document.getElementById('log-end-time').value;
+  const disp=document.getElementById('calc-hours-display');
+  if(!s||!e||!s.includes(':')||!e.includes(':')){disp.textContent='-';document.getElementById('log-hours').value='';return;}
+  const [sh,sm]=s.split(':').map(Number),[eh,em]=e.split(':').map(Number);
+  const diff=(eh*60+em)-(sh*60+sm);
+  if(diff<=0){disp.textContent='-';document.getElementById('log-hours').value='';return;}
+  const h=parseFloat((Math.round(diff/5)*5/60).toFixed(1));
+  document.getElementById('log-hours').value=h;disp.textContent=h+'h';
+}
+function calcEditHours(){
+  const s=document.getElementById('edit-log-start-time').value,e=document.getElementById('edit-log-end-time').value;
+  const disp=document.getElementById('edit-calc-hours-display');
+  if(!s||!e||!s.includes(':')||!e.includes(':')){disp.textContent='-';document.getElementById('edit-log-hours').value='';return;}
+  const [sh,sm]=s.split(':').map(Number),[eh,em]=e.split(':').map(Number);
+  const diff=(eh*60+em)-(sh*60+sm);
+  if(diff<=0){disp.textContent='-';document.getElementById('edit-log-hours').value='';return;}
+  const h=parseFloat((Math.round(diff/5)*5/60).toFixed(1));
+  document.getElementById('edit-log-hours').value=h;disp.textContent=h+'h';
+}
+
+// LOGS
+async function submitLog(){
+  const date=document.getElementById('log-date').value,catId=document.getElementById('log-category').value;
+  const content=document.getElementById('log-content').value.trim();
+  const startTime=document.getElementById('log-start-time').value,endTime=document.getElementById('log-end-time').value;
+  const hours=parseFloat(document.getElementById('log-hours').value);
+  const note=document.getElementById('log-note').value.trim();
+  if(!date||!catId||!content||!startTime||!endTime){showToast('날짜·분류·내용·시간은 필수','error');return;}
+  if(!hours||hours<=0){showToast('종료시간이 시작시간보다 빨라요','error');return;}
+  try{
+    await fetch(`${API}/work_logs`,{method:'POST',headers:H,body:JSON.stringify({employee_id:currentUser.id,category_id:catId,log_date:date,content,hours,note:note||null,start_time:startTime,end_time:endTime})});
+    ['log-content','log-note','log-start-time','log-end-time'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('log-hours').value='';document.getElementById('calc-hours-display').textContent='-';document.getElementById('log-category').value='';
+    showToast('저장됨 ✓','success');loadDateLogs();
+  }catch(e){showToast('저장 실패','error');}
+}
+function setViewDate(val){document.getElementById('view-date').value=val==='today'?today():val;loadDateLogs();}
+async function loadDateLogs(){
+  const el=document.getElementById('today-logs'),date=document.getElementById('view-date').value;
+  if(!date){el.innerHTML='<div class="empty"><div class="empty-icon">📅</div><p>날짜를 선택하세요</p></div>';return;}
+  el.innerHTML='<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
+  try{
+    const res=await fetch(`${API}/work_logs?employee_id=eq.${currentUser.id}&log_date=eq.${date}&order=created_at.desc&select=*,categories(name)`,{headers:H});
+    const logs=await res.json();
+    const totalH=logs.reduce((s,l)=>s+Number(l.hours),0);
+    const header=logs.length?`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:8px 12px;background:var(--surface2);border-radius:8px"><span style="font-size:12px;color:var(--text2)">${date} · ${logs.length}건</span><span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent2)">${totalH.toFixed(1)}h</span></div>`:'';
+    const tmp=document.createElement('div');renderLogList(tmp,logs,true);el.innerHTML=header+tmp.innerHTML;
+  }catch(e){el.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><p>Supabase 설정 후 사용 가능</p></div>';}
+}
+async function loadMyLogs(){
+  const month=document.getElementById('my-month').value;if(!month)return;
+  const [y,m]=month.split('-');const start=`${y}-${m}-01`,end=`${y}-${m}-${new Date(y,m,0).getDate()}`;
+  try{
+    const [logsRes,attendRes]=await Promise.all([
+      fetch(`${API}/work_logs?employee_id=eq.${currentUser.id}&log_date=gte.${start}&log_date=lte.${end}&order=log_date.desc&select=*,categories(name)`,{headers:H}),
+      fetch(`${API}/attends?employee_id=eq.${currentUser.id}&start_date=lte.${end}&end_date=gte.${start}&select=*`,{headers:H})
+    ]);
+    const logs=await logsRes.json(),attends=await attendRes.json();
+    const totalH=logs.reduce((s,l)=>s+Number(l.hours),0);
+    const days=new Set(logs.map(l=>l.log_date)).size;
+    const excludeH=attends.reduce((s,a)=>s+Number(a.exclude_hours||0),0);
+    document.getElementById('my-total-hours').textContent=totalH.toFixed(1);
+    document.getElementById('my-total-days').textContent=days;
+    document.getElementById('my-attend-hours').textContent=excludeH.toFixed(1);
+    renderLogList(document.getElementById('my-log-table'),logs,true);
+  }catch(e){document.getElementById('my-log-table').innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><p>Supabase 연결 필요</p></div>';}
+}
+function renderLogList(el,logs,editable){
+  if(!logs||!logs.length){el.innerHTML='<div class="empty"><div class="empty-icon">📭</div><p>업무일지가 없습니다</p></div>';return;}
+  el.innerHTML=`<table><thead><tr><th>날짜</th><th>분류</th><th>업무내용</th><th>시간</th><th>공수</th>${editable?'<th></th>':''}</tr></thead><tbody>
+  ${logs.map(l=>`<tr>
+    <td style="white-space:nowrap;font-size:11px">${l.log_date}</td>
+    <td><span class="badge badge-blue">${l.categories?.name||'-'}</span></td>
+    <td style="max-width:180px;word-break:break-all;font-size:11px">${l.content}</td>
+    <td style="font-size:11px;color:var(--text2);white-space:nowrap">${l.start_time||'-'}~${l.end_time||'-'}</td>
+    <td style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent2)">${Number(l.hours).toFixed(1)}h</td>
+    ${editable?`<td style="white-space:nowrap"><button class="btn btn-secondary btn-sm" onclick="openEditLog('${l.id}','${l.category_id}',\`${l.content.replace(/`/g,"'")}\`,${l.hours},'${l.note||''}','${l.start_time||''}','${l.end_time||''}')">수정</button> <button class="btn btn-danger btn-sm" onclick="deleteLog('${l.id}')">삭제</button></td>`:''}
+  </tr>`).join('')}</tbody></table>`;
+}
+function openEditLog(id,catId,content,hours,note,startTime,endTime){
+  document.getElementById('edit-log-id').value=id;document.getElementById('edit-log-category').value=catId;
+  document.getElementById('edit-log-content').value=content;document.getElementById('edit-log-hours').value=hours;
+  document.getElementById('edit-log-note').value=note||'';document.getElementById('edit-log-start-time').value=startTime||'';
+  document.getElementById('edit-log-end-time').value=endTime||'';document.getElementById('edit-calc-hours-display').textContent=hours?hours+'h':'-';
+  openModal('modal-edit-log');
+}
+async function updateLog(){
+  const id=document.getElementById('edit-log-id').value,catId=document.getElementById('edit-log-category').value;
+  const content=document.getElementById('edit-log-content').value.trim();
+  const startTime=document.getElementById('edit-log-start-time').value,endTime=document.getElementById('edit-log-end-time').value;
+  const hours=parseFloat(document.getElementById('edit-log-hours').value);
+  const note=document.getElementById('edit-log-note').value.trim();
+  if(!catId||!content||!hours){showToast('필수 항목 입력','error');return;}
+  try{
+    await fetch(`${API}/work_logs?id=eq.${id}`,{method:'PATCH',headers:H,body:JSON.stringify({category_id:catId,content,hours,note:note||null,start_time:startTime||null,end_time:endTime||null})});
+    closeModal('modal-edit-log');showToast('수정됨 ✓','success');loadDateLogs();loadMyLogs();
+  }catch(e){showToast('수정 실패','error');}
+}
+async function deleteLog(id){if(!confirm('이 일지를 삭제할까요?'))return;try{await fetch(`${API}/work_logs?id=eq.${id}`,{method:'DELETE',headers:H});showToast('삭제됨','success');loadDateLogs();loadMyLogs();}catch(e){showToast('삭제 실패','error');}}
+
+// TODO
+async function loadTodos(){
+  const el=document.getElementById('todo-list'),donEl=document.getElementById('todo-done-list');
+  const thirtyDaysAgo=new Date(Date.now()-30*24*60*60*1000).toISOString();
+  try{
+    const res=await fetch(`${API}/todos?employee_id=eq.${currentUser.id}&order=created_at.asc`,{headers:H});
+    const all=await res.json();
+    const active=all.filter(t=>!t.is_done);
+    const done=all.filter(t=>t.is_done&&t.done_at&&new Date(t.done_at)>new Date(thirtyDaysAgo));
+    document.getElementById('todo-count').textContent=`${active.length}개`;
+    el.innerHTML=active.length?active.map(t=>renderTodoItem(t,false)).join(''):'<div class="empty" style="padding:20px"><div class="empty-icon">✅</div><p>할일이 없어요!</p></div>';
+    if(done.length){document.getElementById('todo-done-section').style.display='block';donEl.innerHTML=done.map(t=>renderTodoItem(t,true)).join('');}
+    else document.getElementById('todo-done-section').style.display='none';
+  }catch(e){el.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><p>Supabase 연결 필요</p></div>';}
+}
+function getDueBadge(dueDate){
+  if(!dueDate) return '';
+  const now=new Date();now.setHours(0,0,0,0);
+  const due=new Date(dueDate);due.setHours(0,0,0,0);
+  const diff=Math.ceil((due-now)/(1000*60*60*24));
+  if(diff<0) return `<span style="background:rgba(255,71,87,.2);color:var(--danger);border:1px solid rgba(255,71,87,.4);border-radius:4px;padding:1px 6px;font-size:9px;font-weight:700">⚠️ 기한초과 ${Math.abs(diff)}일</span>`;
+  if(diff<=7) return `<span style="background:rgba(255,100,0,.2);color:#ff7043;border:1px solid rgba(255,100,0,.4);border-radius:4px;padding:1px 6px;font-size:9px;font-weight:700">🔥 ${diff}일 남음</span>`;
+  if(diff<=14) return `<span style="background:rgba(255,165,2,.15);color:var(--warn);border:1px solid rgba(255,165,2,.3);border-radius:4px;padding:1px 6px;font-size:9px;font-weight:700">⏰ ${diff}일 남음</span>`;
+  return `<span style="background:rgba(0,194,255,.1);color:var(--accent);border:1px solid rgba(0,194,255,.2);border-radius:4px;padding:1px 6px;font-size:9px">${dueDate}</span>`;
+}
+
+function renderTodoItem(t,isDone){
+  const src = t.source==='notice' ? '<span style="font-size:9px;color:var(--accent);border:1px solid rgba(0,194,255,.3);border-radius:4px;padding:1px 4px;margin-left:4px">공지</span>'
+            : t.source==='assigned' ? '<span style="font-size:9px;color:var(--accent2);border:1px solid rgba(0,255,157,.3);border-radius:4px;padding:1px 4px;margin-left:4px">담당</span>' : '';
+  const checklist = t.checklist ? (() => { try{return JSON.parse(t.checklist);}catch(e){return [];} })() : [];
+  const doneCount = checklist.filter(c=>c.done).length;
+  const dueBadge = getDueBadge(t.due_date);
+  const assigneeBadge = t.assignee_names ? `<span style="font-size:10px;color:var(--text3)">👤 ${t.assignee_names}</span>` : '';
+  const clBadge = checklist.length ? `<span style="font-size:10px;color:${doneCount===checklist.length?'var(--accent2)':'var(--text3)'}">☑ ${doneCount}/${checklist.length}</span>` : '';
+  const hasMeta = dueBadge||assigneeBadge||clBadge||t.note;
+  return `<div class="todo-item" id="todo-${t.id}" style="${isDone?'opacity:.55':''}">
+    <input type="checkbox" class="todo-check" ${isDone?'checked':''} onchange="toggleTodo('${t.id}',${isDone})">
+    <div style="flex:1;min-width:0;cursor:pointer" onclick="openTodoDetail('${t.id}')">
+      <div class="todo-text ${isDone?'done':''}">${t.content}${src}</div>
+      ${hasMeta?`<div style="display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin-top:5px">${dueBadge}${assigneeBadge}${clBadge}${t.note?`<span style="font-size:10px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px">📝 ${t.note}</span>`:''}
+      </div>`:''}
+    </div>
+    <button class="todo-del" onclick="event.stopPropagation();deleteTodo('${t.id}')">✕</button>
+  </div>`;
+}
+
+
+async function addTodo(){const input=document.getElementById('todo-input'),content=input.value.trim();if(!content)return;try{await fetch(`${API}/todos`,{method:'POST',headers:H,body:JSON.stringify({employee_id:currentUser.id,content,is_done:false,source:'personal'})});input.value='';loadTodos();}catch(e){showToast('추가 실패','error');}}
+async function toggleTodo(id,wasDone){const now=new Date().toISOString();try{await fetch(`${API}/todos?id=eq.${id}`,{method:'PATCH',headers:H,body:JSON.stringify({is_done:!wasDone,done_at:!wasDone?now:null})});loadTodos();}catch(e){showToast('변경 실패','error');}}
+async function deleteTodo(id){try{await fetch(`${API}/todos?id=eq.${id}`,{method:'DELETE',headers:H});loadTodos();}catch(e){showToast('삭제 실패','error');}}
+function toggleDoneSection(){doneSectionOpen=!doneSectionOpen;document.getElementById('todo-done-list').style.display=doneSectionOpen?'block':'none';document.getElementById('done-toggle-icon').textContent=doneSectionOpen?'▲':'▼';}
+
+// ─── TODO 상세 ───
+let currentChecklist = [];
+let selectedAssignees = [];
+let currentTodoData = null;
+
+async function openTodoDetail(id){
+  // DB에서 최신 데이터 가져오기
+  let t = null;
+  try{
+    const res = await fetch(`${API}/todos?id=eq.${id}&select=*`,{headers:H});
+    const data = await res.json();
+    if(data&&data.length) t = data[0];
+  }catch(e){}
+  if(!t) return;
+
+  currentTodoData = t;
+  document.getElementById('detail-todo-id').value = id;
+  document.getElementById('detail-content').value = t.content||'';
+  document.getElementById('detail-due-date').value = t.due_date||'';
+  document.getElementById('detail-note').value = t.note||'';
+
+  // 체크리스트
+  try{ currentChecklist = t.checklist ? JSON.parse(t.checklist) : []; }catch(e){ currentChecklist=[]; }
+  renderChecklist();
+
+  // 담당자 선택
+  selectedAssignees = t.assignee_ids ? (t.assignee_ids.split(',').filter(Boolean)) : [];
+  renderAssigneeChips();
+
+  openModal('modal-todo-detail');
+}
+
+function renderAssigneeChips(){
+  const el = document.getElementById('detail-assignees');
+  if(!allEmployees.length){ el.innerHTML='<span style="font-size:12px;color:var(--text3)">직원 목록을 불러오는 중...</span>'; return; }
+  el.innerHTML = allEmployees.map(e=>`
+    <div class="assignee-chip ${selectedAssignees.includes(e.id)?'selected':''}" onclick="toggleAssignee('${e.id}')">
+      ${e.name}
+    </div>`).join('');
+}
+
+function toggleAssignee(id){
+  const idx = selectedAssignees.indexOf(id);
+  if(idx>=0) selectedAssignees.splice(idx,1);
+  else selectedAssignees.push(id);
+  renderAssigneeChips();
+}
+
+function renderChecklist(){
+  const el = document.getElementById('detail-checklist');
+  if(!currentChecklist.length){ el.innerHTML='<div style="font-size:12px;color:var(--text3);padding:4px 0">체크리스트 항목이 없습니다</div>'; return; }
+  el.innerHTML = currentChecklist.map((item,i)=>`
+    <div class="cl-item">
+      <input type="checkbox" class="cl-check" ${item.done?'checked':''} onchange="toggleClItem(${i})">
+      <span class="cl-text ${item.done?'done':''}">${item.text}</span>
+      <button class="cl-del" onclick="removeClItem(${i})">✕</button>
+    </div>`).join('');
+}
+
+function addChecklistItem(){
+  const input = document.getElementById('checklist-input');
+  const text = input.value.trim();
+  if(!text) return;
+  currentChecklist.push({text, done:false});
+  input.value='';
+  renderChecklist();
+}
+
+function toggleClItem(i){
+  currentChecklist[i].done = !currentChecklist[i].done;
+  renderChecklist();
+}
+
+function removeClItem(i){
+  currentChecklist.splice(i,1);
+  renderChecklist();
+}
+
+async function saveTodoDetail(){
+  const id = document.getElementById('detail-todo-id').value;
+  const content = document.getElementById('detail-content').value.trim();
+  const dueDate = document.getElementById('detail-due-date').value;
+  const note = document.getElementById('detail-note').value.trim();
+  if(!content){showToast('내용을 입력하세요','error');return;}
+
+  const assigneeIds = selectedAssignees.join(',');
+  const assigneeNames = selectedAssignees.map(aid=>allEmployees.find(e=>e.id===aid)?.name||'').filter(Boolean).join(', ');
+
+  const body = {
+    content,
+    due_date: dueDate||null,
+    note: note||null,
+    checklist: currentChecklist.length ? JSON.stringify(currentChecklist) : null,
+    assignee_ids: assigneeIds||null,
+    assignee_names: assigneeNames||null
+  };
+
+  try{
+    await fetch(`${API}/todos?id=eq.${id}`,{method:'PATCH',headers:H,body:JSON.stringify(body)});
+
+    // 담당자 연동: 기존 assigned 항목 삭제 후 재생성
+    await fetch(`${API}/todos?parent_todo_id=eq.${id}`,{method:'DELETE',headers:H});
+    if(selectedAssignees.length){
+      const myId = currentTodoData.employee_id;
+      const others = selectedAssignees.filter(aid=>aid!==myId);
+      await Promise.all(others.map(aid=>
+        fetch(`${API}/todos`,{method:'POST',headers:H,body:JSON.stringify({
+          employee_id:aid,
+          content,
+          is_done:false,
+          source:'assigned',
+          due_date:dueDate||null,
+          note:note||null,
+          checklist:currentChecklist.length?JSON.stringify(currentChecklist):null,
+          assignee_names: assigneeNames||null,
+          parent_todo_id: id
+        })})
+      ));
+    }
+
+    closeModal('modal-todo-detail');
+    showToast('저장됨 ✓','success');
+    loadTodos();
+  }catch(e){ showToast('저장 실패','error'); }
+}
+
+// ─── 팀 전체 TO-DO (관리자) ───
+async function loadTeamTodos(){
+  const el = document.getElementById('teamtodo-list');
+  const memberFilter = document.getElementById('teamtodo-member')?.value||'';
+  const statusFilter = document.getElementById('teamtodo-status')?.value||'active';
+  el.innerHTML='<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
+
+  try{
+    let url = `${API}/todos?order=due_date.asc.nullslast,created_at.asc&select=*,employees(name,emp_id)`;
+    // source='assigned' 항목은 원본과 중복이므로 제외
+    url += '&parent_todo_id=is.null';
+    if(memberFilter) url += `&employee_id=eq.${memberFilter}`;
+    if(statusFilter==='active') url += '&is_done=eq.false';
+    else if(statusFilter==='done') url += '&is_done=eq.true';
+
+    const res = await fetch(url,{headers:H});
+    const todos = await res.json();
+
+    // 통계
+    const now = new Date(); now.setHours(0,0,0,0);
+    const active = todos.filter(t=>!t.is_done);
+    const overdue = active.filter(t=>t.due_date && new Date(t.due_date)<now).length;
+    const soon = active.filter(t=>t.due_date && new Date(t.due_date)>=now && Math.ceil((new Date(t.due_date)-now)/(1000*60*60*24))<=7).length;
+    document.getElementById('teamtodo-stats').style.display='grid';
+    document.getElementById('tt-overdue').textContent=overdue;
+    document.getElementById('tt-soon').textContent=soon;
+    document.getElementById('tt-total').textContent=active.length;
+    // 스크롤 버튼 표시
+    setTimeout(()=>{
+      const memberCount = Object.keys(byMember).length;
+      if(memberCount>1){
+        document.getElementById('teamtodo-scroll-btns').style.display='flex';
+        updateKanbanIndicator();
+      }
+    }, 100);
+
+    if(!todos.length){el.innerHTML='<div class="empty"><div class="empty-icon">✅</div><p>할일이 없습니다</p></div>';return;}
+
+    // 팀원별 그룹
+    const byMember={};
+    todos.forEach(t=>{
+      const k = t.employee_id;
+      if(!byMember[k]) byMember[k]={name:t.employees?.name||'?',empId:t.employees?.emp_id||'',todos:[]};
+      byMember[k].todos.push(t);
+    });
+
+    // 칸반 보드 - 가로 스크롤, 세로 한 줄에 한 명
+    el.innerHTML = `<div style="display:flex;gap:14px;overflow-x:auto;padding-bottom:12px;align-items:flex-start">
+      ${Object.values(byMember).map(m=>{
+        const active = m.todos.filter(t=>!t.is_done);
+        return `<div style="flex-shrink:0;width:220px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px">
+          <!-- 헤더 -->
+          <div style="font-size:13px;font-weight:700;color:var(--accent2);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0">
+            <span>👤 ${m.name}</span>
+            <span style="font-size:10px;color:var(--text3);background:var(--surface2);border-radius:10px;padding:2px 8px">${active.length}건</span>
+          </div>
+          <!-- 할일 목록 세로 -->
+          ${active.length===0
+            ? '<div style="text-align:center;padding:20px 0;color:var(--text3);font-size:12px">✅ 완료</div>'
+            : active.map(t=>{
+                const dueBadge = getDueBadge(t.due_date);
+                const assignee = t.assignee_names ? `<div style="font-size:10px;color:var(--text3);margin-top:4px">👤 ${t.assignee_names}</div>` : '';
+                const due = t.due_date ? `<div style="margin-top:5px">${dueBadge}</div>` : '';
+                const checklist = t.checklist ? (()=>{try{return JSON.parse(t.checklist);}catch(e){return [];}})() : [];
+                const clText = checklist.length ? `<div style="font-size:10px;color:var(--text3);margin-top:4px">☑ ${checklist.filter(c=>c.done).length}/${checklist.length}</div>` : '';
+                return `<div style="padding:10px;background:var(--surface2);border-radius:8px;margin-bottom:8px;border:1px solid var(--border);cursor:pointer;transition:border-color .2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'" onclick="openTodoDetail('${t.id}')">
+                  <div style="font-size:12px;font-weight:600;line-height:1.5;color:var(--text)">${t.content}</div>
+                  ${assignee}${clText}${due}
+                </div>`;
+              }).join('')
+          }
+        </div>`;
+      }).join('')}
+    </div>`;
+  }catch(e){el.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><p>Supabase 연결 필요</p></div>';}
+}
+
+// NOTICE
+async function loadNoticeBanner(){
+  try{
+    const res=await fetch(`${API}/notices?order=created_at.desc&limit=1`,{headers:H});
+    const notices=await res.json();if(!notices||!notices.length)return;
+    const n=notices[0];
+    // 팝업만 표시 (오늘 안 본 공지만)
+    const skipKey=`notice_skip_${n.id}_${new Date().toDateString()}`;
+    if(!localStorage.getItem(skipKey)){
+      document.getElementById('notice-popup-content').innerHTML=`
+        <div style="background:var(--surface2);border-radius:10px;padding:16px;margin-bottom:4px">
+          <div style="font-size:15px;font-weight:700;margin-bottom:10px">${n.title}</div>
+          <div style="font-size:13px;color:var(--text2);line-height:1.7">${n.body}</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:10px">${new Date(n.created_at).toLocaleDateString('ko-KR')}</div>
+        </div>`;
+      document.getElementById('modal-notice-popup').dataset.noticeId=n.id;
+      setTimeout(()=>openModal('modal-notice-popup'),600);
+    }
+  }catch(e){}
+}
+
+function closeNoticePopup(){
+  const modal = document.getElementById('modal-notice-popup');
+  const noticeId = modal.dataset.noticeId;
+  const dontShow = document.getElementById('notice-dont-show').checked;
+  if(dontShow && noticeId){
+    const skipKey = `notice_skip_${noticeId}_${new Date().toDateString()}`;
+    localStorage.setItem(skipKey, '1');
+  }
+  closeModal('modal-notice-popup');
+}
+async function postNotice(){
+  const title=document.getElementById('notice-title-input').value.trim(),body=document.getElementById('notice-body-input').value.trim();
+  if(!title||!body){showToast('제목과 내용을 입력하세요','error');return;}
+  try{
+    await fetch(`${API}/notices`,{method:'POST',headers:H,body:JSON.stringify({title,body,created_by:currentUser.id})});
+    const empRes=await fetch(`${API}/employees?select=id`,{headers:H});const emps=await empRes.json();
+    await Promise.all(emps.map(e=>fetch(`${API}/todos`,{method:'POST',headers:H,body:JSON.stringify({employee_id:e.id,content:`[공지] ${title}: ${body}`,is_done:false,source:'notice'})})));
+    document.getElementById('notice-title-input').value='';document.getElementById('notice-body-input').value='';
+    showToast(`공지 발송 완료 (${emps.length}명)`,'success');loadNoticeHistory();
+  }catch(e){showToast('발송 실패','error');}
+}
+async function loadNoticeHistory(){
+  try{
+    const res=await fetch(`${API}/notices?order=created_at.desc&limit=10`,{headers:H});const notices=await res.json();
+    const el=document.getElementById('notice-history');
+    if(!notices||!notices.length){el.innerHTML='<div class="empty"><div class="empty-icon">📢</div><p>발송된 공지가 없습니다</p></div>';return;}
+    el.innerHTML=notices.map(n=>`<div class="notice-item"><div class="notice-title">${n.title}</div><div class="notice-body">${n.body}</div><div class="notice-meta">${new Date(n.created_at).toLocaleDateString('ko-KR')}</div></div>`).join('');
+  }catch(e){}
+}
+
+// ATTEND
+function toggleAttendNote(){document.getElementById('attend-note-group').style.display=document.getElementById('attend-type').value==='other'?'block':'none';}
+async function submitAttend(){
+  const start=document.getElementById('attend-start').value,end=document.getElementById('attend-end').value;
+  const type=document.getElementById('attend-type').value,note=document.getElementById('attend-note').value.trim();
+  if(!start||!end){showToast('날짜를 입력하세요','error');return;}
+  if(end<start){showToast('종료일이 시작일보다 빨라요','error');return;}
+  if(type==='other'&&!note){showToast('기타 사유를 입력하세요','error');return;}
+  let days=0,d=new Date(start);const e=new Date(end);
+  while(d<=e){const dw=d.getDay();if(dw!==0&&dw!==6)days++;d.setDate(d.getDate()+1);}
+  const excludeH=ATTEND_HOURS[type]*days;
+  try{
+    await fetch(`${API}/attends`,{method:'POST',headers:H,body:JSON.stringify({employee_id:currentUser.id,start_date:start,end_date:end,attend_type:type,note:note||null,exclude_hours:excludeH})});
+    ['attend-note'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('attend-start').value=today();document.getElementById('attend-end').value=today();
+    document.getElementById('attend-type').value='annual';document.getElementById('attend-note-group').style.display='none';
+    showToast(`근태 등록됨 (${excludeH}h 제외)`,'success');loadMyAttends();
+  }catch(e){showToast('등록 실패','error');}
+}
+async function loadMyAttends(){
+  try{
+    const res=await fetch(`${API}/attends?employee_id=eq.${currentUser.id}&order=start_date.desc&limit=20`,{headers:H});
+    const attends=await res.json();const el=document.getElementById('my-attend-list');
+    if(!attends||!attends.length){el.innerHTML='<div class="empty"><div class="empty-icon">🏖️</div><p>등록된 근태가 없습니다</p></div>';return;}
+    el.innerHTML=`<table><thead><tr><th>시작일</th><th>종료일</th><th>유형</th><th>제외(h)</th><th>비고</th><th></th></tr></thead><tbody>
+      ${attends.map(a=>`<tr><td>${a.start_date}</td><td>${a.end_date}</td>
+        <td><span class="attend-${a.attend_type}">${ATTEND_LABELS[a.attend_type]||a.attend_type}</span></td>
+        <td style="font-family:'JetBrains Mono',monospace;color:var(--warn)">${a.exclude_hours}h</td>
+        <td style="font-size:11px;color:var(--text2)">${a.note||''}</td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteAttend('${a.id}')">삭제</button></td>
+      </tr>`).join('')}</tbody></table>`;
+  }catch(e){document.getElementById('my-attend-list').innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><p>Supabase 연결 필요</p></div>';}
+}
+async function deleteAttend(id){if(!confirm('근태를 삭제할까요?'))return;try{await fetch(`${API}/attends?id=eq.${id}`,{method:'DELETE',headers:H});showToast('삭제됨','success');loadMyAttends();}catch(e){showToast('삭제 실패','error');}}
+
+// TEAM
+async function loadTeamStats(){
+  const month=document.getElementById('team-month').value,mf=document.getElementById('team-member-filter').value;if(!month)return;
+  const [y,m]=month.split('-');const start=`${y}-${m}-01`,end=`${y}-${m}-${new Date(y,m,0).getDate()}`;
+  try{
+    let url=`${API}/work_logs?log_date=gte.${start}&log_date=lte.${end}&select=*,categories(name),employees(name,emp_id)`;if(mf)url+=`&employee_id=eq.${mf}`;
+    const [logsRes,attendRes]=await Promise.all([fetch(url,{headers:H}),fetch(`${API}/attends?start_date=lte.${end}&end_date=gte.${start}&select=*,employees(name,emp_id)`,{headers:H})]);
+    const logs=await logsRes.json(),attends=await attendRes.json();
+    const totalH=logs.reduce((s,l)=>s+Number(l.hours),0);const members=new Set(logs.map(l=>l.employee_id)).size;const avgH=members>0?totalH/members:0;
+    document.getElementById('team-total-hours').textContent=totalH.toFixed(1);document.getElementById('team-member-cnt').textContent=members;document.getElementById('team-avg-hours').textContent=avgH.toFixed(1);
+    const byM={};
+    logs.forEach(l=>{const k=l.employee_id;if(!byM[k])byM[k]={name:l.employees?.name,empId:l.employees?.emp_id,hours:0,cnt:0,excludeH:0};byM[k].hours+=Number(l.hours);byM[k].cnt++;});
+    attends.forEach(a=>{if(byM[a.employee_id])byM[a.employee_id].excludeH+=Number(a.exclude_hours||0);});
+    const maxH=Math.max(...Object.values(byM).map(v=>v.hours),1);
+    document.getElementById('team-member-stats').innerHTML=Object.values(byM).sort((a,b)=>b.hours-a.hours).map(v=>`
+      <div style="margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span style="font-size:13px">${v.name} <span style="color:var(--text3);font-size:11px">${v.empId}</span></span>
+          <span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent2)">${v.hours.toFixed(1)}h${v.excludeH>0?`<span style="font-size:10px;color:var(--warn)"> (근태-${v.excludeH}h)</span>`:''}</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${(v.hours/maxH*100).toFixed(0)}%"></div></div>
+        <div style="font-size:10px;color:var(--text3);margin-top:3px">${v.cnt}건</div>
+      </div>`).join('')||'<div class="empty"><div class="empty-icon">📭</div><p>데이터 없음</p></div>';
+    const byCat={};logs.forEach(l=>{const k=l.categories?.name||'미분류';byCat[k]=(byCat[k]||0)+Number(l.hours);});
+    document.getElementById('team-category-stats').innerHTML=`<div class="chip-row">${Object.entries(byCat).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="chip">${k}: <strong>${v.toFixed(1)}h</strong></div>`).join('')}</div>${Object.entries(byCat).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:11px;color:var(--text2);width:72px">${k}</span><div style="flex:1"><div class="progress-bar"><div class="progress-fill" style="width:${totalH>0?(v/totalH*100).toFixed(0):0}%"></div></div></div><span style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--accent2);width:40px;text-align:right">${v.toFixed(1)}h</span></div>`).join('')}`;
+    if(!attends||!attends.length)document.getElementById('team-attend-stats').innerHTML='<div class="empty"><div class="empty-icon">🏖️</div><p>이번 달 근태 없음</p></div>';
+    else document.getElementById('team-attend-stats').innerHTML=`<table><thead><tr><th>이름</th><th>유형</th><th>시작일</th><th>종료일</th><th>제외(h)</th><th>비고</th></tr></thead><tbody>${attends.map(a=>`<tr><td>${a.employees?.name||'-'}</td><td><span class="attend-${a.attend_type}">${ATTEND_LABELS[a.attend_type]||a.attend_type}</span></td><td>${a.start_date}</td><td>${a.end_date}</td><td style="color:var(--warn)">${a.exclude_hours}h</td><td style="font-size:11px;color:var(--text2)">${a.note||''}</td></tr>`).join('')}</tbody></table>`;
+    renderLogList(document.getElementById('team-log-table'),logs,false);
+  }catch(e){document.getElementById('team-log-table').innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><p>Supabase 연결 필요</p></div>';}
+}
+
+// REPORT
+async function generateReport(){
+  const month=document.getElementById('report-month').value;if(!month)return;
+  const [y,m]=month.split('-');const start=`${y}-${m}-01`,end=`${y}-${m}-${new Date(y,m,0).getDate()}`;
+  document.getElementById('report-output').innerHTML='<div class="loading"><div class="spinner"></div>생성 중...</div>';
+  try{
+    const [logsRes,attendRes]=await Promise.all([fetch(`${API}/work_logs?log_date=gte.${start}&log_date=lte.${end}&select=*,categories(name),employees(name,emp_id)`,{headers:H}),fetch(`${API}/attends?start_date=lte.${end}&end_date=gte.${start}&select=*,employees(name)`,{headers:H})]);
+    const logs=await logsRes.json(),attends=await attendRes.json();
+    const totalH=logs.reduce((s,l)=>s+Number(l.hours),0);const members=new Set(logs.map(l=>l.employee_id)).size;const avgH=members>0?totalH/members:0;
+    const byM={};logs.forEach(l=>{const k=l.employee_id;if(!byM[k])byM[k]={name:l.employees?.name,empId:l.employees?.emp_id,hours:0,cnt:0,excludeH:0};byM[k].hours+=Number(l.hours);byM[k].cnt++;});
+    attends.forEach(a=>{if(byM[a.employee_id])byM[a.employee_id].excludeH+=Number(a.exclude_hours||0);});
+    const byCat={};logs.forEach(l=>{const k=l.categories?.name||'미분류';byCat[k]=(byCat[k]||0)+Number(l.hours);});
+    document.getElementById('report-output').innerHTML=`
+      <div class="card"><div class="card-title">📊 ${month} <span>월간 요약</span></div>
+        <div class="stat-grid-3" style="margin-bottom:0">
+          <div class="stat-box"><div class="stat-val accent">${totalH.toFixed(1)}</div><div class="stat-label">총 공수(h)</div></div>
+          <div class="stat-box"><div class="stat-val">${members}</div><div class="stat-label">참여 인원</div></div>
+          <div class="stat-box"><div class="stat-val">${avgH.toFixed(1)}</div><div class="stat-label">1인 평균(h)</div></div>
+        </div>
+      </div>
+      <div class="card"><div class="card-title">👥 <span>팀원별 공수</span></div>
+        <table><thead><tr><th>이름</th><th>사번</th><th>실적(h)</th><th>근태제외(h)</th><th>건수</th></tr></thead><tbody>
+        ${Object.values(byM).sort((a,b)=>b.hours-a.hours).map(v=>`<tr><td>${v.name}</td><td style="font-size:11px">${v.empId}</td><td style="font-family:'JetBrains Mono',monospace;color:var(--accent2)">${v.hours.toFixed(1)}</td><td style="color:var(--warn)">${v.excludeH.toFixed(1)}</td><td>${v.cnt}</td></tr>`).join('')}</tbody></table>
+      </div>
+      <div class="card"><div class="card-title">🏷️ <span>분류별 공수</span></div>
+        ${Object.entries(byCat).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px"><span style="font-size:12px;color:var(--text2);width:76px">${k}</span><div style="flex:1"><div class="progress-bar"><div class="progress-fill" style="width:${totalH>0?(v/totalH*100).toFixed(0):0}%"></div></div></div><span style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--accent2);width:60px;text-align:right">${v.toFixed(1)}h</span></div>`).join('')}
+      </div>
+      <div style="text-align:center;font-size:10px;color:var(--text3);margin-top:16px">생성일: ${new Date().toLocaleDateString('ko-KR')} · 공수관리 시스템 v3.0</div>`;
+  }catch(e){document.getElementById('report-output').innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><p>Supabase 연결 필요</p></div>';}
+}
+
+// CSV
+function toCSV(rows,headers){return[headers,...rows].map(r=>r.map(c=>`"${String(c??'').replace(/"/g,'""')}"`).join(',')).join('\n');}
+function downloadCSV(content,filename){const blob=new Blob(['\uFEFF'+content],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();}
+async function exportMyCSV(){const month=document.getElementById('my-month').value;if(!month)return;const [y,m]=month.split('-');const start=`${y}-${m}-01`,end=`${y}-${m}-${new Date(y,m,0).getDate()}`;try{const res=await fetch(`${API}/work_logs?employee_id=eq.${currentUser.id}&log_date=gte.${start}&log_date=lte.${end}&order=log_date.desc&select=*,categories(name)`,{headers:H});const logs=await res.json();downloadCSV(toCSV(logs.map(l=>[l.log_date,l.categories?.name||'',l.content,l.start_time||'',l.end_time||'',Number(l.hours).toFixed(1),l.note||'']),['날짜','분류','업무내용','시작시간','종료시간','공수(h)','비고']),`내공수_${month}.csv`);showToast('CSV 완료','success');}catch(e){showToast('다운로드 실패','error');}}
+async function exportTeamCSV(){const month=document.getElementById('team-month').value;if(!month)return;const [y,m]=month.split('-');const start=`${y}-${m}-01`,end=`${y}-${m}-${new Date(y,m,0).getDate()}`;try{const res=await fetch(`${API}/work_logs?log_date=gte.${start}&log_date=lte.${end}&order=log_date.desc&select=*,categories(name),employees(name,emp_id)`,{headers:H});const logs=await res.json();downloadCSV(toCSV(logs.map(l=>[l.employees?.name||'',l.employees?.emp_id||'',l.log_date,l.categories?.name||'',l.content,l.start_time||'',l.end_time||'',Number(l.hours).toFixed(1),l.note||'']),['이름','사번','날짜','분류','업무내용','시작시간','종료시간','공수(h)','비고']),`팀공수_${month}.csv`);showToast('팀 CSV 완료','success');}catch(e){showToast('다운로드 실패','error');}}
+async function exportReportCSV(){const month=document.getElementById('report-month').value;if(!month){showToast('월을 선택하세요','error');return;}const [y,m]=month.split('-');const start=`${y}-${m}-01`,end=`${y}-${m}-${new Date(y,m,0).getDate()}`;try{const res=await fetch(`${API}/work_logs?log_date=gte.${start}&log_date=lte.${end}&order=log_date&select=*,categories(name),employees(name,emp_id)`,{headers:H});const logs=await res.json();downloadCSV(toCSV(logs.map(l=>[l.employees?.name||'',l.employees?.emp_id||'',l.log_date,l.categories?.name||'',l.content,l.start_time||'',l.end_time||'',Number(l.hours).toFixed(1),l.note||'']),['이름','사번','날짜','분류','업무내용','시작시간','종료시간','공수(h)','비고']),`월간리포트_${month}.csv`);showToast('리포트 CSV 완료','success');}catch(e){showToast('다운로드 실패','error');}}
+
+// GOAL
+async function saveMonthGoal(){const month=document.getElementById('goal-month').value,hours=parseFloat(document.getElementById('goal-hours').value);if(!month||!hours){showToast('월과 목표시간을 입력하세요','error');return;}try{await fetch(`${API}/month_goals`,{method:'POST',headers:H,body:JSON.stringify({month,target_hours:hours})});showToast(`${month} 목표 저장됨`,'success');loadGoals();}catch(e){try{await fetch(`${API}/month_goals?month=eq.${month}`,{method:'PATCH',headers:H,body:JSON.stringify({target_hours:hours})});showToast(`${month} 목표 수정됨`,'success');loadGoals();}catch(e2){showToast('저장 실패','error');}}}
+async function loadGoals(){try{const res=await fetch(`${API}/month_goals?order=month.desc&limit=6`,{headers:H});const goals=await res.json();document.getElementById('goal-list').innerHTML=goals.map(g=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px"><span>${g.month}</span><span style="font-family:'JetBrains Mono',monospace;color:var(--accent)">${g.target_hours}h / 인</span></div>`).join('')||'<p style="font-size:12px;color:var(--text3)">저장된 목표가 없습니다</p>';}catch(e){}}
+
+// USERS
+async function loadAllEmployees(){
+  // 모든 사용자가 담당자 목록을 위해 호출 (권한 기능 없이 단순 목록만)
+  try{
+    const res=await fetch(`${API}/employees?order=name&select=id,name,emp_id`,{headers:H});
+    allEmployees=await res.json();
+  }catch(e){ allEmployees=[]; }
+}
+
+async function loadUsers(){
+  try{
+    const res=await fetch(`${API}/employees?order=created_at`,{headers:H});
+    allEmployees=await res.json();
+    // 팀현황 필터
+    const filter=document.getElementById('team-member-filter');
+    if(filter) filter.innerHTML='<option value="">전체 팀원</option>'+allEmployees.map(e=>`<option value="${e.id}">${e.name} (${e.emp_id})</option>`).join('');
+    // 팀할일 필터
+    const tf=document.getElementById('teamtodo-member');
+    if(tf) tf.innerHTML='<option value="">전체 팀원</option>'+allEmployees.map(e=>`<option value="${e.id}">${e.name}</option>`).join('');
+    renderUserTable();
+  }catch(e){document.getElementById('user-list-table').innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><p>Supabase 연결 필요</p></div>';}
+}
+function renderUserTable(){const el=document.getElementById('user-list-table');if(!allEmployees.length){el.innerHTML='<div class="empty"><div class="empty-icon">👥</div><p>직원이 없습니다</p></div>';return;}el.innerHTML=`<table><thead><tr><th>이름</th><th>사번</th><th>권한</th><th></th></tr></thead><tbody>${allEmployees.map(e=>`<tr><td>${e.name}</td><td style="font-family:'JetBrains Mono',monospace;font-size:11px">${e.emp_id}</td><td><span class="badge ${e.is_admin?'badge-blue':'badge-green'}">${e.is_admin?'관리자':'직원'}</span></td><td>${e.id!==currentUser.id?`<button class="btn btn-secondary btn-sm" onclick="toggleAdmin('${e.id}',${e.is_admin})">${e.is_admin?'권한해제':'관리자부여'}</button>`:'<span style="color:var(--text3);font-size:11px">본인</span>'}</td></tr>`).join('')}</tbody></table>`;}
+async function addUser(){const name=document.getElementById('new-user-name').value.trim(),empId=document.getElementById('new-user-empid').value.trim();const isAdmin=document.getElementById('new-user-admin').value==='true';if(!name||!empId){showToast('이름과 사번을 입력하세요','error');return;}try{await fetch(`${API}/employees`,{method:'POST',headers:H,body:JSON.stringify({name,emp_id:empId,is_admin:isAdmin})});closeModal('modal-add-user');document.getElementById('new-user-name').value='';document.getElementById('new-user-empid').value='';await loadUsers();showToast(`${name} 추가됨`,'success');}catch(e){showToast('추가 실패 (사번 중복 확인)','error');}}
+async function toggleAdmin(id,isAdmin){try{await fetch(`${API}/employees?id=eq.${id}`,{method:'PATCH',headers:H,body:JSON.stringify({is_admin:!isAdmin})});await loadUsers();showToast('권한 변경됨','success');}catch(e){showToast('변경 실패','error');}}
+
+// KANBAN SCROLL
+function scrollKanban(dir){
+  const el = document.getElementById('teamtodo-list');
+  const cardWidth = 234; // 220px + 14px gap
+  el.scrollBy({left: dir * cardWidth, behavior:'smooth'});
+  setTimeout(updateKanbanIndicator, 350);
+}
+
+function updateKanbanIndicator(){
+  const el = document.getElementById('teamtodo-list');
+  const inner = el.querySelector('div[style*="display:flex"]');
+  if(!inner) return;
+  const cards = inner.children.length;
+  const visibleCount = Math.floor(el.clientWidth / 234) || 1;
+  const totalPages = Math.ceil(cards / visibleCount);
+  const currentPage = Math.round(el.scrollLeft / (234 * visibleCount));
+  const ind = document.getElementById('kanban-indicator');
+  if(!ind) return;
+  ind.innerHTML = Array.from({length:totalPages},(_,i)=>`
+    <div style="width:${i===currentPage?'20px':'8px'};height:8px;border-radius:4px;background:${i===currentPage?'var(--accent)':'var(--border)'};transition:all .3s;cursor:pointer" onclick="scrollKanbanTo(${i})"></div>
+  `).join('');
+}
+
+function scrollKanbanTo(page){
+  const el = document.getElementById('teamtodo-list');
+  const visibleCount = Math.floor(el.clientWidth / 234) || 1;
+  el.scrollTo({left: page * 234 * visibleCount, behavior:'smooth'});
+  setTimeout(updateKanbanIndicator, 350);
+}
+
+// UTILS
+function today(){return new Date().toISOString().split('T')[0];}
+function openModal(id){document.getElementById(id).classList.add('open');if(id==='modal-template-pick')openTemplateModal();}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
+let toastTimer;
+function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className=`show ${type}`;clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.className='',3000);}
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('login-screen').style.display!=='none')doLogin();});
+</script>
+</body>
+</html>
