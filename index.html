@@ -1075,7 +1075,9 @@ async function openTodoDetail(id){
   if(!t) return;
 
   currentTodoData = t;
-  document.getElementById('detail-todo-id').value = id;
+  // 항상 원본 id를 사용 (공유본이면 원본 id로 교체됨)
+  const detailId = t.id; // t가 이미 원본으로 교체됨
+  document.getElementById('detail-todo-id').value = detailId;
   document.getElementById('detail-content').value = t.content||'';
   document.getElementById('detail-due-date').value = t.due_date||'';
   document.getElementById('detail-note').value = t.note||'';
@@ -1138,7 +1140,7 @@ function removeClItem(i){
 }
 
 async function saveTodoDetail(){
-  const id = document.getElementById('detail-todo-id').value;
+  const rootId = document.getElementById('detail-todo-id').value;
   const todoContent = document.getElementById('detail-content').value.trim();
   const dueDate = document.getElementById('detail-due-date').value;
   const note = document.getElementById('detail-note').value.trim();
@@ -1146,15 +1148,11 @@ async function saveTodoDetail(){
 
   const assigneeIds = selectedAssignees.join(',');
   const assigneeNames = selectedAssignees.map(function(aid){
-    const e = allEmployees.find(function(e){return e.id===aid;});
+    const e = allEmployees.find(function(x){return x.id===aid;});
     return e?e.name:'';
   }).filter(Boolean).join(', ');
 
   const checklistJson = currentChecklist.length ? JSON.stringify(currentChecklist) : null;
-
-  // 원본 ID 찾기 (공유본이면 parent_todo_id가 원본)
-  const rootId = (currentTodoData.parent_todo_id && currentTodoData.parent_todo_id !== id)
-    ? currentTodoData.parent_todo_id : id;
 
   const updateBody = {
     content: todoContent,
@@ -1166,35 +1164,63 @@ async function saveTodoDetail(){
   };
 
   try{
-    // 원본 업데이트
+    // 1. 원본 업데이트
     await fetch(API+'/todos?id=eq.'+rootId, {method:'PATCH',headers:H,body:JSON.stringify(updateBody)});
 
-    // 기존 공유본 삭제 후 재생성
-    await fetch(API+'/todos?parent_todo_id=eq.'+rootId, {method:'DELETE',headers:H});
+    // 2. 기존 공유본 조회
+    const existRes = await fetch(API+'/todos?parent_todo_id=eq.'+rootId+'&select=id,employee_id',{headers:H});
+    const existShared = await existRes.json();
+    const existMap = {};
+    existShared.forEach(function(s){ existMap[s.employee_id]=s.id; });
 
-    // 담당자(본인 제외)에게 공유본 생성
-    if(selectedAssignees.length){
-      const rootOwner = currentTodoData.parent_todo_id ? null : currentTodoData.employee_id;
-      const sharedRes = await fetch(API+'/todos?id=eq.'+rootId+'&select=employee_id',{headers:H});
-      const sharedData = await sharedRes.json();
-      const ownerId = sharedData.length ? sharedData[0].employee_id : currentUser.id;
-      const others = selectedAssignees.filter(function(aid){ return aid !== ownerId; });
+    // 3. 원본 소유자 확인
+    const ownerId = currentTodoData.employee_id || currentUser.id;
 
-      await Promise.all(others.map(function(aid){
-        return fetch(API+'/todos', {method:'POST', headers:H, body:JSON.stringify({
-          employee_id: aid,
-          content: todoContent,
-          is_done: false,
-          source: 'assigned',
-          due_date: dueDate||null,
-          note: note||null,
-          checklist: checklistJson,
-          assignee_ids: assigneeIds||null,
-          assignee_names: assigneeNames||null,
-          parent_todo_id: rootId
-        })});
-      }));
-    }
+    // 4. 담당자 목록에서 원본 소유자 제외
+    const others = selectedAssignees.filter(function(aid){ return aid !== ownerId; });
+
+    // 5. 새로 추가된 담당자 → 공유본 생성
+    await Promise.all(others.map(function(aid){
+      if(existMap[aid]){
+        // 이미 있으면 내용만 업데이트 (체크 상태 유지!)
+        return fetch(API+'/todos?id=eq.'+existMap[aid], {
+          method:'PATCH', headers:H,
+          body:JSON.stringify({
+            content:todoContent,
+            due_date:dueDate||null,
+            note:note||null,
+            checklist:checklistJson,
+            assignee_ids:assigneeIds||null,
+            assignee_names:assigneeNames||null
+          })
+        });
+      } else {
+        // 새 담당자 → 공유본 생성
+        return fetch(API+'/todos', {
+          method:'POST', headers:H,
+          body:JSON.stringify({
+            employee_id:aid,
+            content:todoContent,
+            is_done:false,
+            source:'assigned',
+            due_date:dueDate||null,
+            note:note||null,
+            checklist:checklistJson,
+            assignee_ids:assigneeIds||null,
+            assignee_names:assigneeNames||null,
+            parent_todo_id:rootId
+          })
+        });
+      }
+    }));
+
+    // 6. 담당자에서 제거된 사람 → 공유본 삭제
+    await Promise.all(Object.keys(existMap).map(function(aid){
+      if(!others.includes(aid)){
+        return fetch(API+'/todos?id=eq.'+existMap[aid],{method:'DELETE',headers:H});
+      }
+      return Promise.resolve();
+    }));
 
     closeModal('modal-todo-detail');
     showToast('저장됨','success');
