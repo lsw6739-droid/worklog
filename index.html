@@ -113,6 +113,10 @@ tr:hover td{background:rgba(0,194,255,.03)}
 .todo-meta{font-size:10px;color:var(--text3);margin-top:2px}
 .todo-del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:0;flex-shrink:0;transition:color .2s}
 .todo-del:hover{color:var(--danger)}
+.drag-handle{color:var(--text3);cursor:grab;font-size:16px;flex-shrink:0;padding:0 4px;user-select:none;line-height:1}
+.drag-handle:active{cursor:grabbing}
+.todo-item.drag-over{border:2px dashed var(--accent);background:rgba(0,194,255,.05)}
+.todo-item.dragging{opacity:.3}
 .notice-item{background:rgba(0,194,255,.05);border:1px solid rgba(0,194,255,.2);border-radius:10px;padding:12px 14px;margin-bottom:10px}
 .notice-title{font-size:13px;font-weight:700;color:var(--accent);margin-bottom:4px}
 .notice-body{font-size:12px;color:var(--text2);line-height:1.6}
@@ -939,15 +943,15 @@ function getDueBadge(dueDate){
 function renderTodoItem(t,isDone){
   const src = t.source==='notice' ? '<span style="font-size:9px;color:var(--accent);border:1px solid rgba(0,194,255,.3);border-radius:4px;padding:1px 4px;margin-left:4px">공지</span>'
             : t.source==='assigned' ? '<span style="font-size:9px;color:var(--accent2);border:1px solid rgba(0,255,157,.3);border-radius:4px;padding:1px 4px;margin-left:4px">담당</span>' : '';
-  const moveBtn = !isDone ? getMoveBtn(t.id) : '';
+
   const checklist = t.checklist ? (() => { try{return JSON.parse(t.checklist);}catch(e){return [];} })() : [];
   const doneCount = checklist.filter(c=>c.done).length;
   const dueBadge = getDueBadge(t.due_date);
   const assigneeBadge = t.assignee_names ? `<span style="font-size:10px;color:var(--text3)">👤 ${t.assignee_names}</span>` : '';
   const clBadge = checklist.length ? `<span style="font-size:10px;color:${doneCount===checklist.length?'var(--accent2)':'var(--text3)'}">☑ ${doneCount}/${checklist.length}</span>` : '';
   const hasMeta = dueBadge||assigneeBadge||clBadge||t.note;
-  return `<div class="todo-item" id="todo-${t.id}" style="${isDone?'opacity:.55':''}">
-    ${moveBtn}
+  return `<div class="todo-item" id="todo-${t.id}" style="${isDone?'opacity:.55':''}" draggable="${isDone?'false':'true'}" ondragstart="dragStart(event,'${t.id}')" ondragover="dragOver(event)" ondragend="dragEnd(event)" ondrop="dragDrop(event,'${t.id}')">
+    ${!isDone?'<div class="drag-handle" title="드래그로 순서 변경">⠿</div>':''}
     <input type="checkbox" class="todo-check" ${isDone?'checked':''} onchange="toggleTodo('${t.id}',${isDone})">
     <div style="flex:1;min-width:0;cursor:pointer" onclick="openTodoDetail('${t.id}')">
       <div class="todo-text ${isDone?'done':''}">${t.content}${src}</div>
@@ -963,45 +967,62 @@ async function addTodo(){const input=document.getElementById('todo-input'),conte
 // 할일 순서 이동
 let todoOrderCache = [];
 
-function getMoveBtn(id){
-  const wrap = document.createElement('div');
-  wrap.style.cssText = 'display:flex;flex-direction:column;gap:1px;flex-shrink:0;margin-right:4px';
-  const btnStyle = 'background:none;border:none;color:var(--text3);cursor:pointer;font-size:10px;line-height:1;padding:1px 3px;';
-  const upBtn = document.createElement('button');
-  upBtn.textContent = '▲'; upBtn.title = '위로'; upBtn.style.cssText = btnStyle;
-  upBtn.addEventListener('click', function(e){ e.stopPropagation(); moveTodo(id,'up'); });
-  const dnBtn = document.createElement('button');
-  dnBtn.textContent = '▼'; dnBtn.title = '아래로'; dnBtn.style.cssText = btnStyle;
-  dnBtn.addEventListener('click', function(e){ e.stopPropagation(); moveTodo(id,'down'); });
-  wrap.appendChild(upBtn); wrap.appendChild(dnBtn);
-  return wrap.outerHTML;
+
+
+let dragSrcId = null;
+
+function dragStart(e, id){
+  dragSrcId = id;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', id);
+  setTimeout(function(){
+    const el = document.getElementById('todo-'+id);
+    if(el) el.classList.add('dragging');
+  }, 0);
 }
 
-async function moveTodo(id, direction){
-  // 현재 활성 목록에서 순서 파악
+function dragOver(e){
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  const item = e.currentTarget;
+  if(item) item.classList.add('drag-over');
+}
+
+function dragEnd(e){
+  document.querySelectorAll('.todo-item').forEach(function(el){
+    el.classList.remove('dragging','drag-over');
+  });
+}
+
+async function dragDrop(e, targetId){
+  e.preventDefault();
+  e.stopPropagation();
+  document.querySelectorAll('.todo-item').forEach(function(el){
+    el.classList.remove('dragging','drag-over');
+  });
+  if(!dragSrcId || dragSrcId === targetId) return;
+
   const items = document.querySelectorAll('#todo-list .todo-item');
-  const ids = Array.from(items).map(function(el){ return el.id.replace('todo-',''); });
-  const idx = ids.indexOf(id);
-  if(idx === -1) return;
+  let ids = Array.from(items).map(function(el){ return el.id.replace('todo-',''); });
 
-  const newIdx = direction === 'up' ? idx-1 : idx+1;
-  if(newIdx < 0 || newIdx >= ids.length) return;
+  const srcIdx = ids.indexOf(dragSrcId);
+  const tgtIdx = ids.indexOf(targetId);
+  if(srcIdx === -1 || tgtIdx === -1) return;
 
-  // 순서 교환
-  const tmp = ids[idx];
-  ids[idx] = ids[newIdx];
-  ids[newIdx] = tmp;
+  // 순서 재배열
+  ids.splice(srcIdx, 1);
+  ids.splice(tgtIdx, 0, dragSrcId);
 
-  // sort_order 업데이트
   try{
     await Promise.all(ids.map(function(tid, i){
-      return fetch(API+'/todos?id=eq.'+tid, {
+      return fetch(API+'/todos?id=eq.'+tid,{
         method:'PATCH', headers:H,
         body: JSON.stringify({sort_order: i})
       });
     }));
     loadTodos();
   }catch(e){ showToast('순서 변경 실패','error'); }
+  dragSrcId = null;
 }
 
 async function toggleTodo(id,wasDone){
