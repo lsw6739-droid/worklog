@@ -891,7 +891,30 @@ async function loadTodos(){
   const thirtyDaysAgo=new Date(Date.now()-30*24*60*60*1000).toISOString();
   try{
     const res=await fetch(`${API}/todos?employee_id=eq.${currentUser.id}&order=created_at.asc`,{headers:H});
-    const all=await res.json();
+    let all=await res.json();
+
+    // 공유본이면 원본 내용으로 동기화
+    const parentIds=all.filter(function(t){return t.parent_todo_id;}).map(function(t){return t.parent_todo_id;});
+    if(parentIds.length){
+      try{
+        const rootRes=await fetch(API+'/todos?id=in.('+parentIds.join(',')+')',{headers:H});
+        const roots=await rootRes.json();
+        const rootMap={};
+        roots.forEach(function(r){rootMap[r.id]=r;});
+        all=all.map(function(t){
+          if(t.parent_todo_id&&rootMap[t.parent_todo_id]){
+            const root=rootMap[t.parent_todo_id];
+            return Object.assign({},t,{
+              content:root.content,due_date:root.due_date,
+              note:root.note,checklist:root.checklist,
+              assignee_names:root.assignee_names,assignee_ids:root.assignee_ids
+            });
+          }
+          return t;
+        });
+      }catch(e2){}
+    }
+
     const active=all.filter(t=>!t.is_done);
     const done=all.filter(t=>t.is_done&&t.done_at&&new Date(t.done_at)>new Date(thirtyDaysAgo));
     document.getElementById('todo-count').textContent=`${active.length}개`;
@@ -1118,15 +1141,32 @@ async function loadTeamTodos(){
   el.innerHTML='<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
 
   try{
-    let url = `${API}/todos?order=due_date.asc.nullslast,created_at.asc&select=*,employees(name,emp_id)`;
-    // source='assigned' 항목은 원본과 중복이므로 제외
-    url += '&parent_todo_id=is.null';
-    if(memberFilter) url += `&employee_id=eq.${memberFilter}`;
+    // 모든 todo 불러오기 (원본 + 공유본 포함)
+    let url = API+'/todos?order=due_date.asc.nullslast,created_at.asc&select=*,employees(name,emp_id)';
+    if(memberFilter) url += '&employee_id=eq.'+memberFilter;
     if(statusFilter==='active') url += '&is_done=eq.false';
     else if(statusFilter==='done') url += '&is_done=eq.true';
 
     const res = await fetch(url,{headers:H});
-    const todos = await res.json();
+    let todos = await res.json();
+
+    // 공유본은 원본 데이터로 내용 동기화 (같은 parent_todo_id끼리)
+    const rootMap = {};
+    todos.forEach(function(t){ if(!t.parent_todo_id) rootMap[t.id] = t; });
+    todos = todos.map(function(t){
+      if(t.parent_todo_id && rootMap[t.parent_todo_id]){
+        const root = rootMap[t.parent_todo_id];
+        return Object.assign({}, t, {
+          content: root.content,
+          due_date: root.due_date,
+          note: root.note,
+          checklist: root.checklist,
+          assignee_names: root.assignee_names,
+          assignee_ids: root.assignee_ids
+        });
+      }
+      return t;
+    });
 
     // 통계
     const now = new Date(); now.setHours(0,0,0,0);
