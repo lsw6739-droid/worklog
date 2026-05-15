@@ -1147,16 +1147,17 @@ async function loadNoticeHistory(){
     const recent=notices.filter(n=>new Date(n.created_at)>cutoff);
     if(!recent.length){el.innerHTML='<div class="empty"><div class="empty-icon">📢</div><p>최근 24시간 내 발송된 공지가 없습니다</p></div>';return;}
     el.innerHTML=recent.map(n=>{
-      const nid=n.id;
-      return '<div class="notice-item" style="position:relative">'
-        +'<div style="position:absolute;top:8px;right:8px;display:flex;gap:6px">'
-        +'<button onclick="editNotice(''+nid+'')" style="background:rgba(0,194,255,.15);border:1px solid rgba(0,194,255,.3);color:var(--accent);border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer;font-family:inherit">수정</button>'
-        +'<button onclick="deleteNotice(''+nid+'')" style="background:rgba(255,71,87,.15);border:1px solid rgba(255,71,87,.3);color:var(--danger);border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer;font-family:inherit">삭제</button>'
+      const d=document.createElement('div');
+      d.className='notice-item';
+      d.style.position='relative';
+      d.innerHTML='<div style="position:absolute;top:8px;right:8px;display:flex;gap:6px">'
+        +'<button data-nid="'+n.id+'" onclick="editNotice(this.dataset.nid)" style="background:rgba(0,194,255,.15);border:1px solid rgba(0,194,255,.3);color:var(--accent);border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer;font-family:inherit">수정</button>'
+        +'<button data-nid="'+n.id+'" onclick="deleteNotice(this.dataset.nid)" style="background:rgba(255,71,87,.15);border:1px solid rgba(255,71,87,.3);color:var(--danger);border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer;font-family:inherit">삭제</button>'
         +'</div>'
         +'<div class="notice-title" style="padding-right:80px">'+n.title+'</div>'
         +'<div class="notice-body">'+n.body+'</div>'
-        +'<div class="notice-meta">'+new Date(n.created_at).toLocaleString('ko-KR')+'</div>'
-        +'</div>';
+        +'<div class="notice-meta">'+new Date(n.created_at).toLocaleString('ko-KR')+'</div>';
+      return d.outerHTML;
     }).join('');
   }catch(e){}
 }
