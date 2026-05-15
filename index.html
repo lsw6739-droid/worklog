@@ -159,7 +159,7 @@ pre{background:var(--surface2);border:1px solid var(--border);border-radius:8px;
   <div class="login-box">
     <div class="login-logo"><div class="mark">WL</div><h2>공수관리 시스템</h2><p>이름과 사번으로 로그인하세요</p></div>
     <div class="form-group"><label>이름</label><input type="text" id="login-name" placeholder="홍길동" autocomplete="name"></div>
-    <div class="form-group"><label>사번</label><input type="text" id="login-empid" placeholder="2020016" autocomplete="off"></div>
+    <div class="form-group"><label>사번</label><input type="text" id="login-empid" placeholder="20260000" autocomplete="off"></div>
     <button class="btn btn-primary" onclick="doLogin()">로그인</button>
     <p style="text-align:center;font-size:10px;color:var(--text3);margin-top:14px">계정이 없으면 관리자에게 등록을 요청하세요</p>
   </div>
@@ -910,7 +910,28 @@ function renderTodoItem(t,isDone){
 
 
 async function addTodo(){const input=document.getElementById('todo-input'),content=input.value.trim();if(!content)return;try{await fetch(`${API}/todos`,{method:'POST',headers:H,body:JSON.stringify({employee_id:currentUser.id,content,is_done:false,source:'personal'})});input.value='';loadTodos();}catch(e){showToast('추가 실패','error');}}
-async function toggleTodo(id,wasDone){const now=new Date().toISOString();try{await fetch(`${API}/todos?id=eq.${id}`,{method:'PATCH',headers:H,body:JSON.stringify({is_done:!wasDone,done_at:!wasDone?now:null})});loadTodos();}catch(e){showToast('변경 실패','error');}}
+async function toggleTodo(id,wasDone){
+  const now = new Date().toISOString();
+  const isDone = !wasDone;
+  try{
+    // 현재 항목 업데이트
+    await fetch(API+'/todos?id=eq.'+id,{method:'PATCH',headers:H,body:JSON.stringify({is_done:isDone,done_at:isDone?now:null})});
+    // 원본이면 공유본도 동기화, 공유본이면 원본도 동기화
+    const res = await fetch(API+'/todos?id=eq.'+id+'&select=parent_todo_id',{headers:H});
+    const data = await res.json();
+    if(data&&data.length){
+      const parentId = data[0].parent_todo_id;
+      if(parentId){
+        // 공유본 → 원본 동기화
+        await fetch(API+'/todos?id=eq.'+parentId,{method:'PATCH',headers:H,body:JSON.stringify({is_done:isDone,done_at:isDone?now:null})});
+      } else {
+        // 원본 → 공유본 동기화
+        await fetch(API+'/todos?parent_todo_id=eq.'+id,{method:'PATCH',headers:H,body:JSON.stringify({is_done:isDone,done_at:isDone?now:null})});
+      }
+    }
+    loadTodos();
+  }catch(e){showToast('변경 실패','error');}
+}
 async function deleteTodo(id){try{await fetch(`${API}/todos?id=eq.${id}`,{method:'DELETE',headers:H});loadTodos();}catch(e){showToast('삭제 실패','error');}}
 function toggleDoneSection(){doneSectionOpen=!doneSectionOpen;document.getElementById('todo-done-list').style.display=doneSectionOpen?'block':'none';document.getElementById('done-toggle-icon').textContent=doneSectionOpen?'▲':'▼';}
 
@@ -920,12 +941,21 @@ let selectedAssignees = [];
 let currentTodoData = null;
 
 async function openTodoDetail(id){
-  // DB에서 최신 데이터 가져오기
   let t = null;
   try{
-    const res = await fetch(`${API}/todos?id=eq.${id}&select=*`,{headers:H});
+    const res = await fetch(API+'/todos?id=eq.'+id+'&select=*',{headers:H});
     const data = await res.json();
     if(data&&data.length) t = data[0];
+    // 공유본이면 원본 데이터로 열기 (단, employee_id는 현재 유저 유지)
+    if(t && t.parent_todo_id){
+      const rootRes = await fetch(API+'/todos?id=eq.'+t.parent_todo_id+'&select=*',{headers:H});
+      const rootData = await rootRes.json();
+      if(rootData&&rootData.length){
+        const root = rootData[0];
+        // 원본 내용으로 덮어씌우되 id는 원본 id 사용
+        t = Object.assign({}, root, {_shared_id: id});
+      }
+    }
   }catch(e){}
   if(!t) return;
 
@@ -994,44 +1024,61 @@ function removeClItem(i){
 
 async function saveTodoDetail(){
   const id = document.getElementById('detail-todo-id').value;
-  const content = document.getElementById('detail-content').value.trim();
+  const todoContent = document.getElementById('detail-content').value.trim();
   const dueDate = document.getElementById('detail-due-date').value;
   const note = document.getElementById('detail-note').value.trim();
-  if(!content){showToast('내용을 입력하세요','error');return;}
+  if(!todoContent){showToast('내용을 입력하세요','error');return;}
 
   const assigneeIds = selectedAssignees.join(',');
-  const assigneeNames = selectedAssignees.map(aid=>allEmployees.find(e=>e.id===aid)?.name||'').filter(Boolean).join(', ');
+  const assigneeNames = selectedAssignees.map(function(aid){
+    const e = allEmployees.find(function(e){return e.id===aid;});
+    return e?e.name:'';
+  }).filter(Boolean).join(', ');
 
-  const body = {
-    content,
+  const checklistJson = currentChecklist.length ? JSON.stringify(currentChecklist) : null;
+
+  // 원본 ID 찾기 (공유본이면 parent_todo_id가 원본)
+  const rootId = (currentTodoData.parent_todo_id && currentTodoData.parent_todo_id !== id)
+    ? currentTodoData.parent_todo_id : id;
+
+  const updateBody = {
+    content: todoContent,
     due_date: dueDate||null,
     note: note||null,
-    checklist: currentChecklist.length ? JSON.stringify(currentChecklist) : null,
+    checklist: checklistJson,
     assignee_ids: assigneeIds||null,
     assignee_names: assigneeNames||null
   };
 
   try{
-    await fetch(`${API}/todos?id=eq.${id}`,{method:'PATCH',headers:H,body:JSON.stringify(body)});
+    // 원본 업데이트
+    await fetch(API+'/todos?id=eq.'+rootId, {method:'PATCH',headers:H,body:JSON.stringify(updateBody)});
 
-    // 담당자 연동: 기존 assigned 항목 삭제 후 재생성
-    await fetch(`${API}/todos?parent_todo_id=eq.${id}`,{method:'DELETE',headers:H});
+    // 기존 공유본 삭제 후 재생성
+    await fetch(API+'/todos?parent_todo_id=eq.'+rootId, {method:'DELETE',headers:H});
+
+    // 담당자(본인 제외)에게 공유본 생성
     if(selectedAssignees.length){
-      const myId = currentTodoData.employee_id;
-      const others = selectedAssignees.filter(aid=>aid!==myId);
-      await Promise.all(others.map(aid=>
-        fetch(`${API}/todos`,{method:'POST',headers:H,body:JSON.stringify({
-          employee_id:aid,
-          content,
-          is_done:false,
-          source:'assigned',
-          due_date:dueDate||null,
-          note:note||null,
-          checklist:currentChecklist.length?JSON.stringify(currentChecklist):null,
+      const rootOwner = currentTodoData.parent_todo_id ? null : currentTodoData.employee_id;
+      const sharedRes = await fetch(API+'/todos?id=eq.'+rootId+'&select=employee_id',{headers:H});
+      const sharedData = await sharedRes.json();
+      const ownerId = sharedData.length ? sharedData[0].employee_id : currentUser.id;
+      const others = selectedAssignees.filter(function(aid){ return aid !== ownerId; });
+
+      await Promise.all(others.map(function(aid){
+        return fetch(API+'/todos', {method:'POST', headers:H, body:JSON.stringify({
+          employee_id: aid,
+          content: todoContent,
+          is_done: false,
+          source: 'assigned',
+          due_date: dueDate||null,
+          note: note||null,
+          checklist: checklistJson,
+          assignee_ids: assigneeIds||null,
           assignee_names: assigneeNames||null,
-          parent_todo_id: id
-        })})
-      ));
+          parent_todo_id: rootId
+        })});
+      }));
     }
 
     closeModal('modal-todo-detail');
