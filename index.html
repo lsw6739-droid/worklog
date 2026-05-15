@@ -682,17 +682,39 @@ async function toggleCategory(id,active){
   await loadCategories();
 }
 function renderCategoryList(){
-  fetch(`${API}/categories?order=created_at`,{headers:H}).then(r=>r.json()).then(all=>{
-    document.getElementById('category-list').innerHTML=all.map(c=>`
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);gap:8px">
-        <span style="font-size:13px;flex:1">${c.name} <span class="badge ${c.is_active?'badge-green':'badge-red'}">${c.is_active?'활성':'비활성'}</span></span>
-        <div style="display:flex;gap:6px">
-          <button class="btn btn-secondary btn-sm" onclick="openEditCategory('${c.id}','${c.name}')">수정</button>
-          <button class="btn btn-secondary btn-sm" onclick="toggleCategory('${c.id}',${c.is_active})">${c.is_active?'비활성화':'활성화'}</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteCategory('${c.id}','${c.name}')">삭제</button>
-        </div>
-      </div>`).join('');
-  }).catch(()=>{});
+  fetch(API+'/categories?order=created_at',{headers:H}).then(r=>r.json()).then(function(all){
+    const el = document.getElementById('category-list');
+    const frag = document.createDocumentFragment();
+    all.forEach(function(c){
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);gap:8px';
+      const nameSpan = document.createElement('span');
+      nameSpan.style.cssText = 'font-size:13px;flex:1';
+      nameSpan.innerHTML = c.name + ' <span class="badge ' + (c.is_active?'badge-green':'badge-red') + '">' + (c.is_active?'활성':'비활성') + '</span>';
+      const btnDiv = document.createElement('div');
+      btnDiv.style.cssText = 'display:flex;gap:6px';
+      const editBtn = document.createElement('button');
+      editBtn.className = 'btn btn-secondary btn-sm';
+      editBtn.textContent = '수정';
+      editBtn.onclick = function(){ openEditCategory(c.id, c.name); };
+      const toggleBtn = document.createElement('button');
+      toggleBtn.className = 'btn btn-secondary btn-sm';
+      toggleBtn.textContent = c.is_active ? '비활성화' : '활성화';
+      toggleBtn.onclick = function(){ toggleCategory(c.id, c.is_active); };
+      const delBtn = document.createElement('button');
+      delBtn.className = 'btn btn-danger btn-sm';
+      delBtn.textContent = '삭제';
+      delBtn.onclick = function(){ deleteCategory(c.id, c.name); };
+      btnDiv.appendChild(editBtn);
+      btnDiv.appendChild(toggleBtn);
+      btnDiv.appendChild(delBtn);
+      row.appendChild(nameSpan);
+      row.appendChild(btnDiv);
+      frag.appendChild(row);
+    });
+    el.innerHTML = '';
+    el.appendChild(frag);
+  }).catch(function(){});
 }
 function openEditCategory(id,name){const n=prompt('분류명 수정',name);if(!n||n.trim()===name)return;fetch(`${API}/categories?id=eq.${id}`,{method:'PATCH',headers:H,body:JSON.stringify({name:n.trim()})}).then(()=>{loadCategories();showToast('수정됨','success');});}
 async function deleteCategory(id,name){if(!confirm(`'${name}' 삭제할까요?\n연결된 일지가 있으면 비활성화를 이용하세요.`))return;try{await fetch(`${API}/categories?id=eq.${id}`,{method:'DELETE',headers:H});await loadCategories();showToast(`'${name}' 삭제됨`,'success');}catch(e){showToast('삭제 실패 - 비활성화를 이용하세요','error');}}
@@ -1146,19 +1168,49 @@ async function loadNoticeHistory(){
     const cutoff=new Date(Date.now()-24*60*60*1000);
     const recent=notices.filter(n=>new Date(n.created_at)>cutoff);
     if(!recent.length){el.innerHTML='<div class="empty"><div class="empty-icon">📢</div><p>최근 24시간 내 발송된 공지가 없습니다</p></div>';return;}
-    el.innerHTML=recent.map(n=>{
-      const d=document.createElement('div');
-      d.className='notice-item';
-      d.style.position='relative';
-      d.innerHTML='<div style="position:absolute;top:8px;right:8px;display:flex;gap:6px">'
-        +'<button data-nid="'+n.id+'" onclick="editNotice(this.dataset.nid)" style="background:rgba(0,194,255,.15);border:1px solid rgba(0,194,255,.3);color:var(--accent);border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer;font-family:inherit">수정</button>'
-        +'<button data-nid="'+n.id+'" onclick="deleteNotice(this.dataset.nid)" style="background:rgba(255,71,87,.15);border:1px solid rgba(255,71,87,.3);color:var(--danger);border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer;font-family:inherit">삭제</button>'
-        +'</div>'
-        +'<div class="notice-title" style="padding-right:80px">'+n.title+'</div>'
-        +'<div class="notice-body">'+n.body+'</div>'
-        +'<div class="notice-meta">'+new Date(n.created_at).toLocaleString('ko-KR')+'</div>';
-      return d.outerHTML;
-    }).join('');
+    const frag = document.createDocumentFragment();
+    recent.forEach(function(n){
+      const wrap = document.createElement('div');
+      wrap.className = 'notice-item';
+      wrap.style.position = 'relative';
+
+      const btnWrap = document.createElement('div');
+      btnWrap.style.cssText = 'position:absolute;top:8px;right:8px;display:flex;gap:6px';
+
+      const editBtn = document.createElement('button');
+      editBtn.textContent = '수정';
+      editBtn.style.cssText = 'background:rgba(0,194,255,.15);border:1px solid rgba(0,194,255,.3);color:var(--accent);border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer;font-family:inherit';
+      editBtn.onclick = function(){ editNotice(n.id); };
+
+      const delBtn = document.createElement('button');
+      delBtn.textContent = '삭제';
+      delBtn.style.cssText = 'background:rgba(255,71,87,.15);border:1px solid rgba(255,71,87,.3);color:var(--danger);border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer;font-family:inherit';
+      delBtn.onclick = function(){ deleteNotice(n.id); };
+
+      btnWrap.appendChild(editBtn);
+      btnWrap.appendChild(delBtn);
+
+      const title = document.createElement('div');
+      title.className = 'notice-title';
+      title.style.paddingRight = '80px';
+      title.textContent = n.title;
+
+      const body = document.createElement('div');
+      body.className = 'notice-body';
+      body.textContent = n.body;
+
+      const meta = document.createElement('div');
+      meta.className = 'notice-meta';
+      meta.textContent = new Date(n.created_at).toLocaleString('ko-KR');
+
+      wrap.appendChild(btnWrap);
+      wrap.appendChild(title);
+      wrap.appendChild(body);
+      wrap.appendChild(meta);
+      frag.appendChild(wrap);
+    });
+    el.innerHTML = '';
+    el.appendChild(frag);
   }catch(e){}
 }
 
@@ -1183,8 +1235,7 @@ async function editNotice(id){
 }
 
 async function deleteNotice(id){
-  if(!confirm('공지를 삭제할까요?
-팀원 To-do에서도 삭제됩니다.'))return;
+  if(!confirm('공지를 삭제할까요? 팀원 To-do에서도 삭제됩니다.'))return;
   try{
     // 공지 삭제
     await fetch(API+'/notices?id=eq.'+id,{method:'DELETE',headers:H});
