@@ -563,6 +563,7 @@ create policy "allow_all" on attends for all using (true);</pre>
   <div class="modal">
     <div class="modal-title">✏️ 일지 수정</div>
     <input type="hidden" id="edit-log-id">
+    <input type="hidden" id="edit-log-date">
     <div class="form-group"><label>업무 분류</label><select id="edit-log-category"></select></div>
     <div class="form-group"><label>업무 내용</label><textarea id="edit-log-content"></textarea></div>
     <div class="input-row">
@@ -780,6 +781,8 @@ async function submitLog(){
   const note=document.getElementById('log-note').value.trim();
   if(!date||!catId||!content||!startTime||!endTime){showToast('날짜·분류·내용·시간은 필수','error');return;}
   if(!hours||hours<=0){showToast('종료시간이 시작시간보다 빨라요','error');return;}
+  const ovlp=await checkTimeOverlap(date,startTime,endTime);
+  if(ovlp.overlap){showToast(`⚠️ ${ovlp.conflictTime} 일지와 시간이 겹칩니다`,'error');return;}
   try{
     await fetch(`${API}/work_logs`,{method:'POST',headers:H,body:JSON.stringify({employee_id:currentUser.id,category_id:catId,log_date:date,content,hours,note:note||null,start_time:startTime,end_time:endTime})});
     ['log-content','log-note','log-start-time','log-end-time'].forEach(id=>document.getElementById(id).value='');
@@ -797,7 +800,8 @@ async function loadDateLogs(){
     const logs=await res.json();
     const totalH=logs.reduce((s,l)=>s+Number(l.hours),0);
     const header=logs.length?`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:8px 12px;background:var(--surface2);border-radius:8px"><span style="font-size:12px;color:var(--text2)">${date} · ${logs.length}건</span><span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent2)">${totalH.toFixed(1)}h</span></div>`:'';
-    const tmp=document.createElement('div');renderLogList(tmp,logs,true);el.innerHTML=header+tmp.innerHTML;
+    el.innerHTML=header+'<div id="date-log-list"></div>';
+    renderLogList(document.getElementById('date-log-list'),logs,true);
   }catch(e){el.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><p>Supabase 설정 후 사용 가능</p></div>';}
 }
 async function loadMyLogs(){
@@ -818,20 +822,84 @@ async function loadMyLogs(){
     renderLogList(document.getElementById('my-log-table'),logs,true);
   }catch(e){document.getElementById('my-log-table').innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><p>Supabase 연결 필요</p></div>';}
 }
+// ─── LOG 정렬 ───
+const _logSort={}, _logCache={};
+function _logVal(l,col){
+  if(col==='log_date')  return l.log_date||'';
+  if(col==='category')  return l.categories?.name||'';
+  if(col==='hours')     return Number(l.hours)||0;
+  if(col==='start_time')return l.start_time||'';
+  return '';
+}
+function _sortedLogs(logs,col,dir){
+  return [...logs].sort(function(a,b){
+    const va=_logVal(a,col),vb=_logVal(b,col);
+    if(typeof va==='number') return dir==='asc'?va-vb:vb-va;
+    return dir==='asc'?String(va).localeCompare(String(vb)):String(vb).localeCompare(String(va));
+  });
+}
+function _thLog(label,col,elId){
+  const s=_logSort[elId]||{col:'log_date',dir:'desc'};
+  const icon=s.col===col?(s.dir==='asc'?'▲':'▼'):'⇅';
+  const clr=s.col===col?'var(--accent)':'var(--text3)';
+  return `<th style="cursor:pointer;user-select:none;white-space:nowrap" onclick="clickLogSort('${elId}','${col}')">${label}&thinsp;<span style="font-size:9px;color:${clr}">${icon}</span></th>`;
+}
+function clickLogSort(elId,col){
+  const s=_logSort[elId]||{col:'log_date',dir:'desc'};
+  _logSort[elId]=s.col===col?{col,dir:s.dir==='asc'?'desc':'asc'}:{col,dir:'asc'};
+  const c=_logCache[elId];
+  if(c) renderLogList(document.getElementById(elId),c.logs,c.editable);
+}
 function renderLogList(el,logs,editable){
   if(!logs||!logs.length){el.innerHTML='<div class="empty"><div class="empty-icon">📭</div><p>업무일지가 없습니다</p></div>';return;}
-  el.innerHTML=`<table><thead><tr><th>날짜</th><th>분류</th><th>업무내용</th><th>시간</th><th>공수</th>${editable?'<th></th>':''}</tr></thead><tbody>
-  ${logs.map(l=>`<tr>
+  const id=el.id||'';
+  if(id) _logCache[id]={logs,editable};
+  const s=_logSort[id]||{col:'log_date',dir:'desc'};
+  if(id&&!_logSort[id]) _logSort[id]=s;
+  const rows=_sortedLogs(logs,s.col,s.dir);
+  el.innerHTML=`<table><thead><tr>
+    ${_thLog('날짜','log_date',id)}
+    ${_thLog('분류','category',id)}
+    <th>업무내용</th>
+    ${_thLog('시간','start_time',id)}
+    ${_thLog('공수','hours',id)}
+    ${editable?'<th></th>':''}
+  </tr></thead><tbody>
+  ${rows.map(l=>`<tr>
     <td style="white-space:nowrap;font-size:11px">${l.log_date}</td>
     <td><span class="badge badge-blue">${l.categories?.name||'-'}</span></td>
     <td style="max-width:180px;word-break:break-all;font-size:11px">${l.content}</td>
     <td style="font-size:11px;color:var(--text2);white-space:nowrap">${l.start_time||'-'}~${l.end_time||'-'}</td>
     <td style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent2)">${Number(l.hours).toFixed(1)}h</td>
-    ${editable?`<td style="white-space:nowrap"><button class="btn btn-secondary btn-sm" onclick="openEditLog('${l.id}','${l.category_id}',\`${l.content.replace(/`/g,"'")}\`,${l.hours},'${l.note||''}','${l.start_time||''}','${l.end_time||''}')">수정</button> <button class="btn btn-danger btn-sm" onclick="deleteLog('${l.id}')">삭제</button></td>`:''}
-  </tr>`).join('')}</tbody></table>`;
+    ${editable?`<td style="white-space:nowrap"><button class="btn btn-secondary btn-sm" onclick="openEditLog('${l.id}','${l.category_id}',\`${l.content.replace(/`/g,"'")}\`,${l.hours},'${l.note||''}','${l.start_time||''}','${l.end_time||''}','${l.log_date}')">수정</button> <button class="btn btn-danger btn-sm" onclick="deleteLog('${l.id}')">삭제</button></td>`:''}
+  </tr>`).join('')}
+  </tbody></table>`;
 }
-function openEditLog(id,catId,content,hours,note,startTime,endTime){
-  document.getElementById('edit-log-id').value=id;document.getElementById('edit-log-category').value=catId;
+
+// ─── 시간 중복 체크 ───
+async function checkTimeOverlap(date,startTime,endTime,excludeId){
+  if(!startTime||!endTime||!startTime.includes(':')||!endTime.includes(':')) return{overlap:false};
+  try{
+    const res=await fetch(`${API}/work_logs?employee_id=eq.${currentUser.id}&log_date=eq.${date}&select=id,start_time,end_time`,{headers:H});
+    const existing=await res.json();
+    const[sh,sm]=startTime.split(':').map(Number);
+    const[eh,em]=endTime.split(':').map(Number);
+    const ns=sh*60+sm, ne=eh*60+em;
+    for(const l of existing){
+      if(excludeId&&l.id===excludeId) continue;
+      if(!l.start_time||!l.end_time) continue;
+      const[ls,lsm]=l.start_time.split(':').map(Number);
+      const[le,lem]=l.end_time.split(':').map(Number);
+      if(ns<le*60+lem&&ne>ls*60+lsm) return{overlap:true,conflictTime:`${l.start_time}~${l.end_time}`};
+    }
+    return{overlap:false};
+  }catch(e){return{overlap:false};}
+}
+
+function openEditLog(id,catId,content,hours,note,startTime,endTime,logDate){
+  document.getElementById('edit-log-id').value=id;
+  document.getElementById('edit-log-date').value=logDate||'';
+  document.getElementById('edit-log-category').value=catId;
   document.getElementById('edit-log-content').value=content;document.getElementById('edit-log-hours').value=hours;
   document.getElementById('edit-log-note').value=note||'';document.getElementById('edit-log-start-time').value=startTime||'';
   document.getElementById('edit-log-end-time').value=endTime||'';document.getElementById('edit-calc-hours-display').textContent=hours?hours+'h':'-';
@@ -843,7 +911,12 @@ async function updateLog(){
   const startTime=document.getElementById('edit-log-start-time').value,endTime=document.getElementById('edit-log-end-time').value;
   const hours=parseFloat(document.getElementById('edit-log-hours').value);
   const note=document.getElementById('edit-log-note').value.trim();
+  const logDate=document.getElementById('edit-log-date').value;
   if(!catId||!content||!hours){showToast('필수 항목 입력','error');return;}
+  if(logDate&&startTime&&endTime){
+    const ovlp=await checkTimeOverlap(logDate,startTime,endTime,id);
+    if(ovlp.overlap){showToast(`⚠️ ${ovlp.conflictTime} 일지와 시간이 겹칩니다`,'error');return;}
+  }
   try{
     await fetch(`${API}/work_logs?id=eq.${id}`,{method:'PATCH',headers:H,body:JSON.stringify({category_id:catId,content,hours,note:note||null,start_time:startTime||null,end_time:endTime||null})});
     closeModal('modal-edit-log');showToast('수정됨','success');loadDateLogs();loadMyLogs();
@@ -1535,18 +1608,45 @@ async function submitAttend(){
     showToast(`근태 등록됨 (${excludeH}h 제외)`,'success');loadMyAttends();
   }catch(e){showToast('등록 실패','error');}
 }
+// 근태 정렬 상태
+let _myAttendData=[], _myAttendSort={col:'start_date',dir:'desc'};
+
+function renderMyAttendTable(data){
+  if(data) _myAttendData=data;
+  const el=document.getElementById('my-attend-list');
+  if(!_myAttendData||!_myAttendData.length){el.innerHTML='<div class="empty"><div class="empty-icon">🏖️</div><p>등록된 근태가 없습니다</p></div>';return;}
+  const sorted=[..._myAttendData].sort(function(a,b){
+    const va=a[_myAttendSort.col]??'', vb=b[_myAttendSort.col]??'';
+    const na=Number(va), nb=Number(vb);
+    if(!isNaN(na)&&!isNaN(nb)) return _myAttendSort.dir==='asc'?na-nb:nb-na;
+    return _myAttendSort.dir==='asc'?String(va).localeCompare(String(vb)):String(vb).localeCompare(String(va));
+  });
+  function th(label,col){
+    const icon=_myAttendSort.col===col?(_myAttendSort.dir==='asc'?'▲':'▼'):'⇅';
+    const clr=_myAttendSort.col===col?'var(--accent)':'var(--text3)';
+    return `<th style="cursor:pointer;user-select:none;white-space:nowrap" onclick="sortMyAttend('${col}')">${label}&thinsp;<span style="font-size:9px;color:${clr}">${icon}</span></th>`;
+  }
+  el.innerHTML=`<table><thead><tr>
+    ${th('시작일','start_date')}${th('종료일','end_date')}${th('유형','attend_type')}${th('제외(h)','exclude_hours')}<th>비고</th><th></th>
+  </tr></thead><tbody>
+    ${sorted.map(a=>`<tr>
+      <td>${a.start_date}</td><td>${a.end_date}</td>
+      <td><span class="attend-${a.attend_type}">${ATTEND_LABELS[a.attend_type]||a.attend_type}</span></td>
+      <td style="font-family:'JetBrains Mono',monospace;color:var(--warn)">${a.exclude_hours}h</td>
+      <td style="font-size:11px;color:var(--text2)">${a.note||''}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteAttend('${a.id}')">삭제</button></td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
+function sortMyAttend(col){
+  _myAttendSort=_myAttendSort.col===col?{col,dir:_myAttendSort.dir==='asc'?'desc':'asc'}:{col,dir:'asc'};
+  renderMyAttendTable();
+}
 async function loadMyAttends(){
   try{
     const res=await fetch(`${API}/attends?employee_id=eq.${currentUser.id}&order=start_date.desc&limit=20`,{headers:H});
-    const attends=await res.json();const el=document.getElementById('my-attend-list');
-    if(!attends||!attends.length){el.innerHTML='<div class="empty"><div class="empty-icon">🏖️</div><p>등록된 근태가 없습니다</p></div>';return;}
-    el.innerHTML=`<table><thead><tr><th>시작일</th><th>종료일</th><th>유형</th><th>제외(h)</th><th>비고</th><th></th></tr></thead><tbody>
-      ${attends.map(a=>`<tr><td>${a.start_date}</td><td>${a.end_date}</td>
-        <td><span class="attend-${a.attend_type}">${ATTEND_LABELS[a.attend_type]||a.attend_type}</span></td>
-        <td style="font-family:'JetBrains Mono',monospace;color:var(--warn)">${a.exclude_hours}h</td>
-        <td style="font-size:11px;color:var(--text2)">${a.note||''}</td>
-        <td><button class="btn btn-danger btn-sm" onclick="deleteAttend('${a.id}')">삭제</button></td>
-      </tr>`).join('')}</tbody></table>`;
+    const attends=await res.json();
+    renderMyAttendTable(attends);
   }catch(e){document.getElementById('my-attend-list').innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><p>Supabase 연결 필요</p></div>';}
 }
 async function deleteAttend(id){if(!confirm('근태를 삭제할까요?'))return;try{await fetch(`${API}/attends?id=eq.${id}`,{method:'DELETE',headers:H});showToast('삭제됨','success');loadMyAttends();}catch(e){showToast('삭제 실패','error');}}
@@ -1564,20 +1664,12 @@ async function loadTeamStats(){
     const byM={};
     logs.forEach(l=>{const k=l.employee_id;if(!byM[k])byM[k]={name:l.employees?.name,empId:l.employees?.emp_id,hours:0,cnt:0,excludeH:0};byM[k].hours+=Number(l.hours);byM[k].cnt++;});
     attends.forEach(a=>{if(byM[a.employee_id])byM[a.employee_id].excludeH+=Number(a.exclude_hours||0);});
-    const maxH=Math.max(...Object.values(byM).map(v=>v.hours),1);
-    document.getElementById('team-member-stats').innerHTML=Object.values(byM).sort((a,b)=>b.hours-a.hours).map(v=>`
-      <div style="margin-bottom:14px">
-        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-          <span style="font-size:13px">${v.name} <span style="color:var(--text3);font-size:11px">${v.empId}</span></span>
-          <span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent2)">${v.hours.toFixed(1)}h${v.excludeH>0?`<span style="font-size:10px;color:var(--warn)"> (근태-${v.excludeH}h)</span>`:''}</span>
-        </div>
-        <div class="progress-bar"><div class="progress-fill" style="width:${(v.hours/maxH*100).toFixed(0)}%"></div></div>
-        <div style="font-size:10px;color:var(--text3);margin-top:3px">${v.cnt}건</div>
-      </div>`).join('')||'<div class="empty"><div class="empty-icon">📭</div><p>데이터 없음</p></div>';
+    _tmData=Object.values(byM); _tmSort={col:'hours',dir:'desc'};
+    renderTeamMemberStats();
     const byCat={};logs.forEach(l=>{const k=l.categories?.name||'미분류';byCat[k]=(byCat[k]||0)+Number(l.hours);});
     document.getElementById('team-category-stats').innerHTML=`<div class="chip-row">${Object.entries(byCat).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="chip">${k}: <strong>${v.toFixed(1)}h</strong></div>`).join('')}</div>${Object.entries(byCat).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:11px;color:var(--text2);width:72px">${k}</span><div style="flex:1"><div class="progress-bar"><div class="progress-fill" style="width:${totalH>0?(v/totalH*100).toFixed(0):0}%"></div></div></div><span style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--accent2);width:40px;text-align:right">${v.toFixed(1)}h</span></div>`).join('')}`;
-    if(!attends||!attends.length)document.getElementById('team-attend-stats').innerHTML='<div class="empty"><div class="empty-icon">🏖️</div><p>이번 달 근태 없음</p></div>';
-    else document.getElementById('team-attend-stats').innerHTML=`<table><thead><tr><th>이름</th><th>유형</th><th>시작일</th><th>종료일</th><th>제외(h)</th><th>비고</th></tr></thead><tbody>${attends.map(a=>`<tr><td>${a.employees?.name||'-'}</td><td><span class="attend-${a.attend_type}">${ATTEND_LABELS[a.attend_type]||a.attend_type}</span></td><td>${a.start_date}</td><td>${a.end_date}</td><td style="color:var(--warn)">${a.exclude_hours}h</td><td style="font-size:11px;color:var(--text2)">${a.note||''}</td></tr>`).join('')}</tbody></table>`;
+    _teamAttendData=attends||[]; _teamAttendSort={col:'start_date',dir:'desc'};
+    renderTeamAttendStats();
     renderLogList(document.getElementById('team-log-table'),logs,false);
   }catch(e){document.getElementById('team-log-table').innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><p>Supabase 연결 필요</p></div>';}
 }
@@ -1649,6 +1741,72 @@ async function loadUsers(){
 function renderUserTable(){const el=document.getElementById('user-list-table');if(!allEmployees.length){el.innerHTML='<div class="empty"><div class="empty-icon">👥</div><p>직원이 없습니다</p></div>';return;}el.innerHTML=`<table><thead><tr><th>이름</th><th>사번</th><th>권한</th><th></th></tr></thead><tbody>${allEmployees.map(e=>`<tr><td>${e.name}</td><td style="font-family:'JetBrains Mono',monospace;font-size:11px">${e.emp_id}</td><td><span class="badge ${e.is_admin?'badge-blue':'badge-green'}">${e.is_admin?'관리자':'직원'}</span></td><td>${e.id!==currentUser.id?`<button class="btn btn-secondary btn-sm" onclick="toggleAdmin('${e.id}',${e.is_admin})">${e.is_admin?'권한해제':'관리자부여'}</button>`:'<span style="color:var(--text3);font-size:11px">본인</span>'}</td></tr>`).join('')}</tbody></table>`;}
 async function addUser(){const name=document.getElementById('new-user-name').value.trim(),empId=document.getElementById('new-user-empid').value.trim();const isAdmin=document.getElementById('new-user-admin').value==='true';if(!name||!empId){showToast('이름과 사번을 입력하세요','error');return;}try{await fetch(`${API}/employees`,{method:'POST',headers:H,body:JSON.stringify({name,emp_id:empId,is_admin:isAdmin})});closeModal('modal-add-user');document.getElementById('new-user-name').value='';document.getElementById('new-user-empid').value='';await loadUsers();showToast(`${name} 추가됨`,'success');}catch(e){showToast('추가 실패 (사번 중복 확인)','error');}}
 async function toggleAdmin(id,isAdmin){try{await fetch(`${API}/employees?id=eq.${id}`,{method:'PATCH',headers:H,body:JSON.stringify({is_admin:!isAdmin})});await loadUsers();showToast('권한 변경됨','success');}catch(e){showToast('변경 실패','error');}}
+
+// ─── 팀원별 공수 정렬 ───
+let _tmData=[], _tmSort={col:'hours',dir:'desc'};
+function renderTeamMemberStats(){
+  const el=document.getElementById('team-member-stats');
+  if(!_tmData.length){el.innerHTML='<div class="empty"><div class="empty-icon">📭</div><p>데이터 없음</p></div>';return;}
+  const sorted=[..._tmData].sort(function(a,b){
+    if(_tmSort.col==='hours') return _tmSort.dir==='asc'?a.hours-b.hours:b.hours-a.hours;
+    return _tmSort.dir==='asc'?a.name.localeCompare(b.name):b.name.localeCompare(a.name);
+  });
+  const maxH=Math.max(...sorted.map(v=>v.hours),1);
+  function th(label,col){
+    const icon=_tmSort.col===col?(_tmSort.dir==='asc'?'▲':'▼'):'⇅';
+    const clr=_tmSort.col===col?'var(--accent)':'var(--text3)';
+    return `<span style="cursor:pointer;font-size:10px;font-weight:700;color:var(--text2);border:1px solid var(--border);border-radius:6px;padding:2px 8px;margin-right:4px;background:var(--surface2)" onclick="sortTeamMember('${col}')">${label}&thinsp;<span style="font-size:9px;color:${clr}">${icon}</span></span>`;
+  }
+  el.innerHTML=`<div style="margin-bottom:10px;display:flex;align-items:center;gap:4px">
+    <span style="font-size:10px;color:var(--text3);margin-right:4px">정렬:</span>
+    ${th('공수순','hours')}${th('이름순','name')}
+  </div>`+sorted.map(v=>`
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+        <span style="font-size:13px">${v.name} <span style="color:var(--text3);font-size:11px">${v.empId}</span></span>
+        <span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent2)">${v.hours.toFixed(1)}h${v.excludeH>0?`<span style="font-size:10px;color:var(--warn)"> (근태-${v.excludeH}h)</span>`:''}</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${(v.hours/maxH*100).toFixed(0)}%"></div></div>
+      <div style="font-size:10px;color:var(--text3);margin-top:3px">${v.cnt}건</div>
+    </div>`).join('');
+}
+function sortTeamMember(col){
+  _tmSort=_tmSort.col===col?{col,dir:_tmSort.dir==='asc'?'desc':'asc'}:{col,dir:'asc'};
+  renderTeamMemberStats();
+}
+
+// ─── 팀 근태 현황 정렬 ───
+let _teamAttendData=[], _teamAttendSort={col:'start_date',dir:'desc'};
+function renderTeamAttendStats(){
+  const el=document.getElementById('team-attend-stats');
+  if(!_teamAttendData||!_teamAttendData.length){el.innerHTML='<div class="empty"><div class="empty-icon">🏖️</div><p>이번 달 근태 없음</p></div>';return;}
+  const sorted=[..._teamAttendData].sort(function(a,b){
+    const va=a[_teamAttendSort.col]??'', vb=b[_teamAttendSort.col]??'';
+    const na=Number(va),nb=Number(vb);
+    if(!isNaN(na)&&!isNaN(nb)) return _teamAttendSort.dir==='asc'?na-nb:nb-na;
+    return _teamAttendSort.dir==='asc'?String(va).localeCompare(String(vb)):String(vb).localeCompare(String(va));
+  });
+  function th(label,col){
+    const icon=_teamAttendSort.col===col?(_teamAttendSort.dir==='asc'?'▲':'▼'):'⇅';
+    const clr=_teamAttendSort.col===col?'var(--accent)':'var(--text3)';
+    return `<th style="cursor:pointer;user-select:none;white-space:nowrap" onclick="sortTeamAttend('${col}')">${label}&thinsp;<span style="font-size:9px;color:${clr}">${icon}</span></th>`;
+  }
+  el.innerHTML=`<table><thead><tr>
+    ${th('이름','name')}${th('유형','attend_type')}${th('시작일','start_date')}${th('종료일','end_date')}${th('제외(h)','exclude_hours')}<th>비고</th>
+  </tr></thead><tbody>
+    ${sorted.map(a=>`<tr>
+      <td>${a.employees?.name||'-'}</td>
+      <td><span class="attend-${a.attend_type}">${ATTEND_LABELS[a.attend_type]||a.attend_type}</span></td>
+      <td>${a.start_date}</td><td>${a.end_date}</td>
+      <td style="color:var(--warn)">${a.exclude_hours}h</td>
+      <td style="font-size:11px;color:var(--text2)">${a.note||''}</td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
+function sortTeamAttend(col){
+  _teamAttendSort=_teamAttendSort.col===col?{col,dir:_teamAttendSort.dir==='asc'?'desc':'asc'}:{col,dir:'asc'};
+  renderTeamAttendStats();
+}
 
 // KANBAN SCROLL
 function scrollKanban(dir){
