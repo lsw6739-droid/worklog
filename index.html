@@ -657,6 +657,9 @@ async function initApp(){
     loadUsers(); // 관리자 탭용 (권한 변경 기능 포함)
     loadGoals();loadNoticeHistory();
   }
+
+  // 30초마다 새 공지 확인 (폴링)
+  startNoticePolling();
 }
 
 function switchPage(p){
@@ -1118,12 +1121,45 @@ async function loadTeamTodos(){
 }
 
 // NOTICE
+let lastNoticeId = null;
+let noticePollingTimer = null;
+
+function startNoticePolling(){
+  // 30초마다 새 공지 확인
+  noticePollingTimer = setInterval(async function(){
+    try{
+      const res = await fetch(API+'/notices?order=created_at.desc&limit=1&select=id,title,body,created_at',{headers:H});
+      const notices = await res.json();
+      if(!notices||!notices.length) return;
+      const n = notices[0];
+      // 새 공지가 있고 아직 안 본 경우
+      if(lastNoticeId && n.id !== lastNoticeId){
+        const skipKey = 'notice_skip_'+n.id+'_'+new Date().toDateString();
+        if(!localStorage.getItem(skipKey)){
+          document.getElementById('notice-popup-content').innerHTML =
+            '<div style="background:var(--surface2);border-radius:10px;padding:16px;margin-bottom:4px">'
+            +'<div style="font-size:15px;font-weight:700;margin-bottom:10px">'+n.title+'</div>'
+            +'<div style="font-size:13px;color:var(--text2);line-height:1.7">'+n.body+'</div>'
+            +'<div style="font-size:10px;color:var(--text3);margin-top:10px">'+new Date(n.created_at).toLocaleDateString('ko-KR')+'</div>'
+            +'</div>';
+          document.getElementById('modal-notice-popup').dataset.noticeId = n.id;
+          openModal('modal-notice-popup');
+          // To-do도 새로고침
+          loadTodos();
+        }
+      }
+      lastNoticeId = n.id;
+    }catch(e){}
+  }, 30000);
+}
+
 async function loadNoticeBanner(){
   try{
     const res=await fetch(`${API}/notices?order=created_at.desc&limit=1`,{headers:H});
     const notices=await res.json();if(!notices||!notices.length)return;
     const n=notices[0];
     // 팝업만 표시 (오늘 안 본 공지만)
+    lastNoticeId = n.id; // 초기 공지 ID 저장
     const skipKey=`notice_skip_${n.id}_${new Date().toDateString()}`;
     if(!localStorage.getItem(skipKey)){
       document.getElementById('notice-popup-content').innerHTML=`
