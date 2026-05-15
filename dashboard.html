@@ -316,8 +316,60 @@ let filters = { members: [], categories: [], diff: 'all' };
 let charts = {};
 let radarSelected = [];
 
+// 근태 상수
+const ATTEND_HOURS_DAILY = {annual:8, half:4, quarter:2, other:0};
+const ATTEND_LABELS_DB   = {annual:'연차', half:'반차', quarter:'반반차', other:'기타근태'};
+
+// 근태 레코드 → 가상 work_log 배열로 변환
+function attendToLogs(attends, employees, periodStart, periodEnd){
+  const empMap = {};
+  employees.forEach(function(e){ empMap[e.id] = e; });
+  const logs = [];
+  const pStart = new Date(periodStart + 'T00:00:00');
+  const pEnd   = new Date(periodEnd   + 'T00:00:00');
+
+  attends.forEach(function(a){
+    const emp = empMap[a.employee_id];
+    if(!emp) return;
+    const dailyH = ATTEND_HOURS_DAILY[a.attend_type] || 0;
+    if(!dailyH) return; // 기타(0h)는 제외
+
+    let d = new Date(a.start_date + 'T00:00:00');
+    const endD = new Date(a.end_date + 'T00:00:00');
+
+    while(d <= endD){
+      if(d >= pStart && d <= pEnd){
+        const dw = d.getDay();
+        if(dw !== 0 && dw !== 6){ // 주말 제외
+          const dateStr = d.toISOString().split('T')[0];
+          logs.push({
+            id: 'attend-'+a.id+'-'+dateStr,
+            employee_id: a.employee_id,
+            category_id: 'attend-virtual',
+            log_date: dateStr,
+            hours: dailyH,
+            plan_hours: dailyH,
+            difficulty: 'low',
+            content: ATTEND_LABELS_DB[a.attend_type] || '근태',
+            categories: {name:'근태'},
+            employees: {name:emp.name, emp_id:emp.emp_id}
+          });
+        }
+      }
+      d.setDate(d.getDate() + 1);
+    }
+  });
+  return logs;
+}
+
 const COLORS = ['#00d4ff','#00ff9d','#7c3aed','#ff6b9d','#ffa502','#ff4757','#00b4d8','#06d6a0','#f72585','#4cc9f0'];
 const DIFF_COLORS = { low:'#00ff9d', mid:'#ffa502', high:'#ff4757' };
+const ATTEND_COLOR = '#a78bfa'; // 근태 전용 색상 (보라)
+
+// 카테고리명으로 색상 반환 (근태는 고정색)
+function getCatColor(catName, idx){
+  return catName === '근태' ? ATTEND_COLOR : COLORS[idx % COLORS.length];
+}
 
 // ─── INIT ───
 window.addEventListener('load', async () => {
@@ -352,17 +404,29 @@ async function loadData() {
   document.querySelector('.db-main').style.opacity = '0.5';
 
   try {
-    const [logsRes, empRes, catRes, goalRes] = await Promise.all([
+    const [logsRes, empRes, catRes, goalRes, attendRes] = await Promise.all([
       fetch(`${API}/work_logs?log_date=gte.${start}&log_date=lte.${end}&select=*,categories(name),employees(name,emp_id)&order=log_date`, {headers:H}),
       fetch(`${API}/employees?order=name`, {headers:H}),
       fetch(`${API}/categories?is_active=eq.true&order=name`, {headers:H}),
-      fetch(`${API}/month_goals?month=eq.${month}&select=*`, {headers:H})
+      fetch(`${API}/month_goals?month=eq.${month}&select=*`, {headers:H}),
+      fetch(`${API}/attends?start_date=lte.${end}&end_date=gte.${start}&select=*`, {headers:H})
     ]);
     allLogs = await logsRes.json();
     allEmployees = await empRes.json();
     allCategories = await catRes.json();
     const goals = await goalRes.json();
+    const attends = await attendRes.json();
     monthGoal = goals&&goals.length ? Number(goals[0].target_hours) : 160;
+
+    // 근태 가상 카테고리 추가
+    if(!allCategories.find(function(c){ return c.id==='attend-virtual'; })){
+      allCategories.push({id:'attend-virtual', name:'근태', is_active:true});
+    }
+    // 근태를 공수에 포함
+    if(attends && attends.length){
+      const attendLogs = attendToLogs(attends, allEmployees, start, end);
+      allLogs = allLogs.concat(attendLogs);
+    }
   } catch(e) {
     // DEMO DATA
     allEmployees = [{id:'e1',name:'이상우',emp_id:'2020016'},{id:'e2',name:'유태규',emp_id:'E002'},{id:'e3',name:'김형성',emp_id:'E003'},{id:'e4',name:'김경원',emp_id:'E004'},{id:'e5',name:'김동호',emp_id:'E005'},{id:'e6',name:'이주명',emp_id:'E006'}];
@@ -564,12 +628,13 @@ function renderPieChart(logs) {
   logs.forEach(l => { const k=l.categories?.name||'기타'; byCat[k]=(byCat[k]||0)+Number(l.hours); });
   const sorted = Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
 
+  const pieColors = sorted.map(function(x,i){ return getCatColor(x[0],i); });
   destroyChart('chart-pie');
   charts['chart-pie'] = new Chart(document.getElementById('chart-pie'), {
     type:'doughnut',
     data:{
       labels:sorted.map(x=>x[0]),
-      datasets:[{data:sorted.map(x=>x[1]),backgroundColor:COLORS.map(c=>c+'cc'),borderColor:COLORS,borderWidth:2,hoverOffset:8}]
+      datasets:[{data:sorted.map(x=>x[1]),backgroundColor:pieColors.map(c=>c+'cc'),borderColor:pieColors,borderWidth:2,hoverOffset:8}]
     },
     options:{
       responsive:true, maintainAspectRatio:true,
@@ -778,10 +843,24 @@ function renderHeatmap(logs) {
 }
 
 function handleHeatmapClick(date) {
-  // 날짜 클릭 시 해당 날짜 로그만 표시
   const dayLogs = allLogs.filter(l=>l.log_date===date);
   if(!dayLogs.length) return;
-  showTooltip(`${date}\n${dayLogs.length}건 / ${dayLogs.reduce((s,l)=>s+Number(l.hours),0).toFixed(1)}h`);
+  const total = dayLogs.reduce((s,l)=>s+Number(l.hours),0);
+  const memberNames = [...new Set(dayLogs.map(l=>l.employees?.name).filter(Boolean))].join(', ');
+  const catNames = [...new Set(dayLogs.map(l=>l.categories?.name).filter(Boolean))].join(', ');
+
+  // 해당 날짜 멤버로 필터 적용
+  const memberIds = [...new Set(dayLogs.map(l=>l.employee_id))];
+  filters.members = memberIds;
+  document.querySelectorAll('[id^="m-"]').forEach(function(el){ el.classList.remove('active-member'); });
+  memberIds.forEach(function(id){
+    const el = document.getElementById('m-'+id);
+    if(el) el.classList.add('active-member');
+  });
+  updateActiveFilterBar();
+  applyFilters();
+
+  showTooltip('📅 '+date+'\n'+dayLogs.length+'건 · '+total.toFixed(1)+'h\n👤 '+memberNames+'\n🏷 '+catNames);
 }
 
 // ─── THIS WEEK WIDGET ───

@@ -117,6 +117,8 @@ tr:hover td{background:rgba(0,194,255,.03)}
 .drag-handle:active{cursor:grabbing}
 .todo-item.drag-over{border:2px dashed var(--accent);background:rgba(0,194,255,.05)}
 .todo-item.dragging{opacity:.3}
+.todo-item.drag-over-top{border-top:2px solid var(--accent)!important;background:rgba(0,194,255,.04);border-radius:var(--radius) var(--radius) 0 0}
+.todo-item.drag-over-bottom{border-bottom:2px solid var(--accent)!important;background:rgba(0,194,255,.04);border-radius:0 0 var(--radius) var(--radius)}
 .notice-item{background:rgba(0,194,255,.05);border:1px solid rgba(0,194,255,.2);border-radius:10px;padding:12px 14px;margin-bottom:10px}
 .notice-title{font-size:13px;font-weight:700;color:var(--accent);margin-bottom:4px}
 .notice-body{font-size:12px;color:var(--text2);line-height:1.6}
@@ -493,27 +495,23 @@ create policy "allow_all" on attends for all using (true);</pre>
     <input type="hidden" id="detail-todo-id">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
       <div style="font-size:16px;font-weight:700;color:var(--accent)">📋 할일 상세</div>
-      <button onclick="closeModal('modal-todo-detail')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px">✕</button>
+      <button onclick="closeModal('modal-todo-detail')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:20px;line-height:1">✕</button>
     </div>
-    <!-- 제목 -->
     <div class="form-group">
       <label>할일 내용</label>
       <textarea id="detail-content" style="min-height:50px;font-size:14px;font-weight:600"></textarea>
     </div>
-    <!-- 담당자 -->
     <div class="form-group">
-      <label>담당자 (복수 선택 가능)</label>
-      <div id="detail-assignees" style="display:flex;flex-wrap:wrap;gap:8px;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;min-height:44px"></div>
+      <label>담당자 <span style="color:var(--text3);font-size:10px">(클릭으로 선택 · 복수 가능)</span></label>
+      <div id="detail-assignees" style="display:flex;flex-wrap:wrap;gap:8px;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;min-height:46px"></div>
     </div>
-    <!-- 기한일 -->
     <div class="form-group">
       <label>기한일</label>
       <input type="date" id="detail-due-date">
     </div>
-    <!-- 체크리스트 -->
     <div class="form-group">
       <label>체크리스트</label>
-      <div id="detail-checklist" style="margin-bottom:8px"></div>
+      <div id="detail-checklist" style="margin-bottom:8px;min-height:10px"></div>
       <div style="display:flex;gap:8px">
         <input type="text" id="checklist-input" placeholder="항목 입력 후 Enter" style="flex:1;margin-bottom:0" onkeydown="if(event.key==='Enter'){event.preventDefault();addChecklistItem()}">
         <button class="btn btn-secondary btn-sm" onclick="addChecklistItem()">추가</button>
@@ -549,45 +547,6 @@ create policy "allow_all" on attends for all using (true);</pre>
       </select>
     </div>
     <div id="team-todos-content"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
-  </div>
-</div>
-
-<!-- To-do 상세 모달 -->
-<div class="modal-overlay" id="modal-todo-detail">
-  <div class="modal" style="max-width:560px">
-    <input type="hidden" id="detail-todo-id">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <div style="font-size:16px;font-weight:700;color:var(--accent)">📋 할일 상세</div>
-      <button onclick="closeModal('modal-todo-detail')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:20px;line-height:1">✕</button>
-    </div>
-    <div class="form-group">
-      <label>할일 내용</label>
-      <textarea id="detail-content" style="min-height:50px;font-size:14px;font-weight:600"></textarea>
-    </div>
-    <div class="form-group">
-      <label>담당자 <span style="color:var(--text3);font-size:10px">(클릭으로 선택 · 복수 가능)</span></label>
-      <div id="detail-assignees" style="display:flex;flex-wrap:wrap;gap:8px;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;min-height:46px"></div>
-    </div>
-    <div class="form-group">
-      <label>기한일</label>
-      <input type="date" id="detail-due-date">
-    </div>
-    <div class="form-group">
-      <label>체크리스트</label>
-      <div id="detail-checklist" style="margin-bottom:8px;min-height:10px"></div>
-      <div style="display:flex;gap:8px">
-        <input type="text" id="checklist-input" placeholder="항목 입력 후 Enter" style="flex:1;margin-bottom:0" onkeydown="if(event.key==='Enter'){event.preventDefault();addChecklistItem()}">
-        <button class="btn btn-secondary btn-sm" onclick="addChecklistItem()">추가</button>
-      </div>
-    </div>
-    <div class="form-group">
-      <label>비고</label>
-      <textarea id="detail-note" placeholder="추가 메모를 입력하세요" style="min-height:80px"></textarea>
-    </div>
-    <div class="btn-row">
-      <button class="btn btn-secondary" onclick="closeModal('modal-todo-detail')">취소</button>
-      <button class="btn btn-primary" onclick="saveTodoDetail()">저장</button>
-    </div>
   </div>
 </div>
 
@@ -682,6 +641,7 @@ async function initApp(){
   await loadCategories();
   await loadAllEmployees(); // 모든 사용자가 담당자 목록 필요
   loadDateLogs();loadTodos();loadMyAttends();loadNoticeBanner();
+  setTimeout(initTouchDrag, 500); // 모바일 터치 드래그 초기화
   if(currentUser.is_admin){
     loadUsers(); // 관리자 탭용 (권한 변경 기능 포함)
     loadGoals();loadNoticeHistory();
@@ -985,12 +945,24 @@ function dragOver(e){
   e.preventDefault();
   e.dataTransfer.dropEffect = 'move';
   const item = e.currentTarget;
-  if(item) item.classList.add('drag-over');
+  document.querySelectorAll('.todo-item').forEach(function(el){
+    el.classList.remove('drag-over','drag-over-top','drag-over-bottom');
+  });
+  if(item && item.id !== 'todo-'+dragSrcId){
+    const rect = item.getBoundingClientRect();
+    if(e.clientY < rect.top + rect.height / 2){
+      item.classList.add('drag-over-top');
+      item.dataset.dropPos = 'before';
+    } else {
+      item.classList.add('drag-over-bottom');
+      item.dataset.dropPos = 'after';
+    }
+  }
 }
 
 function dragEnd(e){
   document.querySelectorAll('.todo-item').forEach(function(el){
-    el.classList.remove('dragging','drag-over');
+    el.classList.remove('dragging','drag-over','drag-over-top','drag-over-bottom');
   });
 }
 
@@ -998,31 +970,88 @@ async function dragDrop(e, targetId){
   e.preventDefault();
   e.stopPropagation();
   document.querySelectorAll('.todo-item').forEach(function(el){
-    el.classList.remove('dragging','drag-over');
+    el.classList.remove('dragging','drag-over','drag-over-top','drag-over-bottom');
   });
   if(!dragSrcId || dragSrcId === targetId) return;
+  const targetEl = document.getElementById('todo-'+targetId);
+  const dropPos = targetEl && targetEl.dataset.dropPos || 'after';
+  await performDrop(dragSrcId, targetId, dropPos);
+  dragSrcId = null;
+}
 
+async function performDrop(srcId, targetId, dropPos){
   const items = document.querySelectorAll('#todo-list .todo-item');
   let ids = Array.from(items).map(function(el){ return el.id.replace('todo-',''); });
-
-  const srcIdx = ids.indexOf(dragSrcId);
-  const tgtIdx = ids.indexOf(targetId);
-  if(srcIdx === -1 || tgtIdx === -1) return;
-
-  // 순서 재배열
+  const srcIdx = ids.indexOf(srcId);
+  if(srcIdx === -1) return;
   ids.splice(srcIdx, 1);
-  ids.splice(tgtIdx, 0, dragSrcId);
-
+  const newTgtIdx = ids.indexOf(targetId);
+  if(newTgtIdx === -1) return;
+  const insertIdx = dropPos === 'before' ? newTgtIdx : newTgtIdx + 1;
+  ids.splice(insertIdx, 0, srcId);
   try{
     await Promise.all(ids.map(function(tid, i){
-      return fetch(API+'/todos?id=eq.'+tid,{
-        method:'PATCH', headers:H,
-        body: JSON.stringify({sort_order: i})
-      });
+      return fetch(API+'/todos?id=eq.'+tid,{method:'PATCH',headers:H,body:JSON.stringify({sort_order:i})});
     }));
     loadTodos();
   }catch(e){ showToast('순서 변경 실패','error'); }
-  dragSrcId = null;
+}
+
+// ─── TOUCH DRAG (모바일 지원) ───
+let touchDragId = null, touchClone = null, touchOffsetX = 0, touchOffsetY = 0;
+
+function initTouchDrag(){
+  const container = document.getElementById('todo-list');
+  if(!container || container._touchInit) return;
+  container._touchInit = true;
+
+  container.addEventListener('touchstart', function(e){
+    const handle = e.target.closest('.drag-handle');
+    if(!handle) return;
+    const item = handle.closest('.todo-item');
+    if(!item || item.getAttribute('draggable') === 'false') return;
+    touchDragId = item.id.replace('todo-','');
+    const touch = e.touches[0];
+    const rect = item.getBoundingClientRect();
+    touchOffsetX = touch.clientX - rect.left;
+    touchOffsetY = touch.clientY - rect.top;
+    touchClone = item.cloneNode(true);
+    touchClone.style.cssText = 'position:fixed;width:'+rect.width+'px;left:'+rect.left+'px;top:'+rect.top+'px;opacity:.85;pointer-events:none;z-index:9999;border:2px solid var(--accent);border-radius:12px;background:var(--surface2);box-shadow:0 8px 32px rgba(0,0,0,.5);transition:none';
+    document.body.appendChild(touchClone);
+    item.classList.add('dragging');
+  }, {passive:true});
+
+  container.addEventListener('touchmove', function(e){
+    if(!touchDragId) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    touchClone.style.left = (touch.clientX - touchOffsetX)+'px';
+    touchClone.style.top  = (touch.clientY - touchOffsetY)+'px';
+    touchClone.style.visibility = 'hidden';
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    touchClone.style.visibility = '';
+    document.querySelectorAll('.todo-item').forEach(function(t){ t.classList.remove('drag-over-top','drag-over-bottom'); });
+    const target = el && el.closest('#todo-list .todo-item');
+    if(target && target.id !== 'todo-'+touchDragId){
+      const r = target.getBoundingClientRect();
+      if(touch.clientY < r.top + r.height/2){ target.classList.add('drag-over-top'); target.dataset.dropPos='before'; }
+      else { target.classList.add('drag-over-bottom'); target.dataset.dropPos='after'; }
+    }
+  }, {passive:false});
+
+  container.addEventListener('touchend', function(e){
+    if(!touchDragId) return;
+    const touch = e.changedTouches[0];
+    if(touchClone){ touchClone.remove(); touchClone=null; }
+    document.querySelectorAll('.todo-item').forEach(function(t){ t.classList.remove('dragging','drag-over-top','drag-over-bottom'); });
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    const target = el && el.closest('#todo-list .todo-item');
+    const targetId = target && target.id.replace('todo-','');
+    if(targetId && targetId !== touchDragId){
+      performDrop(touchDragId, targetId, target.dataset.dropPos || 'after');
+    }
+    touchDragId = null;
+  }, {passive:true});
 }
 
 async function toggleTodo(id,wasDone){
