@@ -199,8 +199,8 @@ pre{background:var(--surface2);border:1px solid var(--border);border-radius:8px;
             </div>
             <div class="form-group"><label>업무 내용</label><textarea id="log-content" placeholder="수행한 업무를 입력하세요"></textarea></div>
             <div class="input-row-3">
-              <div class="form-group"><label>시작 시간 (24h)</label><input type="text" id="log-start-time" placeholder="09:00" maxlength="5" oninput="fmtTime(this);calcHours()"></div>
-              <div class="form-group"><label>종료 시간 (24h)</label><input type="text" id="log-end-time" placeholder="18:00" maxlength="5" oninput="fmtTime(this);calcHours()"></div>
+              <div class="form-group"><label>시작 시간</label><input type="time" id="log-start-time" onchange="calcHours()"></div>
+              <div class="form-group"><label>종료 시간</label><input type="time" id="log-end-time" onchange="calcHours()"></div>
               <div class="form-group"><label>비고</label><input type="text" id="log-note" placeholder="선택사항"></div>
             </div>
             <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
@@ -215,23 +215,25 @@ pre{background:var(--surface2);border:1px solid var(--border);border-radius:8px;
           </div>
           <!-- 엑셀 붙여넣기 업로드 -->
           <div class="card">
-            <div class="card-title">📋 엑셀 <span>붙여넣기 업로드</span></div>
-            <div class="form-group">
-              <label>날짜 선택</label>
-              <input type="date" id="paste-date">
-            </div>
-            <div class="form-group">
-              <label>엑셀 내용 붙여넣기 <span style="color:var(--text3);font-size:10px">(업무구분 / 업무내용 / 시작시간 / 종료시간 순서로 복사)</span></label>
-              <textarea id="paste-area" placeholder="엑셀에서 복사 후 여기에 Ctrl+V" style="min-height:120px;font-family:'JetBrains Mono',monospace;font-size:11px" onpaste="setTimeout(()=>parsePasteData(),50)"></textarea>
-            </div>
-            <div id="paste-preview" style="display:none">
-              <div style="font-size:11px;font-weight:700;color:var(--accent2);margin-bottom:8px" id="paste-preview-count"></div>
-              <div class="table-wrap" style="margin-bottom:12px">
-                <table id="paste-preview-table"></table>
+            <div class="card-title" style="cursor:pointer;user-select:none" onclick="togglePasteArea()">📋 엑셀 <span>붙여넣기 업로드</span><span id="paste-toggle-icon" style="margin-left:auto;font-size:12px;color:var(--text3)">▼ 펼치기</span></div>
+            <div id="paste-area-wrap" style="display:none">
+              <div class="form-group">
+                <label>날짜 선택</label>
+                <input type="date" id="paste-date">
               </div>
-              <div class="btn-row">
-                <button class="btn btn-secondary" onclick="clearPaste()">취소</button>
-                <button class="btn btn-primary" onclick="submitPasteData()">한번에 저장</button>
+              <div class="form-group">
+                <label>엑셀 내용 붙여넣기 <span style="color:var(--text3);font-size:10px">(업무구분 / 업무내용 / 시작시간 / 종료시간 순서로 복사)</span></label>
+                <textarea id="paste-area" placeholder="엑셀에서 복사 후 여기에 Ctrl+V" style="min-height:120px;font-family:'JetBrains Mono',monospace;font-size:11px" onpaste="setTimeout(()=>parsePasteData(),50)"></textarea>
+              </div>
+              <div id="paste-preview" style="display:none">
+                <div style="font-size:11px;font-weight:700;color:var(--accent2);margin-bottom:8px" id="paste-preview-count"></div>
+                <div class="table-wrap" style="margin-bottom:12px">
+                  <table id="paste-preview-table"></table>
+                </div>
+                <div class="btn-row">
+                  <button class="btn btn-secondary" onclick="clearPaste()">취소</button>
+                  <button class="btn btn-primary" onclick="submitPasteData()">한번에 저장</button>
+                </div>
               </div>
             </div>
           </div>
@@ -246,7 +248,7 @@ pre{background:var(--surface2);border:1px solid var(--border);border-radius:8px;
           </div>
         </div>
         <div>
-          <div class="card" style="position:sticky;top:70px">
+          <div class="card" style="position:sticky;top:108px">
             <div class="card-title">✅ To-do <span>할일</span>
               <span id="todo-count" style="font-size:10px;color:var(--text3)"></span>
             </div>
@@ -270,7 +272,7 @@ pre{background:var(--surface2);border:1px solid var(--border);border-radius:8px;
       <div class="card">
         <div class="card-title">🔍 <span>조회 조건</span></div>
         <div class="filter-row">
-          <input type="month" id="my-month" style="flex:1">
+          <input type="month" id="my-month" style="flex:1" onchange="loadMyLogs()">
           <button class="btn btn-secondary btn-sm" onclick="loadMyLogs()">조회</button>
           <button class="btn btn-success btn-sm" onclick="exportMyCSV()">⬇ CSV</button>
         </div>
@@ -567,8 +569,8 @@ create policy "allow_all" on attends for all using (true);</pre>
     <div class="form-group"><label>업무 분류</label><select id="edit-log-category"></select></div>
     <div class="form-group"><label>업무 내용</label><textarea id="edit-log-content"></textarea></div>
     <div class="input-row">
-      <div class="form-group"><label>시작 시간 (24h)</label><input type="text" id="edit-log-start-time" placeholder="09:00" maxlength="5" oninput="fmtTime(this);calcEditHours()"></div>
-      <div class="form-group"><label>종료 시간 (24h)</label><input type="text" id="edit-log-end-time" placeholder="18:00" maxlength="5" oninput="fmtTime(this);calcEditHours()"></div>
+      <div class="form-group"><label>시작 시간</label><input type="time" id="edit-log-start-time" onchange="calcEditHours()"></div>
+      <div class="form-group"><label>종료 시간</label><input type="time" id="edit-log-end-time" onchange="calcEditHours()"></div>
     </div>
     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
       <span style="font-size:12px;color:var(--text2)">계산된 공수</span>
@@ -663,6 +665,8 @@ async function loadCategories(){
   catch(e){categories=[{id:'1',name:'제조'},{id:'2',name:'QA'},{id:'3',name:'문서관리'},{id:'4',name:'교육'},{id:'5',name:'회의'},{id:'6',name:'기타'}];}
   const opts=categories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
   ['log-category','edit-log-category','edit-tpl-category'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<option value="">분류 선택...</option>'+opts;});
+  const lastCat=localStorage.getItem('wl_last_cat');
+  if(lastCat){const el=document.getElementById('log-category');if(el&&el.querySelector(`option[value="${lastCat}"]`))el.value=lastCat;}
   if(currentUser.is_admin)renderCategoryList();
 }
 async function addCategory(){
@@ -751,6 +755,7 @@ function deleteTemplate(id){templates=templates.filter(t=>t.id!==id);localStorag
 
 // TIME
 function fmtTime(el){let v=el.value.replace(/[^0-9]/g,'');if(v.length>=3)v=v.slice(0,2)+':'+v.slice(2,4);el.value=v;}
+function togglePasteArea(){const w=document.getElementById('paste-area-wrap'),ic=document.getElementById('paste-toggle-icon');const open=w.style.display!=='none';w.style.display=open?'none':'block';ic.textContent=open?'▼ 펼치기':'▲ 접기';}
 function calcHours(){
   const s=document.getElementById('log-start-time').value,e=document.getElementById('log-end-time').value;
   const disp=document.getElementById('calc-hours-display');
@@ -785,8 +790,10 @@ async function submitLog(){
   if(ovlp.overlap){showToast(`⚠️ ${ovlp.conflictTime} 일지와 시간이 겹칩니다`,'error');return;}
   try{
     await fetch(`${API}/work_logs`,{method:'POST',headers:H,body:JSON.stringify({employee_id:currentUser.id,category_id:catId,log_date:date,content,hours,note:note||null,start_time:startTime,end_time:endTime})});
+    const savedCat=document.getElementById('log-category').value;
+    if(savedCat)localStorage.setItem('wl_last_cat',savedCat);
     ['log-content','log-note','log-start-time','log-end-time'].forEach(id=>document.getElementById(id).value='');
-    document.getElementById('log-hours').value='';document.getElementById('calc-hours-display').textContent='-';document.getElementById('log-category').value='';
+    document.getElementById('log-hours').value='';document.getElementById('calc-hours-display').textContent='-';document.getElementById('log-category').value=savedCat||'';
     showToast('저장됨','success');loadDateLogs();
   }catch(e){showToast('저장 실패','error');}
 }
