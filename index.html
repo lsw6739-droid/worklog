@@ -477,13 +477,7 @@ create policy "allow_all" on attends for all using (true);</pre>
       <button onclick="closeNoticePopup()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:20px;line-height:1">✕</button>
     </div>
     <div id="notice-popup-content"></div>
-    <div style="margin-top:16px">
-      <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);cursor:pointer">
-        <input type="checkbox" id="notice-dont-show" style="width:16px;height:16px;margin:0">
-        오늘 하루 다시 보지 않기
-      </label>
-    </div>
-    <button class="btn btn-primary" style="margin-top:14px" onclick="closeNoticePopup()">확인</button>
+    <button class="btn btn-primary" style="margin-top:14px" onclick="closeNoticePopup()">확인 (다시 보지 않기)</button>
   </div>
 </div>
 
@@ -1364,8 +1358,7 @@ function startNoticePolling(){
       const n = notices[0];
       // 새 공지가 있고 아직 안 본 경우
       if(lastNoticeId && n.id !== lastNoticeId){
-        const skipKey = 'notice_skip_'+n.id+'_'+new Date().toDateString();
-        if(!localStorage.getItem(skipKey)){
+        if(!localStorage.getItem('notice_seen_'+n.id)){
           document.getElementById('notice-popup-content').innerHTML =
             '<div style="background:var(--surface2);border-radius:10px;padding:16px;margin-bottom:4px">'
             +'<div style="font-size:15px;font-weight:700;margin-bottom:10px">'+n.title+'</div>'
@@ -1390,8 +1383,7 @@ async function loadNoticeBanner(){
     const n=notices[0];
     // 팝업만 표시 (오늘 안 본 공지만)
     lastNoticeId = n.id; // 초기 공지 ID 저장
-    const skipKey=`notice_skip_${n.id}_${new Date().toDateString()}`;
-    if(!localStorage.getItem(skipKey)){
+    if(!localStorage.getItem('notice_seen_'+n.id)){
       document.getElementById('notice-popup-content').innerHTML=`
         <div style="background:var(--surface2);border-radius:10px;padding:16px;margin-bottom:4px">
           <div style="font-size:15px;font-weight:700;margin-bottom:10px">${n.title}</div>
@@ -1407,11 +1399,7 @@ async function loadNoticeBanner(){
 function closeNoticePopup(){
   const modal = document.getElementById('modal-notice-popup');
   const noticeId = modal.dataset.noticeId;
-  const dontShow = document.getElementById('notice-dont-show').checked;
-  if(dontShow && noticeId){
-    const skipKey = `notice_skip_${noticeId}_${new Date().toDateString()}`;
-    localStorage.setItem(skipKey, '1');
-  }
+  if(noticeId) localStorage.setItem('notice_seen_'+noticeId, '1');
   closeModal('modal-notice-popup');
 }
 async function postNotice(){
