@@ -6,6 +6,8 @@
 <meta name="theme-color" content="#0a1628">
 <title>공수 대시보드</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600;700&display=swap');
 :root {
@@ -186,22 +188,6 @@ input.date-range:focus{outline:none;border-color:var(--accent)}
   .kpi-row{grid-template-columns:repeat(2,1fr)}
 }
 
-/* ── PDF PRINT ── */
-@media print {
-  @page { size: A4 landscape; margin: 10mm; }
-  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
-  body { background: #0a1628 !important; overflow: visible !important; }
-  body::before { display: none; }
-  .db-header, .filter-bar, .active-filter-bar { position: static !important; }
-  .db-controls .db-back, .db-controls button { display: none !important; }
-  .db-controls .pdf-print-btn-hide { display: none !important; }
-  .db-main { padding: 8px !important; }
-  .kpi-row { grid-template-columns: repeat(5,1fr) !important; break-inside: avoid; }
-  .chart-row-2, .chart-row-21 { grid-template-columns: 1fr 1fr !important; }
-  .chart-card, .kpi-card { break-inside: avoid; page-break-inside: avoid; }
-  canvas { max-height: none !important; }
-  .custom-tooltip { display: none !important; }
-}
 </style>
 </head>
 <body>
@@ -224,10 +210,13 @@ input.date-range:focus{outline:none;border-color:var(--accent)}
       <span style="color:var(--text3);font-size:11px">~</span>
       <input type="date" class="date-range" id="date-end" onchange="onRangeChange()">
     </div>
-    <button class="db-back" onclick="exportDashboardPDF()" style="border-color:rgba(0,255,157,0.4);color:var(--accent2)">🖨️ PDF 출력</button>
+    <button id="pdf-btn" class="db-back" onclick="exportDashboardPDF()" style="border-color:rgba(0,255,157,0.4);color:var(--accent2);min-width:80px">🖨️ PDF 출력</button>
     <a href="index.html" class="db-back">← 앱으로</a>
   </div>
 </div>
+
+<!-- PDF 캡처 루트 시작 -->
+<div id="db-capture-root">
 
 <!-- FILTER BAR -->
 <div class="filter-bar">
@@ -312,7 +301,8 @@ input.date-range:focus{outline:none;border-color:var(--accent)}
     </div>
   </div>
 
-</div>
+</div><!-- /.db-main -->
+</div><!-- /#db-capture-root -->
 
 <div class="custom-tooltip" id="custom-tooltip"></div>
 
@@ -1075,41 +1065,92 @@ Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
 Chart.defaults.font.family = "'Noto Sans KR', sans-serif";
 
 // ─── PDF EXPORT ───
-function exportDashboardPDF() {
-  // 모든 캔버스를 고해상도 이미지로 미리 변환해두어 인쇄 시 깨짐 방지
-  const canvases = document.querySelectorAll('canvas');
-  const snapshots = [];
-  canvases.forEach(function(c) {
-    try {
-      // canvas → img 교체
-      const img = document.createElement('img');
-      img.src = c.toDataURL('image/png', 1.0);
-      img.style.cssText = c.style.cssText || '';
-      img.style.width = '100%';
-      img.style.height = 'auto';
-      img.style.maxHeight = c.style.maxHeight || '';
-      img.className = c.className;
-      img.dataset.printReplaced = '1';
-      snapshots.push({ canvas: c, img: img, parent: c.parentNode, next: c.nextSibling });
-      c.parentNode.insertBefore(img, c);
-      c.style.display = 'none';
-    } catch(e) {}
-  });
+async function exportDashboardPDF() {
+  const btn = document.getElementById('pdf-btn');
+  const origText = btn ? btn.innerHTML : '';
+  if (btn) { btn.innerHTML = '⏳ 생성 중...'; btn.disabled = true; }
 
-  // 헤더 버튼들 숨기기
-  const btns = document.querySelectorAll('.db-controls button, .db-controls a');
-  btns.forEach(function(b){ b.dataset.pdfHide = '1'; b.style.display = 'none'; });
+  try {
+    // 1. 캡처 대상: 헤더 제외하고 필터바 + 메인 콘텐츠만
+    const target = document.getElementById('db-capture-root');
 
-  window.print();
-
-  // 복원
-  setTimeout(function() {
-    snapshots.forEach(function(s) {
-      s.canvas.style.display = '';
-      if(s.img.parentNode) s.img.parentNode.removeChild(s.img);
+    // 2. 캔버스 max-height 임시 해제 (차트가 잘리지 않도록)
+    const canvasList = target.querySelectorAll('canvas');
+    const origMaxH = [];
+    canvasList.forEach(function(c) {
+      origMaxH.push(c.style.maxHeight);
+      c.style.maxHeight = 'none';
     });
-    btns.forEach(function(b){ b.style.display = ''; delete b.dataset.pdfHide; });
-  }, 1000);
+
+    // 3. 스크롤 top으로
+    window.scrollTo(0, 0);
+
+    // 4. html2canvas 캡처
+    const canvas = await html2canvas(target, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#0a1628',
+      logging: false,
+      width: target.scrollWidth,
+      height: target.scrollHeight,
+      windowWidth: target.scrollWidth,
+      windowHeight: target.scrollHeight,
+      scrollX: 0,
+      scrollY: 0,
+      onclone: function(cloneDoc) {
+        // 클론 내 모든 캔버스 max-height 제거
+        cloneDoc.querySelectorAll('canvas').forEach(function(c){ c.style.maxHeight='none'; });
+        // sticky 해제
+        cloneDoc.querySelectorAll('.filter-bar,.active-filter-bar').forEach(function(el){
+          el.style.position='static';
+        });
+      }
+    });
+
+    // 5. 캔버스 복원
+    canvasList.forEach(function(c, i){ c.style.maxHeight = origMaxH[i]; });
+
+    // 6. jsPDF 생성 (A4 landscape)
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' });
+    const pW = pdf.internal.pageSize.getWidth();   // 297mm
+    const pH = pdf.internal.pageSize.getHeight();  // 210mm
+
+    const imgW = pW;
+    const imgH = (canvas.height / canvas.width) * imgW;
+    const imgData = canvas.toDataURL('image/jpeg', 0.92);
+
+    if (imgH <= pH) {
+      // 한 페이지에 들어오는 경우
+      pdf.addImage(imgData, 'JPEG', 0, 0, imgW, imgH);
+    } else {
+      // 여러 페이지로 분할
+      const totalPages = Math.ceil(imgH / pH);
+      for (let p = 0; p < totalPages; p++) {
+        if (p > 0) pdf.addPage();
+        // y 오프셋: 각 페이지마다 이미지를 위로 당겨서 해당 구간이 보이게
+        const yOffset = -(p * pH);
+        pdf.addImage(imgData, 'JPEG', 0, yOffset, imgW, imgH);
+        // 페이지 밖 영역을 흰/다크 사각형으로 가리기
+        if (yOffset + imgH > pH) {
+          pdf.setFillColor(10, 22, 40);
+          pdf.rect(0, pH, pW, imgH, 'F');
+        }
+      }
+    }
+
+    // 7. 저장
+    const start = document.getElementById('date-start').value || '';
+    const end   = document.getElementById('date-end').value   || '';
+    pdf.save('공수대시보드' + (start ? '_'+start+'~'+end : '') + '.pdf');
+
+  } catch(e) {
+    console.error(e);
+    alert('PDF 생성 실패: ' + e.message);
+  }
+
+  if (btn) { btn.innerHTML = origText; btn.disabled = false; }
 }
 </script>
 </body>
