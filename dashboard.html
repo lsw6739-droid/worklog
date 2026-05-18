@@ -50,6 +50,11 @@ select.filter-select{background:var(--surface2);border:1px solid var(--border);c
 select.filter-select:focus{outline:none;border-color:var(--accent)}
 .clear-btn{padding:5px 10px;border-radius:20px;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;border:1px solid var(--danger);background:rgba(255,71,87,0.1);color:var(--danger);transition:all .2s}
 .clear-btn:hover{background:rgba(255,71,87,0.2)}
+.period-btn{padding:5px 11px;border-radius:8px;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text2);transition:all .2s;white-space:nowrap}
+.period-btn:hover{border-color:var(--accent);color:var(--accent)}
+.period-btn.active{background:rgba(0,212,255,0.15);border-color:var(--accent);color:var(--accent)}
+input.date-range{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:5px 8px;font-size:11px;font-family:inherit;cursor:pointer;-webkit-appearance:none;color-scheme:dark}
+input.date-range:focus{outline:none;border-color:var(--accent)}
 
 /* ACTIVE FILTER DISPLAY */
 .active-filter-bar{background:rgba(0,212,255,0.05);border-bottom:1px solid rgba(0,212,255,0.1);padding:8px 20px;display:none;align-items:center;gap:8px;font-size:11px;color:var(--text2)}
@@ -193,7 +198,15 @@ select.filter-select:focus{outline:none;border-color:var(--accent)}
     </div>
   </div>
   <div class="db-controls">
-    <select class="filter-select" id="month-select" onchange="loadData()"></select>
+    <button class="period-btn active" id="btn-thisweek" onclick="setPeriod('thisweek')">이번 주</button>
+    <button class="period-btn" id="btn-lastweek" onclick="setPeriod('lastweek')">지난 주</button>
+    <button class="period-btn" id="btn-thismonth" onclick="setPeriod('thismonth')">이번 달</button>
+    <button class="period-btn" id="btn-lastmonth" onclick="setPeriod('lastmonth')">지난 달</button>
+    <div style="display:flex;align-items:center;gap:4px">
+      <input type="date" class="date-range" id="date-start" onchange="onRangeChange()">
+      <span style="color:var(--text3);font-size:11px">~</span>
+      <input type="date" class="date-range" id="date-end" onchange="onRangeChange()">
+    </div>
     <a href="index.html" class="db-back">← 앱으로</a>
   </div>
 </div>
@@ -202,22 +215,12 @@ select.filter-select:focus{outline:none;border-color:var(--accent)}
 <div class="filter-bar">
   <div class="filter-section">
     <span class="filter-label">👤 인원</span>
-    <div id="member-chips"></div>
+    <div id="member-chips" style="display:flex;gap:6px;flex-wrap:wrap"></div>
   </div>
   <div class="filter-divider"></div>
   <div class="filter-section">
     <span class="filter-label">🏷️ 업무</span>
-    <div id="category-chips"></div>
-  </div>
-  <div class="filter-divider"></div>
-  <div class="filter-section">
-    <span class="filter-label">🎯 난이도</span>
-    <div style="display:flex;gap:6px">
-      <button class="filter-chip" id="diff-all" onclick="setDiffFilter('all')">전체</button>
-      <button class="filter-chip" id="diff-low" onclick="setDiffFilter('low')">🟢 하</button>
-      <button class="filter-chip" id="diff-mid" onclick="setDiffFilter('mid')">🟡 중</button>
-      <button class="filter-chip" id="diff-high" onclick="setDiffFilter('high')">🔴 상</button>
-    </div>
+    <div id="category-chips" style="display:flex;gap:6px;flex-wrap:wrap"></div>
   </div>
   <div class="filter-divider"></div>
   <button class="clear-btn" onclick="clearAllFilters()">✕ 필터 초기화</button>
@@ -232,29 +235,23 @@ select.filter-select:focus{outline:none;border-color:var(--accent)}
 <div class="db-main">
 
   <!-- KPI -->
-  <div class="kpi-row" id="kpi-row">
+  <div class="kpi-row" id="kpi-row" style="grid-template-columns:repeat(5,1fr)">
     <div class="kpi-card"><div class="kpi-icon">⏱️</div><div class="kpi-val" id="kpi-total" style="color:var(--accent)">-</div><div class="kpi-label">총 공수(h)</div><div class="kpi-sub" id="kpi-total-sub"></div></div>
     <div class="kpi-card"><div class="kpi-icon">👥</div><div class="kpi-val" id="kpi-members" style="color:var(--accent2)">-</div><div class="kpi-label">참여 인원</div></div>
     <div class="kpi-card"><div class="kpi-icon">📊</div><div class="kpi-val" id="kpi-avg" style="color:#7c3aed">-</div><div class="kpi-label">1인 평균(h)</div></div>
-    <div class="kpi-card"><div class="kpi-icon">🎯</div><div class="kpi-val" id="kpi-accuracy" style="color:var(--warn)">-</div><div class="kpi-label">예측 정확도</div></div>
     <div class="kpi-card"><div class="kpi-icon">📈</div><div class="kpi-val" id="kpi-util" style="color:var(--pink)">-</div><div class="kpi-label">가용률</div><div class="kpi-sub" id="kpi-util-sub"></div></div>
     <div class="kpi-card"><div class="kpi-icon">📋</div><div class="kpi-val" id="kpi-logs" style="color:var(--accent)">-</div><div class="kpi-label">총 업무 건수</div></div>
   </div>
 
-  <!-- ROW 1: 막대 + 파이 + 게이지 -->
-  <div class="chart-row chart-row-3">
+  <!-- ROW 1: 막대 + 파이 -->
+  <div class="chart-row" style="grid-template-columns:1.5fr 1fr;margin-bottom:12px">
     <div class="chart-card clickable" id="card-bar">
       <div class="chart-title">👤 인원별 공수 <span>막대</span> <span class="chart-hint">클릭으로 필터</span></div>
       <div class="chart-wrap chart-wrap-tall"><canvas id="chart-bar"></canvas></div>
     </div>
     <div class="chart-card clickable" id="card-pie">
       <div class="chart-title">🏷️ 업무별 <span>비중</span> <span class="chart-hint">클릭으로 필터</span></div>
-      <div class="chart-wrap"><canvas id="chart-pie"></canvas></div>
-    </div>
-    <div class="chart-card" id="card-gauge">
-      <div class="chart-title">🎯 목표 <span>달성률</span></div>
-      <div class="gauge-wrap" id="gauge-wrap"></div>
-      <div id="gauge-detail" style="font-size:11px;color:var(--text2);text-align:center"></div>
+      <div class="chart-wrap chart-wrap-tall"><canvas id="chart-pie"></canvas></div>
     </div>
   </div>
 
@@ -312,7 +309,7 @@ const H = {'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorizatio
 
 // STATE
 let allLogs = [], allEmployees = [], allCategories = [], monthGoal = 160;
-let filters = { members: [], categories: [], diff: 'all' };
+let filters = { members: [], categories: [] };
 let charts = {};
 let radarSelected = [];
 
@@ -373,68 +370,99 @@ function getCatColor(catName, idx){
 
 // ─── INIT ───
 window.addEventListener('load', async () => {
-  // Check auth
   const user = JSON.parse(localStorage.getItem('wl_user')||'null');
   if (!user || !user.is_admin) {
     document.querySelector('.db-main').innerHTML = '<div class="db-empty"><div style="font-size:40px;margin-bottom:12px">🔒</div><p>관리자만 접근 가능합니다</p><a href="index.html" style="color:var(--accent);margin-top:12px;display:block">← 앱으로 돌아가기</a></div>';
     return;
   }
-
-  initMonthSelect();
-  await loadData();
+  setPeriod('thisweek');
 });
 
-function initMonthSelect() {
-  const sel = document.getElementById('month-select');
+function getWorkingDays(startStr, endStr) {
+  let count = 0;
+  const d = new Date(startStr + 'T00:00:00');
+  const end = new Date(endStr + 'T00:00:00');
+  while(d <= end){ const dw=d.getDay(); if(dw!==0&&dw!==6)count++; d.setDate(d.getDate()+1); }
+  return count;
+}
+
+function setPeriod(preset) {
   const now = new Date();
-  for (let i = 0; i < 12; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-    const opt = document.createElement('option');
-    opt.value = val; opt.textContent = `${d.getFullYear()}년 ${d.getMonth()+1}월`;
-    sel.appendChild(opt);
+  let start, end;
+  if(preset==='thisweek'){
+    const mon=new Date(now); mon.setDate(now.getDate()-(now.getDay()||7)+1);
+    const sun=new Date(mon); sun.setDate(mon.getDate()+6);
+    start=mon.toISOString().split('T')[0]; end=sun.toISOString().split('T')[0];
+  } else if(preset==='lastweek'){
+    const mon=new Date(now); mon.setDate(now.getDate()-(now.getDay()||7)-6);
+    const sun=new Date(mon); sun.setDate(mon.getDate()+6);
+    start=mon.toISOString().split('T')[0]; end=sun.toISOString().split('T')[0];
+  } else if(preset==='thismonth'){
+    const y=now.getFullYear(),m=now.getMonth();
+    start=`${y}-${String(m+1).padStart(2,'0')}-01`;
+    end=`${y}-${String(m+1).padStart(2,'0')}-${new Date(y,m+1,0).getDate()}`;
+  } else if(preset==='lastmonth'){
+    const d=new Date(now.getFullYear(),now.getMonth()-1,1);
+    const y=d.getFullYear(),m=d.getMonth();
+    start=`${y}-${String(m+1).padStart(2,'0')}-01`;
+    end=`${y}-${String(m+1).padStart(2,'0')}-${new Date(y,m+1,0).getDate()}`;
   }
+  document.getElementById('date-start').value=start;
+  document.getElementById('date-end').value=end;
+  ['thisweek','lastweek','thismonth','lastmonth'].forEach(id=>{
+    document.getElementById('btn-'+id)?.classList.toggle('active', id===preset);
+  });
+  loadData();
+}
+
+function onRangeChange(){
+  // 직접 날짜 선택 시 프리셋 버튼 비활성화
+  ['thisweek','lastweek','thismonth','lastmonth'].forEach(id=>{
+    document.getElementById('btn-'+id)?.classList.remove('active');
+  });
+  loadData();
 }
 
 async function loadData() {
-  const month = document.getElementById('month-select').value;
-  const [y, m] = month.split('-');
-  const start = `${y}-${m}-01`, end = `${y}-${m}-${new Date(y,m,0).getDate()}`;
+  const start = document.getElementById('date-start').value;
+  const end = document.getElementById('date-end').value;
+  if(!start||!end) return;
 
   document.querySelector('.db-main').style.opacity = '0.5';
 
   try {
-    const [logsRes, empRes, catRes, goalRes, attendRes] = await Promise.all([
+    const [logsRes, empRes, catRes, attendRes] = await Promise.all([
       fetch(`${API}/work_logs?log_date=gte.${start}&log_date=lte.${end}&select=*,categories(name),employees(name,emp_id)&order=log_date`, {headers:H}),
       fetch(`${API}/employees?order=name`, {headers:H}),
       fetch(`${API}/categories?is_active=eq.true&order=name`, {headers:H}),
-      fetch(`${API}/month_goals?month=eq.${month}&select=*`, {headers:H}),
       fetch(`${API}/attends?start_date=lte.${end}&end_date=gte.${start}&select=*`, {headers:H})
     ]);
     allLogs = await logsRes.json();
     allEmployees = await empRes.json();
     allCategories = await catRes.json();
-    const goals = await goalRes.json();
     const attends = await attendRes.json();
-    monthGoal = goals&&goals.length ? Number(goals[0].target_hours) : 160;
 
-    // 근태 가상 카테고리 추가
-    if(!allCategories.find(function(c){ return c.id==='attend-virtual'; })){
-      allCategories.push({id:'attend-virtual', name:'근태', is_active:true});
-    }
-    // 근태를 공수에 포함
+    // 근태 중복 방지: DB에 이미 '근태' 카테고리가 있으면 제거 후 가상 카테고리만 사용
+    allCategories = allCategories.filter(function(c){ return c.name !== '근태'; });
+    allCategories.push({id:'attend-virtual', name:'근태', is_active:true});
+
+    // 근태 공수 포함
     if(attends && attends.length){
-      const attendLogs = attendToLogs(attends, allEmployees, start, end);
-      allLogs = allLogs.concat(attendLogs);
+      allLogs = allLogs.concat(attendToLogs(attends, allEmployees, start, end));
     }
+
+    // 기간 목표: 근무일 × 8h / 인
+    monthGoal = getWorkingDays(start, end) * 8;
+
   } catch(e) {
     // DEMO DATA
     allEmployees = [{id:'e1',name:'이상우',emp_id:'2020016'},{id:'e2',name:'유태규',emp_id:'E002'},{id:'e3',name:'김형성',emp_id:'E003'},{id:'e4',name:'김경원',emp_id:'E004'},{id:'e5',name:'김동호',emp_id:'E005'},{id:'e6',name:'이주명',emp_id:'E006'}];
-    allCategories = [{id:'c1',name:'제조'},{id:'c2',name:'QA'},{id:'c3',name:'문서관리'},{id:'c4',name:'교육'},{id:'c5',name:'회의'},{id:'c6',name:'기타'}];
+    allCategories = [{id:'c1',name:'제조'},{id:'c2',name:'QA'},{id:'c3',name:'문서관리'},{id:'c4',name:'교육'},{id:'c5',name:'회의'},{id:'c6',name:'기타'},{id:'attend-virtual',name:'근태'}];
     allLogs = generateDemoData();
+    monthGoal = getWorkingDays(start, end) * 8;
   }
 
-  filters = { members:[], categories:[], diff:'all' };
+  filters = { members:[], categories:[] };
   buildFilterChips();
   clearAllFilters();
   document.querySelector('.db-main').style.opacity = '1';
@@ -442,10 +470,9 @@ async function loadData() {
 
 function generateDemoData() {
   const logs = [];
-  const month = document.getElementById('month-select').value;
-  const [y,m] = month.split('-');
+  const start = document.getElementById('date-start').value || new Date().toISOString().split('T')[0].slice(0,8)+'01';
+  const [y,m] = start.split('-');
   const days = new Date(y,m,0).getDate();
-  const diffs = ['low','mid','high'];
   allEmployees.forEach(e => {
     for(let d=1;d<=days;d++) {
       if(d%7===0||d%7===6) continue;
@@ -469,12 +496,38 @@ function generateDemoData() {
 // ─── FILTER CHIPS ───
 function buildFilterChips() {
   const mc = document.getElementById('member-chips');
-  mc.innerHTML = allEmployees.map(e => `<button class="filter-chip" id="m-${e.id}" onclick="toggleMemberFilter('${e.id}','${e.name}')">${e.name}</button>`).join('');
+  mc.innerHTML =
+    `<button class="filter-chip active" id="m-all" onclick="selectAllMembers()">전체</button>` +
+    allEmployees.map(e => `<button class="filter-chip" id="m-${e.id}" onclick="toggleMemberFilter('${e.id}','${e.name}')">${e.name}</button>`).join('');
 
   const cc = document.getElementById('category-chips');
-  cc.innerHTML = allCategories.map(c => `<button class="filter-chip" id="c-${c.id}" onclick="toggleCatFilter('${c.id}','${c.name}')">${c.name}</button>`).join('');
+  cc.innerHTML =
+    `<button class="filter-chip active" id="c-all" onclick="selectAllCategories()">전체</button>` +
+    allCategories.map(c => `<button class="filter-chip" id="c-${c.id}" onclick="toggleCatFilter('${c.id}','${c.name}')">${c.name}</button>`).join('');
+}
 
-  document.getElementById('diff-all').className = 'filter-chip active';
+function syncAllBtn(type) {
+  if (type === 'member') {
+    const allBtn = document.getElementById('m-all');
+    if (allBtn) allBtn.classList.toggle('active', filters.members.length === 0);
+  } else {
+    const allBtn = document.getElementById('c-all');
+    if (allBtn) allBtn.classList.toggle('active', filters.categories.length === 0);
+  }
+}
+
+function selectAllMembers() {
+  filters.members = [];
+  document.querySelectorAll('[id^="m-"]').forEach(el => el.classList.remove('active-member'));
+  document.getElementById('m-all')?.classList.add('active');
+  applyFilters();
+}
+
+function selectAllCategories() {
+  filters.categories = [];
+  document.querySelectorAll('[id^="c-"]').forEach(el => el.classList.remove('active-cat'));
+  document.getElementById('c-all')?.classList.add('active');
+  applyFilters();
 }
 
 function toggleMemberFilter(id, name) {
@@ -482,6 +535,7 @@ function toggleMemberFilter(id, name) {
   if (idx >= 0) filters.members.splice(idx, 1);
   else filters.members.push(id);
   document.getElementById(`m-${id}`)?.classList.toggle('active-member', filters.members.includes(id));
+  syncAllBtn('member');
   applyFilters();
 }
 
@@ -490,23 +544,15 @@ function toggleCatFilter(id, name) {
   if (idx >= 0) filters.categories.splice(idx, 1);
   else filters.categories.push(id);
   document.getElementById(`c-${id}`)?.classList.toggle('active-cat', filters.categories.includes(id));
-  applyFilters();
-}
-
-function setDiffFilter(d) {
-  filters.diff = d;
-  ['all','low','mid','high'].forEach(x => {
-    const el = document.getElementById(`diff-${x}`);
-    if (!el) return;
-    el.className = 'filter-chip' + (x===d ? (x==='all'?' active':x==='low'?' active-diff-low':x==='mid'?' active-diff-mid':' active-diff-high') : '');
-  });
+  syncAllBtn('category');
   applyFilters();
 }
 
 function clearAllFilters() {
-  filters = { members:[], categories:[], diff:'all' };
-  document.querySelectorAll('.filter-chip').forEach(el => el.classList.remove('active','active-member','active-cat','active-diff-low','active-diff-mid','active-diff-high'));
-  document.getElementById('diff-all').className = 'filter-chip active';
+  filters = { members:[], categories:[] };
+  document.querySelectorAll('.filter-chip').forEach(el => el.classList.remove('active','active-member','active-cat'));
+  document.getElementById('m-all')?.classList.add('active');
+  document.getElementById('c-all')?.classList.add('active');
   document.getElementById('active-filter-bar').classList.remove('show');
   radarSelected = allEmployees.map(e=>e.id);
   renderAll(allLogs);
@@ -516,7 +562,6 @@ function applyFilters() {
   let filtered = allLogs;
   if (filters.members.length) filtered = filtered.filter(l => filters.members.includes(l.employee_id));
   if (filters.categories.length) filtered = filtered.filter(l => filters.categories.includes(l.category_id));
-  if (filters.diff !== 'all') filtered = filtered.filter(l => (l.difficulty||'mid') === filters.diff);
   updateActiveFilterBar();
   renderAll(filtered);
 }
@@ -533,7 +578,6 @@ function updateActiveFilterBar() {
     const c = allCategories.find(x=>x.id===id);
     if(c) items.push(`<span class="active-filter-tag">🏷️ ${c.name} <button onclick="toggleCatFilter('${id}','${c.name}')">✕</button></span>`);
   });
-  if (filters.diff !== 'all') items.push(`<span class="active-filter-tag">🎯 ${filters.diff==='low'?'하':filters.diff==='mid'?'중':'상'} <button onclick="setDiffFilter('all')">✕</button></span>`);
   tags.innerHTML = items.join('');
   bar.classList.toggle('show', items.length > 0);
 }
@@ -543,7 +587,6 @@ function renderAll(logs) {
   updateKPI(logs);
   renderBarChart(logs);
   renderPieChart(logs);
-  renderGauge(logs);
   renderMatrix(logs);
   renderTrendChart(logs);
   renderRadarChart(logs);
@@ -555,19 +598,17 @@ function renderAll(logs) {
 // ─── KPI ───
 function updateKPI(logs) {
   const totalH = logs.reduce((s,l)=>s+Number(l.hours),0);
-  const planH = logs.reduce((s,l)=>s+(Number(l.plan_hours)||0),0);
   const members = new Set(logs.map(l=>l.employee_id)).size;
   const avgH = members>0 ? totalH/members : 0;
-  const acc = planH>0 ? Math.round((1-Math.abs(totalH-planH)/planH)*100) : null;
   const teamTarget = monthGoal * (allEmployees.length||members);
   const util = teamTarget>0 ? Math.min((totalH/teamTarget*100),999).toFixed(0) : 0;
+  const start = document.getElementById('date-start').value;
+  const end = document.getElementById('date-end').value;
 
   animateNum('kpi-total', totalH, 1);
-  document.getElementById('kpi-total-sub').textContent = `예상 ${planH.toFixed(1)}h`;
+  document.getElementById('kpi-total-sub').textContent = `${start}~${end.slice(5)}`;
   animateNum('kpi-members', members, 0);
   animateNum('kpi-avg', avgH, 1);
-  document.getElementById('kpi-accuracy').textContent = acc!=null ? acc+'%' : '-';
-  document.getElementById('kpi-accuracy').style.color = acc==null?'var(--text3)':acc>=90?'var(--accent2)':acc>=70?'var(--warn)':'var(--danger)';
   document.getElementById('kpi-util').textContent = util+'%';
   document.getElementById('kpi-util').style.color = util>=80?'var(--danger)':util>=60?'var(--warn)':'var(--pink)';
   document.getElementById('kpi-util-sub').textContent = `목표 ${monthGoal}h/인`;
@@ -616,7 +657,7 @@ function renderBarChart(logs) {
         if(!els.length) return;
         const name = labels[els[0].index];
         const emp = allEmployees.find(x=>x.name===name);
-        if(emp) toggleMemberFilter(emp.id, emp.name);
+        if(emp){ toggleMemberFilter(emp.id, emp.name); syncAllBtn('member'); }
       }
     }
   });
@@ -647,7 +688,7 @@ function renderPieChart(logs) {
         if(!els.length) return;
         const name = sorted[els[0].index][0];
         const cat = allCategories.find(c=>c.name===name);
-        if(cat) toggleCatFilter(cat.id, cat.name);
+        if(cat){ toggleCatFilter(cat.id, cat.name); syncAllBtn('category'); }
       }
     }
   });
@@ -717,33 +758,47 @@ function renderMatrix(logs) {
 
 function handleMatrixClick(empId, empName, catName) {
   toggleMemberFilter(empId, empName);
+  syncAllBtn('member');
   const cat = allCategories.find(c=>c.name===catName);
-  if (cat) toggleCatFilter(cat.id, catName);
+  if (cat) { toggleCatFilter(cat.id, catName); syncAllBtn('category'); }
 }
 
 // ─── TREND CHART ───
 function renderTrendChart(logs) {
-  const weekMap = {};
+  const start = document.getElementById('date-start').value;
+  const end   = document.getElementById('date-end').value;
+  const days  = getWorkingDays(start, end);
+  const byDay = days <= 31; // 31일 이하면 일별, 그 이상이면 주별
+
+  const bucketMap = {};
   logs.forEach(l=>{
-    const d=new Date(l.log_date);d.setHours(0,0,0,0);d.setDate(d.getDate()-d.getDay()+1);
-    const wk=d.toISOString().split('T')[0];
-    const eid=l.employee_id;
-    if(!weekMap[wk])weekMap[wk]={};
-    weekMap[wk][eid]=(weekMap[wk][eid]||0)+Number(l.hours);
+    let key;
+    if(byDay){
+      key = l.log_date;
+    } else {
+      const d=new Date(l.log_date+'T00:00:00');
+      d.setDate(d.getDate()-(d.getDay()||7)+1);
+      key=d.toISOString().split('T')[0];
+    }
+    if(!bucketMap[key])bucketMap[key]={};
+    bucketMap[key][l.employee_id]=(bucketMap[key][l.employee_id]||0)+Number(l.hours);
   });
-  const weeks = Object.keys(weekMap).sort();
-  const weekLabels = weeks.map(w=>{const d=new Date(w);return `${d.getMonth()+1}/${d.getDate()}주`;});
+
+  const keys = Object.keys(bucketMap).sort();
+  const labels = keys.map(k=>{
+    const d=new Date(k+'T00:00:00');
+    return byDay ? `${d.getMonth()+1}/${d.getDate()}` : `${d.getMonth()+1}/${d.getDate()}주`;
+  });
 
   const members = allEmployees.filter(e=>logs.some(l=>l.employee_id===e.id));
   const datasets = members.map((e,i)=>({
     label:e.name,
-    data:weeks.map(w=>weekMap[w]?.[e.id]||0),
+    data:keys.map(k=>bucketMap[k]?.[e.id]||0),
     borderColor:COLORS[i%COLORS.length],
     backgroundColor:COLORS[i%COLORS.length]+'20',
-    borderWidth:2, pointRadius:4, pointHoverRadius:6, tension:.4, fill:false
+    borderWidth:2, pointRadius:byDay?3:4, pointHoverRadius:6, tension:.4, fill:false
   }));
 
-  // Legend
   document.getElementById('trend-legend').innerHTML = members.map((e,i)=>`
     <div class="trend-leg-item" onclick="toggleMemberFilter('${e.id}','${e.name}')">
       <div class="trend-leg-dot" style="background:${COLORS[i%COLORS.length]}"></div>${e.name}
@@ -751,11 +806,18 @@ function renderTrendChart(logs) {
 
   destroyChart('chart-trend');
   charts['chart-trend'] = new Chart(document.getElementById('chart-trend'),{
-    type:'line',data:{labels:weekLabels,datasets},
+    type:'line',data:{labels,datasets},
     options:{responsive:true,maintainAspectRatio:true,
-      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},
-      scales:{x:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#7aa8d4',font:{size:10}}},
-              y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#7aa8d4',font:{size:10}},beginAtZero:true}}}
+      plugins:{
+        legend:{display:false},
+        tooltip:{mode:'index',intersect:false},
+        title:{display:true,text:byDay?'일별 공수':'주별 공수',color:'#3d6a9e',font:{size:10}}
+      },
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#7aa8d4',font:{size:10},maxTicksLimit:14}},
+        y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#7aa8d4',font:{size:10}},beginAtZero:true}
+      }
+    }
   });
 }
 
@@ -800,39 +862,49 @@ function toggleRadar(id) {
   renderRadarChart(allLogs.filter(l=>{
     if(filters.members.length&&!filters.members.includes(l.employee_id))return false;
     if(filters.categories.length&&!filters.categories.includes(l.category_id))return false;
-    if(filters.diff!=='all'&&(l.difficulty||'mid')!==filters.diff)return false;
     return true;
   }));
 }
 
 // ─── HEATMAP ───
 function renderHeatmap(logs) {
-  const month = document.getElementById('month-select').value;
-  const [y,m] = month.split('-');
-  const daysInMonth = new Date(y,m,0).getDate();
+  const start = document.getElementById('date-start').value;
+  const end = document.getElementById('date-end').value;
+  if(!start||!end) return;
+
   const byDate = {};
   logs.forEach(l=>byDate[l.log_date]=(byDate[l.log_date]||0)+Number(l.hours));
   const maxH = Math.max(...Object.values(byDate),1);
-
   function level(h){ if(!h)return 0; const r=h/maxH; return r<.1?1:r<.25?2:r<.5?3:r<.75?4:r<.9?5:6; }
+
+  // 시작일이 속한 주 월요일부터 그리기
+  const startD = new Date(start+'T00:00:00');
+  const endD = new Date(end+'T00:00:00');
+  const gridStart = new Date(startD);
+  const dayOfWeek = gridStart.getDay()||7; // 월=1 ~ 일=7
+  gridStart.setDate(gridStart.getDate() - (dayOfWeek - 1));
 
   const weeks = [];
   let week = [];
-  const firstDay = new Date(y,m-1,1).getDay();
-  for(let i=0;i<firstDay;i++) week.push(null);
-  for(let d=1;d<=daysInMonth;d++){
-    const date=`${y}-${m}-${String(d).padStart(2,'0')}`;
-    week.push({d,date,h:byDate[date]||0});
+  const cur = new Date(gridStart);
+  while(cur <= endD){
+    const dateStr = cur.toISOString().split('T')[0];
+    const inRange = cur >= startD && cur <= endD;
+    week.push(inRange ? {d:cur.getDate(),date:dateStr,h:byDate[dateStr]||0} : null);
     if(week.length===7){weeks.push(week);week=[];}
+    cur.setDate(cur.getDate()+1);
   }
-  if(week.length) weeks.push(week);
+  if(week.length){while(week.length<7)week.push(null);weeks.push(week);}
 
-  const dayNames=['일','월','화','수','목','금','토'];
+  const dayNames=['월','화','수','목','금','토','일'];
   document.getElementById('heatmap-wrap').innerHTML = `
     <div style="overflow-x:auto">
       <div class="heatmap-days">${dayNames.map(d=>`<div class="heatmap-day">${d}</div>`).join('')}</div>
       ${weeks.map(w=>`<div class="heatmap-row">
-        ${w.map(cell=>cell?`<div class="heatmap-cell level-${level(cell.h)}" title="${cell.date}: ${cell.h.toFixed(1)}h" onclick="handleHeatmapClick('${cell.date}')">${cell.h>0?cell.h.toFixed(0):''}</div>`:`<div class="heatmap-cell level-0" style="opacity:0.2"></div>`).join('')}
+        ${w.map(cell=>cell
+          ?`<div class="heatmap-cell level-${level(cell.h)}" title="${cell.date}: ${cell.h.toFixed(1)}h" onclick="handleHeatmapClick('${cell.date}')">${cell.h>0?cell.h.toFixed(0):cell.d}</div>`
+          :`<div class="heatmap-cell level-0" style="opacity:0.1"></div>`
+        ).join('')}
       </div>`).join('')}
       <div style="display:flex;align-items:center;gap:4px;margin-top:8px;font-size:10px;color:var(--text3)">
         <span>적음</span>
@@ -857,6 +929,7 @@ function handleHeatmapClick(date) {
     const el = document.getElementById('m-'+id);
     if(el) el.classList.add('active-member');
   });
+  syncAllBtn('member');
   updateActiveFilterBar();
   applyFilters();
 
@@ -935,8 +1008,8 @@ async function renderMonthlyTrend() {
     type:'bar',
     data:{labels,datasets:[{
       label:'월 총 공수',data:monthlyData,
-      backgroundColor:months.map(m=>m===document.getElementById('month-select').value?'rgba(0,255,157,0.6)':'rgba(0,212,255,0.3)'),
-      borderColor:months.map(m=>m===document.getElementById('month-select').value?'#00ff9d':'#00d4ff'),
+      backgroundColor:months.map(m=>{const s=document.getElementById('date-start').value||'';return s.startsWith(m)?'rgba(0,255,157,0.6)':'rgba(0,212,255,0.3)';}),
+      borderColor:months.map(m=>{const s=document.getElementById('date-start').value||'';return s.startsWith(m)?'#00ff9d':'#00d4ff';}),
       borderWidth:2,borderRadius:6
     }]},
     options:{responsive:true,maintainAspectRatio:true,
