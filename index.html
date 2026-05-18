@@ -688,6 +688,35 @@ async function initApp(){
 function switchPage(p){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.page===p));
   document.querySelectorAll('.page').forEach(pg=>pg.classList.toggle('active',pg.id===`page-${p}`));
+
+  const t = today();
+  const ym = t.slice(0,7);
+
+  if(p==='write'){
+    // 일지 작성 + 날짜별 조회 → 오늘 날짜로
+    document.getElementById('log-date').value = t;
+    document.getElementById('view-date').value = t;
+    loadDateLogs();
+  } else if(p==='mylog'){
+    // 내 이력 → 이번 달
+    document.getElementById('my-month').value = ym;
+    loadMyLogs();
+  } else if(p==='attend'){
+    // 근태 시작일·종료일 → 오늘
+    document.getElementById('attend-start').value = t;
+    document.getElementById('attend-end').value = t;
+    loadMyAttends();
+  } else if(p==='team'){
+    // 팀 현황 → 이번 달로 리셋 후 자동 조회
+    document.getElementById('team-month').value = ym;
+    loadTeamStats();
+  } else if(p==='teamtodo'){
+    // 팀 할일 → 자동 조회
+    loadTeamTodos();
+  } else if(p==='report'){
+    // 리포트 → 이번 달
+    document.getElementById('report-month').value = ym;
+  }
 }
 
 // CATEGORIES
