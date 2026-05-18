@@ -185,6 +185,23 @@ input.date-range:focus{outline:none;border-color:var(--accent)}
 @media(max-width:480px){
   .kpi-row{grid-template-columns:repeat(2,1fr)}
 }
+
+/* ── PDF PRINT ── */
+@media print {
+  @page { size: A4 landscape; margin: 10mm; }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+  body { background: #0a1628 !important; overflow: visible !important; }
+  body::before { display: none; }
+  .db-header, .filter-bar, .active-filter-bar { position: static !important; }
+  .db-controls .db-back, .db-controls button { display: none !important; }
+  .db-controls .pdf-print-btn-hide { display: none !important; }
+  .db-main { padding: 8px !important; }
+  .kpi-row { grid-template-columns: repeat(5,1fr) !important; break-inside: avoid; }
+  .chart-row-2, .chart-row-21 { grid-template-columns: 1fr 1fr !important; }
+  .chart-card, .kpi-card { break-inside: avoid; page-break-inside: avoid; }
+  canvas { max-height: none !important; }
+  .custom-tooltip { display: none !important; }
+}
 </style>
 </head>
 <body>
@@ -207,6 +224,7 @@ input.date-range:focus{outline:none;border-color:var(--accent)}
       <span style="color:var(--text3);font-size:11px">~</span>
       <input type="date" class="date-range" id="date-end" onchange="onRangeChange()">
     </div>
+    <button class="db-back" onclick="exportDashboardPDF()" style="border-color:rgba(0,255,157,0.4);color:var(--accent2)">🖨️ PDF 출력</button>
     <a href="index.html" class="db-back">← 앱으로</a>
   </div>
 </div>
@@ -843,7 +861,10 @@ function renderRadarChart(logs) {
   }));
 
   // Selector buttons
-  document.getElementById('radar-selector').innerHTML = allEmployees.map((e,i)=>`
+  const isAll = radarSelected.length === allEmployees.length;
+  document.getElementById('radar-selector').innerHTML =
+    `<button class="radar-btn ${isAll?'active':''}" onclick="toggleRadarAll()" style="${isAll?'border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,0.1)':''}">전체</button>` +
+    allEmployees.map((e,i)=>`
     <button class="radar-btn ${radarSelected.includes(e.id)?'active':''}" onclick="toggleRadar('${e.id}')" style="${radarSelected.includes(e.id)?`border-color:${COLORS[i%COLORS.length]};color:${COLORS[i%COLORS.length]};background:${COLORS[i%COLORS.length]}20`:''}">${e.name}</button>`).join('');
 
   destroyChart('chart-radar');
@@ -853,6 +874,15 @@ function renderRadarChart(logs) {
       scales:{r:{grid:{color:'rgba(255,255,255,0.08)'},angleLines:{color:'rgba(255,255,255,0.08)'},pointLabels:{color:'#7aa8d4',font:{size:10}},ticks:{color:'rgba(255,255,255,0.3)',font:{size:8},backdropColor:'transparent'}}},
       plugins:{legend:{display:false}}}
   });
+}
+
+function toggleRadarAll() {
+  radarSelected = allEmployees.map(e=>e.id);
+  renderRadarChart(allLogs.filter(l=>{
+    if(filters.members.length&&!filters.members.includes(l.employee_id))return false;
+    if(filters.categories.length&&!filters.categories.includes(l.category_id))return false;
+    return true;
+  }));
 }
 
 function toggleRadar(id) {
@@ -1043,6 +1073,44 @@ function showTooltip(msg) {
 Chart.defaults.color = '#7aa8d4';
 Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
 Chart.defaults.font.family = "'Noto Sans KR', sans-serif";
+
+// ─── PDF EXPORT ───
+function exportDashboardPDF() {
+  // 모든 캔버스를 고해상도 이미지로 미리 변환해두어 인쇄 시 깨짐 방지
+  const canvases = document.querySelectorAll('canvas');
+  const snapshots = [];
+  canvases.forEach(function(c) {
+    try {
+      // canvas → img 교체
+      const img = document.createElement('img');
+      img.src = c.toDataURL('image/png', 1.0);
+      img.style.cssText = c.style.cssText || '';
+      img.style.width = '100%';
+      img.style.height = 'auto';
+      img.style.maxHeight = c.style.maxHeight || '';
+      img.className = c.className;
+      img.dataset.printReplaced = '1';
+      snapshots.push({ canvas: c, img: img, parent: c.parentNode, next: c.nextSibling });
+      c.parentNode.insertBefore(img, c);
+      c.style.display = 'none';
+    } catch(e) {}
+  });
+
+  // 헤더 버튼들 숨기기
+  const btns = document.querySelectorAll('.db-controls button, .db-controls a');
+  btns.forEach(function(b){ b.dataset.pdfHide = '1'; b.style.display = 'none'; });
+
+  window.print();
+
+  // 복원
+  setTimeout(function() {
+    snapshots.forEach(function(s) {
+      s.canvas.style.display = '';
+      if(s.img.parentNode) s.img.parentNode.removeChild(s.img);
+    });
+    btns.forEach(function(b){ b.style.display = ''; delete b.dataset.pdfHide; });
+  }, 1000);
+}
 </script>
 </body>
 </html>
