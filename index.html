@@ -142,8 +142,13 @@ tr:hover td{background:rgba(0,194,255,.03)}
 .section-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin:16px 0 10px}
 .assignee-chip{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;border:2px solid var(--border);background:var(--surface);color:var(--text2);transition:all .2s}
 .assignee-chip.selected{border-color:var(--accent2);background:rgba(0,255,157,.1);color:var(--accent2)}
-.cl-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(42,63,82,.4)}
+.cl-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(42,63,82,.4);position:relative;transition:opacity .15s}
 .cl-item:last-child{border-bottom:none}
+.cl-item.cl-dragging{opacity:.3}
+.cl-item.cl-insert-before::before{content:'';position:absolute;top:-2px;left:0;right:0;height:2px;background:var(--accent);border-radius:2px;z-index:10}
+.cl-item.cl-insert-after::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:2px;background:var(--accent);border-radius:2px;z-index:10}
+.cl-handle{color:var(--text3);cursor:grab;font-size:15px;flex-shrink:0;padding:0 2px;user-select:none;line-height:1}
+.cl-handle:active{cursor:grabbing}
 .cl-check{width:16px;height:16px;border-radius:3px;border:2px solid var(--border);background:transparent;cursor:pointer;flex-shrink:0;appearance:none;-webkit-appearance:none;position:relative;transition:all .2s}
 .cl-check:checked{background:var(--accent2);border-color:var(--accent2)}
 .cl-check:checked::after{content:'✓';position:absolute;top:-2px;left:1px;color:#000;font-size:11px;font-weight:700}
@@ -1307,9 +1312,14 @@ function renderChecklist(){
   const el = document.getElementById('detail-checklist');
   if(!currentChecklist.length){ el.innerHTML='<div style="font-size:12px;color:var(--text3);padding:4px 0">체크리스트 항목이 없습니다</div>'; return; }
   el.innerHTML = currentChecklist.map((item,i)=>`
-    <div class="cl-item">
+    <div class="cl-item" draggable="true" data-ci="${i}"
+         ondragstart="clDragStart(event,${i})"
+         ondragover="clDragOver(event)"
+         ondragend="clDragEnd(event)"
+         ondrop="clDragDrop(event,${i})">
+      <span class="cl-handle" title="드래그로 순서 변경">⠿</span>
       <input type="checkbox" class="cl-check" ${item.done?'checked':''} onchange="toggleClItem(${i})">
-      <span class="cl-text ${item.done?'done':''}">${item.text}</span>
+      <span class="cl-text ${item.done?'done':''}">${item.text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>
       <button class="cl-del" onclick="removeClItem(${i})">✕</button>
     </div>`).join('');
 }
@@ -1330,6 +1340,59 @@ function toggleClItem(i){
 
 function removeClItem(i){
   currentChecklist.splice(i,1);
+  renderChecklist();
+}
+
+// ── 체크리스트 드래그 앤 드롭 ──
+let clDragSrcIdx = null;
+
+function clDragStart(e, idx){
+  clDragSrcIdx = idx;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', idx);
+  setTimeout(function(){ e.target.closest('.cl-item').classList.add('cl-dragging'); }, 0);
+}
+
+function clDragOver(e){
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  const item = e.target.closest('.cl-item');
+  if(!item) return;
+  // 모든 삽입 표시 제거
+  document.querySelectorAll('#detail-checklist .cl-item').forEach(function(el){
+    el.classList.remove('cl-insert-before','cl-insert-after');
+  });
+  const rect = item.getBoundingClientRect();
+  const isTop = e.clientY < rect.top + rect.height / 2;
+  item.classList.add(isTop ? 'cl-insert-before' : 'cl-insert-after');
+  item._clDropPos = isTop ? 'before' : 'after';
+}
+
+function clDragEnd(e){
+  document.querySelectorAll('#detail-checklist .cl-item').forEach(function(el){
+    el.classList.remove('cl-dragging','cl-insert-before','cl-insert-after');
+  });
+}
+
+function clDragDrop(e, targetIdx){
+  e.preventDefault();
+  document.querySelectorAll('#detail-checklist .cl-item').forEach(function(el){
+    el.classList.remove('cl-dragging','cl-insert-before','cl-insert-after');
+  });
+  if(clDragSrcIdx === null || clDragSrcIdx === targetIdx){ clDragSrcIdx = null; return; }
+
+  const item = e.target.closest('.cl-item');
+  const dropPos = item ? (item._clDropPos || 'before') : 'before';
+
+  // 배열 재정렬
+  const moved = currentChecklist.splice(clDragSrcIdx, 1)[0];
+  // splice 후 targetIdx가 앞으로 당겨졌을 수 있으므로 보정
+  let insertAt = targetIdx > clDragSrcIdx ? targetIdx - 1 : targetIdx;
+  if(dropPos === 'after') insertAt += 1;
+  insertAt = Math.max(0, Math.min(insertAt, currentChecklist.length));
+  currentChecklist.splice(insertAt, 0, moved);
+
+  clDragSrcIdx = null;
   renderChecklist();
 }
 
