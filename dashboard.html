@@ -944,10 +944,14 @@ async function renderWeekWidget() {
   const start = mon.toISOString().split('T')[0];
   const end = sun.toISOString().split('T')[0];
 
-  let weekLogs = [];
+  let weekLogs = [], weekAttends = [];
   try {
-    const res = await fetch(`${API}/work_logs?log_date=gte.${start}&log_date=lte.${end}&select=employee_id,hours`,{headers:H});
-    weekLogs = await res.json();
+    const [logsRes, attendsRes] = await Promise.all([
+      fetch(`${API}/work_logs?log_date=gte.${start}&log_date=lte.${end}&select=employee_id,hours`,{headers:H}),
+      fetch(`${API}/attends?start_date=lte.${end}&end_date=gte.${start}&select=employee_id,exclude_hours`,{headers:H})
+    ]);
+    weekLogs = await logsRes.json();
+    weekAttends = await attendsRes.json();
   } catch(e) {
     weekLogs = allLogs.filter(l=>l.log_date>=start&&l.log_date<=end);
   }
@@ -955,6 +959,8 @@ async function renderWeekWidget() {
   const byMember = {};
   allEmployees.forEach(e=>byMember[e.id]={name:e.name,hours:0});
   weekLogs.forEach(l=>{if(byMember[l.employee_id])byMember[l.employee_id].hours+=Number(l.hours);});
+  // 근태 시간 합산 (연차 등 제외 시간을 공수로 포함)
+  weekAttends.forEach(function(a){if(byMember[a.employee_id])byMember[a.employee_id].hours+=Number(a.exclude_hours||0);});
 
   const weekGoal = monthGoal/4;
   const sorted = Object.values(byMember).sort((a,b)=>b.hours-a.hours);

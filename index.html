@@ -116,6 +116,13 @@ tr:hover td{background:rgba(0,194,255,.03)}
 .drag-handle{color:var(--text3);cursor:grab;font-size:16px;flex-shrink:0;padding:0 4px;user-select:none;line-height:1}
 .drag-handle:active{cursor:grabbing}
 .todo-item.dragging{opacity:.3}
+.status-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.status-dot.active{background:#00ff9d;box-shadow:0 0 5px #00ff9d88}
+.status-dot.waiting{background:#ffa502;box-shadow:0 0 5px #ffa50288}
+.status-dot.done{background:var(--text3)}
+.status-toggle-btn{padding:4px 12px;border-radius:12px;font-size:11px;font-weight:600;border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;transition:all .2s;font-family:inherit}
+.status-toggle-btn.active{border-color:#00ff9d;background:rgba(0,255,157,.12);color:#00ff9d}
+.status-toggle-btn.waiting{border-color:#ffa502;background:rgba(255,165,2,.12);color:#ffa502}
 .todo-item.drag-insert-before::before{content:'';position:absolute;top:-2px;left:0;right:0;height:2px;background:var(--accent);border-radius:2px;z-index:10}
 .todo-item.drag-insert-after::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:2px;background:var(--accent);border-radius:2px;z-index:10}
 .sort-th{cursor:pointer;user-select:none;white-space:nowrap}
@@ -464,6 +471,19 @@ alter table work_logs
   add column if not exists end_time text;
 -- todos 순서 컬럼 추가
 alter table todos add column if not exists sort_order integer default 0;
+alter table todos add column if not exists title text;
+alter table todos add column if not exists status text default 'waiting';
+-- 템플릿 테이블 (localStorage 대신 DB에 저장)
+create table if not exists user_templates (
+  id uuid default gen_random_uuid() primary key,
+  employee_id uuid references employees(id),
+  category_id text,
+  cat_name text,
+  content text not null,
+  created_at timestamptz default now()
+);
+alter table user_templates enable row level security;
+create policy "allow_all" on user_templates for all using (true);
 -- RLS
 alter table todos enable row level security;
 alter table notices enable row level security;
@@ -485,50 +505,6 @@ create policy "allow_all" on attends for all using (true);</pre>
     </div>
     <div id="notice-popup-content"></div>
     <button class="btn btn-primary" style="margin-top:14px" onclick="closeNoticePopup()">확인 (다시 보지 않기)</button>
-  </div>
-</div>
-
-<!-- To-do 상세 모달 -->
-<div class="modal-overlay" id="modal-todo-detail">
-  <div class="modal" style="max-width:560px">
-    <input type="hidden" id="detail-todo-id">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <div style="font-size:16px;font-weight:700;color:var(--accent)">📋 할일 상세</div>
-      <button onclick="closeModal('modal-todo-detail')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px">✕</button>
-    </div>
-    <!-- 제목 -->
-    <div class="form-group">
-      <label>할일 내용</label>
-      <textarea id="detail-content" style="min-height:50px;font-size:14px;font-weight:600"></textarea>
-    </div>
-    <!-- 담당자 -->
-    <div class="form-group">
-      <label>담당자 (복수 선택 가능)</label>
-      <div id="detail-assignees" style="display:flex;flex-wrap:wrap;gap:8px;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;min-height:44px"></div>
-    </div>
-    <!-- 기한일 -->
-    <div class="form-group">
-      <label>기한일</label>
-      <input type="date" id="detail-due-date">
-    </div>
-    <!-- 체크리스트 -->
-    <div class="form-group">
-      <label>체크리스트</label>
-      <div id="detail-checklist" style="margin-bottom:8px"></div>
-      <div style="display:flex;gap:8px">
-        <input type="text" id="checklist-input" placeholder="항목 입력 후 Enter" style="flex:1;margin-bottom:0" onkeydown="if(event.key==='Enter'){event.preventDefault();addChecklistItem()}">
-        <button class="btn btn-secondary btn-sm" onclick="addChecklistItem()">추가</button>
-      </div>
-    </div>
-    <!-- 비고 -->
-    <div class="form-group">
-      <label>비고</label>
-      <textarea id="detail-note" placeholder="추가 메모를 입력하세요" style="min-height:80px"></textarea>
-    </div>
-    <div class="btn-row">
-      <button class="btn btn-secondary" onclick="closeModal('modal-todo-detail')">취소</button>
-      <button class="btn btn-primary" onclick="saveTodoDetail()">저장</button>
-    </div>
   </div>
 </div>
 
@@ -561,9 +537,18 @@ create policy "allow_all" on attends for all using (true);</pre>
       <div style="font-size:16px;font-weight:700;color:var(--accent)">📋 할일 상세</div>
       <button onclick="closeModal('modal-todo-detail')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:20px;line-height:1">✕</button>
     </div>
+    <!-- 상태 + 제목 -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <button class="status-toggle-btn waiting" id="detail-status-btn" onclick="toggleTodoStatus()">⏸ 대기</button>
+      <input type="hidden" id="detail-status" value="waiting">
+    </div>
     <div class="form-group">
-      <label>할일 내용</label>
-      <textarea id="detail-content" style="min-height:50px;font-size:14px;font-weight:600"></textarea>
+      <label>제목 <span style="color:var(--danger)">*</span></label>
+      <input type="text" id="detail-title" placeholder="할일 제목을 입력하세요" style="font-size:14px;font-weight:600">
+    </div>
+    <div class="form-group">
+      <label>상세 내용 <span style="color:var(--text3);font-size:10px">(선택)</span></label>
+      <textarea id="detail-content" placeholder="자세한 내용이 있으면 입력하세요" style="min-height:70px"></textarea>
     </div>
     <div class="form-group">
       <label>담당자 <span style="color:var(--text3);font-size:10px">(클릭으로 선택 · 복수 가능)</span></label>
@@ -605,6 +590,7 @@ create policy "allow_all" on attends for all using (true);</pre>
   <div class="modal">
     <div class="modal-title">✏️ 일지 수정</div>
     <input type="hidden" id="edit-log-id">
+    <input type="hidden" id="edit-log-date">
     <div class="form-group"><label>업무 분류</label><select id="edit-log-category"></select></div>
     <div class="form-group"><label>업무 내용</label><textarea id="edit-log-content"></textarea></div>
     <div class="input-row">
@@ -679,8 +665,8 @@ async function initApp(){
   document.getElementById('attend-end').value=today();
   ['my-month','team-month','report-month','goal-month'].forEach(id=>document.getElementById(id).value=ym);
   document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>switchPage(t.dataset.page)));
-  try{const raw=localStorage.getItem('wl_templates');templates=raw?JSON.parse(raw):[];}catch(e){templates=[];}
   await loadCategories();
+  await loadTemplates();
   await loadAllEmployees(); // 모든 사용자가 담당자 목록 필요
   loadDateLogs();loadTodos();loadMyAttends();loadNoticeBanner();
   if(currentUser.is_admin){
@@ -755,41 +741,69 @@ function openEditCategory(id,name){const n=prompt('분류명 수정',name);if(!n
 async function deleteCategory(id,name){if(!confirm(`'${name}' 삭제할까요?\n연결된 일지가 있으면 비활성화를 이용하세요.`))return;try{await fetch(`${API}/categories?id=eq.${id}`,{method:'DELETE',headers:H});await loadCategories();showToast(`'${name}' 삭제됨`,'success');}catch(e){showToast('삭제 실패 - 비활성화를 이용하세요','error');}}
 
 // TEMPLATES
-function saveTemplate(){
+async function loadTemplates(){
+  try{
+    const res=await fetch(`${API}/user_templates?employee_id=eq.${currentUser.id}&order=created_at.desc`,{headers:H});
+    const rows=await res.json();
+    templates=rows.map(function(t){return{id:t.id,catId:t.category_id,catName:t.cat_name,content:t.content};});
+    localStorage.setItem('wl_templates',JSON.stringify(templates));
+  }catch(e){
+    const raw=localStorage.getItem('wl_templates');
+    try{templates=raw?JSON.parse(raw):[];}catch(e2){templates=[];}
+  }
+}
+async function saveTemplate(){
   const catId=document.getElementById('log-category').value;
   const content=document.getElementById('log-content').value.trim();
   if(!content){showToast('내용을 입력하세요','error');return;}
-  const catName=categories.find(c=>c.id===catId)?.name||'';
-  templates.push({id:Date.now(),catId,catName,content});
-  try{localStorage.setItem('wl_templates',JSON.stringify(templates));showToast('템플릿 저장됨','success');}catch(e){showToast('저장 실패','error');}
+  const catName=categories.find(function(c){return c.id===catId;})?.name||'';
+  try{
+    const res=await fetch(`${API}/user_templates`,{method:'POST',headers:H,body:JSON.stringify({employee_id:currentUser.id,category_id:catId,cat_name:catName,content})});
+    const data=await res.json();
+    if(data&&data.length){const s=data[0];templates.push({id:s.id,catId:s.category_id,catName:s.cat_name,content:s.content});}
+    localStorage.setItem('wl_templates',JSON.stringify(templates));
+    showToast('템플릿 저장됨','success');
+  }catch(e){
+    templates.push({id:String(Date.now()),catId,catName,content});
+    try{localStorage.setItem('wl_templates',JSON.stringify(templates));showToast('템플릿 저장됨','success');}catch(e2){showToast('저장 실패','error');}
+  }
 }
 function openTemplateModal(){
   const el=document.getElementById('template-list-modal');
   if(!templates.length){el.innerHTML='<div class="empty"><div class="empty-icon">📌</div><p>저장된 템플릿이 없습니다</p></div>';return;}
-  el.innerHTML=templates.map(t=>`
-    <div class="template-item">
-      <div style="flex:1;min-width:0;cursor:pointer" onclick="applyTemplate(${t.id})">
-        <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.content.slice(0,30)}${t.content.length>30?'...':''}</div>
+  el.innerHTML=templates.map(function(t){
+    const preview=(t.content||'').slice(0,30);
+    const more=t.content&&t.content.length>30?'...':'';
+    return `<div class="template-item">
+      <div style="flex:1;min-width:0;cursor:pointer" onclick="applyTemplate('${t.id}')">
+        <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${preview}${more}</div>
         <div style="font-size:11px;color:var(--text2);margin-top:2px">${t.catName||'분류없음'}</div>
       </div>
-      <button class="btn btn-secondary btn-sm" onclick="openEditTemplate(${t.id})">수정</button>
-      <button class="btn btn-danger btn-sm" onclick="deleteTemplate(${t.id})">삭제</button>
-    </div>`).join('');
+      <button class="btn btn-secondary btn-sm" onclick="openEditTemplate('${t.id}')">수정</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteTemplate('${t.id}')">삭제</button>
+    </div>`;
+  }).join('');
 }
-function applyTemplate(id){const t=templates.find(x=>x.id===id);if(!t)return;document.getElementById('log-category').value=t.catId;document.getElementById('log-content').value=t.content;closeModal('modal-template-pick');showToast('템플릿 적용됨','success');}
-function openEditTemplate(id){const t=templates.find(x=>x.id===id);if(!t)return;document.getElementById('edit-tpl-id').value=id;document.getElementById('edit-tpl-category').value=t.catId;document.getElementById('edit-tpl-content').value=t.content;closeModal('modal-template-pick');openModal('modal-edit-template');}
-function saveEditTemplate(){
-  const id=parseInt(document.getElementById('edit-tpl-id').value);
+function applyTemplate(id){const t=templates.find(function(x){return x.id===id;});if(!t)return;document.getElementById('log-category').value=t.catId;document.getElementById('log-content').value=t.content;closeModal('modal-template-pick');showToast('템플릿 적용됨','success');}
+function openEditTemplate(id){const t=templates.find(function(x){return x.id===id;});if(!t)return;document.getElementById('edit-tpl-id').value=id;document.getElementById('edit-tpl-category').value=t.catId;document.getElementById('edit-tpl-content').value=t.content;closeModal('modal-template-pick');openModal('modal-edit-template');}
+async function saveEditTemplate(){
+  const id=document.getElementById('edit-tpl-id').value;
   const catId=document.getElementById('edit-tpl-category').value;
   const content=document.getElementById('edit-tpl-content').value.trim();
   if(!content){showToast('내용을 입력하세요','error');return;}
-  const catName=categories.find(c=>c.id===catId)?.name||'';
-  const idx=templates.findIndex(t=>t.id===id);
+  const catName=categories.find(function(c){return c.id===catId;})?.name||'';
+  try{await fetch(`${API}/user_templates?id=eq.${id}`,{method:'PATCH',headers:H,body:JSON.stringify({category_id:catId,cat_name:catName,content})});}catch(e){}
+  const idx=templates.findIndex(function(t){return t.id===id;});
   if(idx>=0)templates[idx]={...templates[idx],catId,catName,content};
   localStorage.setItem('wl_templates',JSON.stringify(templates));
   closeModal('modal-edit-template');showToast('템플릿 수정됨 ✓','success');
 }
-function deleteTemplate(id){templates=templates.filter(t=>t.id!==id);localStorage.setItem('wl_templates',JSON.stringify(templates));openTemplateModal();}
+async function deleteTemplate(id){
+  try{await fetch(`${API}/user_templates?id=eq.${id}`,{method:'DELETE',headers:H});}catch(e){}
+  templates=templates.filter(function(t){return t.id!==id;});
+  localStorage.setItem('wl_templates',JSON.stringify(templates));
+  openTemplateModal();
+}
 
 // TIME
 // 문자열 시간 자동 포맷 (0800 → 08:00)
@@ -868,6 +882,27 @@ function calcEditHours(){
   document.getElementById('edit-log-hours').value=h;disp.textContent=h+'h';
 }
 
+// ─── 시간 중복 체크 ───
+async function checkTimeOverlap(date, startTime, endTime, excludeId){
+  if(!date||!startTime||!endTime||!startTime.includes(':')||!endTime.includes(':')) return false;
+  try{
+    const res=await fetch(`${API}/work_logs?employee_id=eq.${currentUser.id}&log_date=eq.${date}&select=id,start_time,end_time`,{headers:H});
+    const logs=await res.json();
+    const [sh,sm]=startTime.split(':').map(Number);
+    const [eh,em]=endTime.split(':').map(Number);
+    const ns=sh*60+sm, ne=eh*60+em;
+    for(const log of logs){
+      if(excludeId&&log.id===excludeId) continue;
+      if(!log.start_time||!log.end_time||!log.start_time.includes(':')||!log.end_time.includes(':')) continue;
+      const [lsh,lsm]=log.start_time.split(':').map(Number);
+      const [leh,lem]=log.end_time.split(':').map(Number);
+      const ls=lsh*60+lsm, le=leh*60+lem;
+      if(ns<le&&ne>ls) return true;
+    }
+    return false;
+  }catch(e){return false;}
+}
+
 // LOGS
 async function submitLog(){
   const date=document.getElementById('log-date').value,catId=document.getElementById('log-category').value;
@@ -877,6 +912,8 @@ async function submitLog(){
   const note=document.getElementById('log-note').value.trim();
   if(!date||!catId||!content||!startTime||!endTime){showToast('날짜·분류·내용·시간은 필수','error');return;}
   if(!hours||hours<=0){showToast('종료시간이 시작시간보다 빨라요','error');return;}
+  const overlap=await checkTimeOverlap(date,startTime,endTime,null);
+  if(overlap){showToast('⚠️ 다른 업무와 시간이 겹칩니다','error');return;}
   try{
     await fetch(`${API}/work_logs`,{method:'POST',headers:H,body:JSON.stringify({employee_id:currentUser.id,category_id:catId,log_date:date,content,hours,note:note||null,start_time:startTime,end_time:endTime})});
     const savedCat=document.getElementById('log-category').value;
@@ -963,11 +1000,13 @@ function renderLogList(el,logs,editable){
     <td style="max-width:180px;word-break:break-all;font-size:11px">${l.content}</td>
     <td style="font-size:11px;color:var(--text2);white-space:nowrap">${l.start_time||'-'}~${l.end_time||'-'}</td>
     <td style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent2)">${Number(l.hours).toFixed(1)}h</td>
-    ${ed?`<td style="white-space:nowrap"><button class="btn btn-secondary btn-sm" onclick="openEditLog('${l.id}','${l.category_id}',\`${l.content.replace(/`/g,"'")}\`,${l.hours},'${l.note||''}','${l.start_time||''}','${l.end_time||''}')">수정</button> <button class="btn btn-danger btn-sm" onclick="deleteLog('${l.id}')">삭제</button></td>`:''}
+    ${ed?`<td style="white-space:nowrap"><button class="btn btn-secondary btn-sm" onclick="openEditLog('${l.id}','${l.category_id}',\`${l.content.replace(/`/g,"'")}\`,${l.hours},'${l.note||''}','${l.start_time||''}','${l.end_time||''}','${l.log_date||''}')">수정</button> <button class="btn btn-danger btn-sm" onclick="deleteLog('${l.id}')">삭제</button></td>`:''}
   </tr>`).join('')}</tbody></table>`;
 }
-function openEditLog(id,catId,content,hours,note,startTime,endTime){
-  document.getElementById('edit-log-id').value=id;document.getElementById('edit-log-category').value=catId;
+function openEditLog(id,catId,content,hours,note,startTime,endTime,logDate){
+  document.getElementById('edit-log-id').value=id;
+  document.getElementById('edit-log-date').value=logDate||'';
+  document.getElementById('edit-log-category').value=catId;
   document.getElementById('edit-log-content').value=content;document.getElementById('edit-log-hours').value=hours;
   document.getElementById('edit-log-note').value=note||'';document.getElementById('edit-log-start-time').value=startTime||'';
   document.getElementById('edit-log-end-time').value=endTime||'';document.getElementById('edit-calc-hours-display').textContent=hours?hours+'h':'-';
@@ -975,11 +1014,16 @@ function openEditLog(id,catId,content,hours,note,startTime,endTime){
 }
 async function updateLog(){
   const id=document.getElementById('edit-log-id').value,catId=document.getElementById('edit-log-category').value;
+  const logDate=document.getElementById('edit-log-date').value;
   const content=document.getElementById('edit-log-content').value.trim();
   const startTime=document.getElementById('edit-log-start-time').value,endTime=document.getElementById('edit-log-end-time').value;
   const hours=parseFloat(document.getElementById('edit-log-hours').value);
   const note=document.getElementById('edit-log-note').value.trim();
   if(!catId||!content||!hours){showToast('필수 항목 입력','error');return;}
+  if(logDate&&startTime&&endTime){
+    const overlap=await checkTimeOverlap(logDate,startTime,endTime,id);
+    if(overlap){showToast('⚠️ 다른 업무와 시간이 겹칩니다','error');return;}
+  }
   try{
     await fetch(`${API}/work_logs?id=eq.${id}`,{method:'PATCH',headers:H,body:JSON.stringify({category_id:catId,content,hours,note:note||null,start_time:startTime||null,end_time:endTime||null})});
     closeModal('modal-edit-log');showToast('수정됨','success');loadDateLogs();loadMyLogs();
@@ -1039,27 +1083,23 @@ function getDueBadge(dueDate){
 function renderTodoItem(t,isDone){
   const src = t.source==='notice' ? '<span style="font-size:9px;color:var(--accent);border:1px solid rgba(0,194,255,.3);border-radius:4px;padding:1px 4px;margin-left:4px">공지</span>'
             : t.source==='assigned' ? '<span style="font-size:9px;color:var(--accent2);border:1px solid rgba(0,255,157,.3);border-radius:4px;padding:1px 4px;margin-left:4px">담당</span>' : '';
-
-  const checklist = t.checklist ? (() => { try{return JSON.parse(t.checklist);}catch(e){return [];} })() : [];
-  const doneCount = checklist.filter(c=>c.done).length;
-  const dueBadge = getDueBadge(t.due_date);
-  const assigneeBadge = t.assignee_names ? `<span style="font-size:10px;color:var(--text3)">👤 ${t.assignee_names}</span>` : '';
-  const clBadge = checklist.length ? `<span style="font-size:10px;color:${doneCount===checklist.length?'var(--accent2)':'var(--text3)'}">☑ ${doneCount}/${checklist.length}</span>` : '';
-  const hasMeta = dueBadge||assigneeBadge||clBadge||t.note;
+  const displayTitle = (t.title || t.content || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const statusCls = isDone ? 'done' : (t.status==='active' ? 'active' : 'waiting');
+  const dueBadge = t.due_date ? getDueBadge(t.due_date) : '';
   return `<div class="todo-item" id="todo-${t.id}" style="${isDone?'opacity:.55':''}" draggable="${isDone?'false':'true'}" ondragstart="dragStart(event,'${t.id}')" ondragover="dragOver(event)" ondragend="dragEnd(event)" ondrop="dragDrop(event,'${t.id}')">
     ${!isDone?'<div class="drag-handle" title="드래그로 순서 변경">⠿</div>':''}
     <input type="checkbox" class="todo-check" ${isDone?'checked':''} onchange="toggleTodo('${t.id}',${isDone})">
+    <div class="status-dot ${statusCls}" style="margin-top:4px;flex-shrink:0"></div>
     <div style="flex:1;min-width:0;cursor:pointer" onclick="openTodoDetail('${t.id}')">
-      <div class="todo-text ${isDone?'done':''}">${t.content}${src}</div>
-      ${hasMeta?`<div style="display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin-top:5px">${dueBadge}${assigneeBadge}${clBadge}${t.note?`<span style="font-size:10px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px">📝 ${t.note}</span>`:''}
-      </div>`:''}
+      <div class="todo-text ${isDone?'done':''}">${displayTitle}${src}</div>
+      ${dueBadge?`<div style="margin-top:3px">${dueBadge}</div>`:''}
     </div>
     <button class="todo-del" onclick="event.stopPropagation();deleteTodo('${t.id}')">✕</button>
   </div>`;
 }
 
 
-async function addTodo(){const input=document.getElementById('todo-input'),content=input.value.trim();if(!content)return;try{await fetch(`${API}/todos`,{method:'POST',headers:H,body:JSON.stringify({employee_id:currentUser.id,content,is_done:false,source:'personal'})});input.value='';loadTodos();}catch(e){showToast('추가 실패','error');}}
+async function addTodo(){const input=document.getElementById('todo-input'),title=input.value.trim();if(!title)return;try{await fetch(`${API}/todos`,{method:'POST',headers:H,body:JSON.stringify({employee_id:currentUser.id,title,content:title,is_done:false,source:'personal',status:'waiting'})});input.value='';loadTodos();}catch(e){showToast('추가 실패','error');}}
 // 할일 순서 이동
 let todoOrderCache = [];
 
@@ -1162,6 +1202,18 @@ async function deleteTodo(id){
 }
 function toggleDoneSection(){doneSectionOpen=!doneSectionOpen;document.getElementById('todo-done-list').style.display=doneSectionOpen?'block':'none';document.getElementById('done-toggle-icon').textContent=doneSectionOpen?'▲':'▼';}
 
+function toggleTodoStatus(){
+  const btn=document.getElementById('detail-status-btn');
+  const input=document.getElementById('detail-status');
+  const cur=input.value;
+  let next,label,cls;
+  if(cur==='waiting'){next='active';label='▶ 진행';cls='active';}
+  else{next='waiting';label='⏸ 대기';cls='waiting';}
+  input.value=next;
+  btn.textContent=label;
+  btn.className='status-toggle-btn '+cls;
+}
+
 // ─── TODO 상세 ───
 let currentChecklist = [];
 let selectedAssignees = [];
@@ -1190,9 +1242,21 @@ async function openTodoDetail(id){
   // 항상 원본 id를 사용 (공유본이면 원본 id로 교체됨)
   const detailId = t.id; // t가 이미 원본으로 교체됨
   document.getElementById('detail-todo-id').value = detailId;
+  document.getElementById('detail-title').value = t.title || t.content || '';
   document.getElementById('detail-content').value = t.content||'';
   document.getElementById('detail-due-date').value = t.due_date||'';
   document.getElementById('detail-note').value = t.note||'';
+  // 상태 설정
+  const todoStatus = t.status || 'waiting';
+  document.getElementById('detail-status').value = todoStatus;
+  const statusBtn = document.getElementById('detail-status-btn');
+  if(todoStatus === 'active'){
+    statusBtn.textContent = '▶ 진행';
+    statusBtn.className = 'status-toggle-btn active';
+  } else {
+    statusBtn.textContent = '⏸ 대기';
+    statusBtn.className = 'status-toggle-btn waiting';
+  }
 
   // 체크리스트
   try{ currentChecklist = t.checklist ? JSON.parse(t.checklist) : []; }catch(e){ currentChecklist=[]; }
@@ -1253,10 +1317,12 @@ function removeClItem(i){
 
 async function saveTodoDetail(){
   const rootId = document.getElementById('detail-todo-id').value;
+  const todoTitle = document.getElementById('detail-title').value.trim();
   const todoContent = document.getElementById('detail-content').value.trim();
+  const todoStatus = document.getElementById('detail-status').value || 'waiting';
   const dueDate = document.getElementById('detail-due-date').value;
   const note = document.getElementById('detail-note').value.trim();
-  if(!todoContent){showToast('내용을 입력하세요','error');return;}
+  if(!todoTitle){showToast('제목을 입력하세요','error');return;}
 
   const assigneeIds = selectedAssignees.join(',');
   const assigneeNames = selectedAssignees.map(function(aid){
@@ -1267,7 +1333,9 @@ async function saveTodoDetail(){
   const checklistJson = currentChecklist.length ? JSON.stringify(currentChecklist) : null;
 
   const updateBody = {
-    content: todoContent,
+    title: todoTitle,
+    content: todoContent || todoTitle,
+    status: todoStatus,
     due_date: dueDate||null,
     note: note||null,
     checklist: checklistJson,
@@ -1298,7 +1366,8 @@ async function saveTodoDetail(){
         return fetch(API+'/todos?id=eq.'+existMap[aid], {
           method:'PATCH', headers:H,
           body:JSON.stringify({
-            content:todoContent,
+            title:todoTitle,
+            content:todoContent||todoTitle,
             due_date:dueDate||null,
             note:note||null,
             checklist:checklistJson,
@@ -1312,9 +1381,11 @@ async function saveTodoDetail(){
           method:'POST', headers:H,
           body:JSON.stringify({
             employee_id:aid,
-            content:todoContent,
+            title:todoTitle,
+            content:todoContent||todoTitle,
             is_done:false,
             source:'assigned',
+            status:'waiting',
             due_date:dueDate||null,
             note:note||null,
             checklist:checklistJson,
