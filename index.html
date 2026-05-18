@@ -364,14 +364,8 @@ pre{background:var(--surface2);border:1px solid var(--border);border-radius:8px;
         <div class="stat-box"><div class="stat-val warn" id="tt-soon">0</div><div class="stat-label">1주일 이내</div></div>
         <div class="stat-box"><div class="stat-val accent" id="tt-total">0</div><div class="stat-label">전체 미완료</div></div>
       </div>
-      <!-- 좌우 스크롤 버튼 -->
-      <div id="teamtodo-scroll-btns" style="display:none;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <button onclick="scrollKanban(-1)" style="background:var(--surface);border:1px solid var(--border);color:var(--text2);border-radius:8px;padding:8px 16px;cursor:pointer;font-size:16px;font-family:inherit;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">← 이전</button>
-        <div id="kanban-indicator" style="display:flex;gap:6px;align-items:center"></div>
-        <button onclick="scrollKanban(1)" style="background:var(--surface);border:1px solid var(--border);color:var(--text2);border-radius:8px;padding:8px 16px;cursor:pointer;font-size:16px;font-family:inherit;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">다음 →</button>
-      </div>
       <!-- 팀원별 할일 -->
-      <div id="teamtodo-list" onscroll="updateKanbanIndicator()"><div class="empty"><div class="empty-icon">✅</div><p>조회 버튼을 눌러주세요</p></div></div>
+      <div id="teamtodo-list"><div class="empty"><div class="empty-icon">✅</div><p>조회 버튼을 눌러주세요</p></div></div>
     </div>
 
     <!-- 리포트 -->
@@ -1412,7 +1406,7 @@ async function loadTeamTodos(){
 
   try{
     // 모든 todo 불러오기 (원본 + 공유본 포함)
-    let url = API+'/todos?order=due_date.asc.nullslast,created_at.asc&select=*,employees(name,emp_id)';
+    let url = API+'/todos?order=sort_order.asc,created_at.asc&select=*,employees(name,emp_id)';
     if(memberFilter) url += '&employee_id=eq.'+memberFilter;
     if(statusFilter==='active') url += '&is_done=eq.false';
     else if(statusFilter==='done') url += '&is_done=eq.true';
@@ -1447,15 +1441,6 @@ async function loadTeamTodos(){
     document.getElementById('tt-overdue').textContent=overdue;
     document.getElementById('tt-soon').textContent=soon;
     document.getElementById('tt-total').textContent=active.length;
-    // 스크롤 버튼 표시
-    setTimeout(()=>{
-      const memberCount = Object.keys(byMember).length;
-      if(memberCount>1){
-        document.getElementById('teamtodo-scroll-btns').style.display='flex';
-        updateKanbanIndicator();
-      }
-    }, 100);
-
     if(!todos.length){el.innerHTML='<div class="empty"><div class="empty-icon">✅</div><p>할일이 없습니다</p></div>';return;}
 
     // 팀원별 그룹
@@ -1487,7 +1472,7 @@ async function loadTeamTodos(){
                 const clText = checklist.length ? `<div style="font-size:10px;color:var(--text3);margin-top:4px">☑ ${checklist.filter(c=>c.done).length}/${checklist.length}</div>` : '';
                 return `<div style="padding:10px;background:var(--surface2);border-radius:8px;margin-bottom:8px;border:1px solid var(--border);transition:border-color .2s;position:relative" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
                   <div style="cursor:pointer" onclick="openTodoDetail('${t.id}')">
-                    <div style="font-size:12px;font-weight:600;line-height:1.5;color:var(--text);padding-right:24px">${t.content}</div>
+                    <div style="font-size:12px;font-weight:600;line-height:1.5;color:var(--text);padding-right:24px">${t.title||t.content}</div>
                     ${assignee}${clText}${due}
                   </div>
                   <button onclick="deleteTodo('${t.id}')" style="position:absolute;top:6px;right:6px;background:none;border:none;color:var(--text3);cursor:pointer;font-size:13px;line-height:1;transition:color .2s" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text3)'">✕</button>
@@ -1893,36 +1878,6 @@ function sortUser(col){
 }
 async function addUser(){const name=document.getElementById('new-user-name').value.trim(),empId=document.getElementById('new-user-empid').value.trim();const isAdmin=document.getElementById('new-user-admin').value==='true';if(!name||!empId){showToast('이름과 사번을 입력하세요','error');return;}try{await fetch(`${API}/employees`,{method:'POST',headers:H,body:JSON.stringify({name,emp_id:empId,is_admin:isAdmin})});closeModal('modal-add-user');document.getElementById('new-user-name').value='';document.getElementById('new-user-empid').value='';await loadUsers();showToast(`${name} 추가됨`,'success');}catch(e){showToast('추가 실패 (사번 중복 확인)','error');}}
 async function toggleAdmin(id,isAdmin){try{await fetch(`${API}/employees?id=eq.${id}`,{method:'PATCH',headers:H,body:JSON.stringify({is_admin:!isAdmin})});await loadUsers();showToast('권한 변경됨','success');}catch(e){showToast('변경 실패','error');}}
-
-// KANBAN SCROLL
-function scrollKanban(dir){
-  const el = document.getElementById('teamtodo-list');
-  const cardWidth = 234; // 220px + 14px gap
-  el.scrollBy({left: dir * cardWidth, behavior:'smooth'});
-  setTimeout(updateKanbanIndicator, 350);
-}
-
-function updateKanbanIndicator(){
-  const el = document.getElementById('teamtodo-list');
-  const inner = el.querySelector('div[style*="display:flex"]');
-  if(!inner) return;
-  const cards = inner.children.length;
-  const visibleCount = Math.floor(el.clientWidth / 234) || 1;
-  const totalPages = Math.ceil(cards / visibleCount);
-  const currentPage = Math.round(el.scrollLeft / (234 * visibleCount));
-  const ind = document.getElementById('kanban-indicator');
-  if(!ind) return;
-  ind.innerHTML = Array.from({length:totalPages},(_,i)=>`
-    <div style="width:${i===currentPage?'20px':'8px'};height:8px;border-radius:4px;background:${i===currentPage?'var(--accent)':'var(--border)'};transition:all .3s;cursor:pointer" onclick="scrollKanbanTo(${i})"></div>
-  `).join('');
-}
-
-function scrollKanbanTo(page){
-  const el = document.getElementById('teamtodo-list');
-  const visibleCount = Math.floor(el.clientWidth / 234) || 1;
-  el.scrollTo({left: page * 234 * visibleCount, behavior:'smooth'});
-  setTimeout(updateKanbanIndicator, 350);
-}
 
 // PASTE UPLOAD
 let pasteRows = [];
