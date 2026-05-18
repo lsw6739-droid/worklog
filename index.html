@@ -2155,7 +2155,7 @@ async function submitPasteData(){
 }
 
 // UTILS
-function today(){return new Date().toISOString().split('T')[0];}
+function today(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function openModal(id){document.getElementById(id).classList.add('open');if(id==='modal-template-pick')openTemplateModal();}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.modal-overlay').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));

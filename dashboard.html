@@ -325,6 +325,9 @@ let radarSelected = [];
 const ATTEND_HOURS_DAILY = {annual:8, half:4, quarter:2, other:0};
 const ATTEND_LABELS_DB   = {annual:'연차', half:'반차', quarter:'반반차', other:'기타근태'};
 
+// 로컬 날짜 → YYYY-MM-DD (toISOString은 UTC 기준이라 한국에서 날짜 오류 발생)
+function dateToStr(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+
 // 근태 레코드 → 가상 work_log 배열로 변환
 function attendToLogs(attends, employees, periodStart, periodEnd){
   const empMap = {};
@@ -346,7 +349,7 @@ function attendToLogs(attends, employees, periodStart, periodEnd){
       if(d >= pStart && d <= pEnd){
         const dw = d.getDay();
         if(dw !== 0 && dw !== 6){ // 주말 제외
-          const dateStr = d.toISOString().split('T')[0];
+          const dateStr = dateToStr(d);
           logs.push({
             id: 'attend-'+a.id+'-'+dateStr,
             employee_id: a.employee_id,
@@ -400,11 +403,11 @@ function setPeriod(preset) {
   if(preset==='thisweek'){
     const mon=new Date(now); mon.setDate(now.getDate()-(now.getDay()||7)+1);
     const sun=new Date(mon); sun.setDate(mon.getDate()+6);
-    start=mon.toISOString().split('T')[0]; end=sun.toISOString().split('T')[0];
+    start=dateToStr(mon); end=dateToStr(sun);
   } else if(preset==='lastweek'){
     const mon=new Date(now); mon.setDate(now.getDate()-(now.getDay()||7)-6);
     const sun=new Date(mon); sun.setDate(mon.getDate()+6);
-    start=mon.toISOString().split('T')[0]; end=sun.toISOString().split('T')[0];
+    start=dateToStr(mon); end=dateToStr(sun);
   } else if(preset==='thismonth'){
     const y=now.getFullYear(),m=now.getMonth();
     start=`${y}-${String(m+1).padStart(2,'0')}-01`;
@@ -478,7 +481,7 @@ async function loadData() {
 
 function generateDemoData() {
   const logs = [];
-  const start = document.getElementById('date-start').value || new Date().toISOString().split('T')[0].slice(0,8)+'01';
+  const start = document.getElementById('date-start').value || dateToStr(new Date()).slice(0,8)+'01';
   const [y,m] = start.split('-');
   const days = new Date(y,m,0).getDate();
   allEmployees.forEach(e => {
@@ -786,7 +789,7 @@ function renderTrendChart(logs) {
     } else {
       const d=new Date(l.log_date+'T00:00:00');
       d.setDate(d.getDate()-(d.getDay()||7)+1);
-      key=d.toISOString().split('T')[0];
+      key=dateToStr(d);
     }
     if(!bucketMap[key])bucketMap[key]={};
     bucketMap[key][l.employee_id]=(bucketMap[key][l.employee_id]||0)+Number(l.hours);
@@ -908,7 +911,7 @@ function renderHeatmap(logs) {
   let week = [];
   const cur = new Date(gridStart);
   while(cur <= endD){
-    const dateStr = cur.toISOString().split('T')[0];
+    const dateStr = dateToStr(cur);
     const inRange = cur >= startD && cur <= endD;
     week.push(inRange ? {d:cur.getDate(),date:dateStr,h:byDate[dateStr]||0} : null);
     if(week.length===7){weeks.push(week);week=[];}
@@ -961,8 +964,8 @@ async function renderWeekWidget() {
   const now = new Date();
   const mon = new Date(now); mon.setDate(now.getDate()-now.getDay()+1);
   const sun = new Date(mon); sun.setDate(mon.getDate()+6);
-  const start = mon.toISOString().split('T')[0];
-  const end = sun.toISOString().split('T')[0];
+  const start = dateToStr(mon);
+  const end = dateToStr(sun);
 
   let weekLogs = [], weekAttends = [];
   try {
