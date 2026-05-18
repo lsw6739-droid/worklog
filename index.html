@@ -725,8 +725,6 @@ async function loadCategories(){
   catch(e){categories=[{id:'1',name:'제조'},{id:'2',name:'QA'},{id:'3',name:'문서관리'},{id:'4',name:'교육'},{id:'5',name:'회의'},{id:'6',name:'기타'}];}
   const opts=categories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
   ['log-category','edit-log-category','edit-tpl-category'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<option value="">분류 선택...</option>'+opts;});
-  const lastCat=localStorage.getItem('wl_last_cat');
-  if(lastCat){const el=document.getElementById('log-category');if(el&&el.querySelector(`option[value="${lastCat}"]`))el.value=lastCat;}
   if(currentUser.is_admin)renderCategoryList();
 }
 async function addCategory(){
