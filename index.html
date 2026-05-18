@@ -152,8 +152,10 @@ tr:hover td{background:rgba(0,194,255,.03)}
 .cl-check{width:16px;height:16px;border-radius:3px;border:2px solid var(--border);background:transparent;cursor:pointer;flex-shrink:0;appearance:none;-webkit-appearance:none;position:relative;transition:all .2s}
 .cl-check:checked{background:var(--accent2);border-color:var(--accent2)}
 .cl-check:checked::after{content:'✓';position:absolute;top:-2px;left:1px;color:#000;font-size:11px;font-weight:700}
-.cl-text{flex:1;font-size:12px}
+.cl-text{flex:1;font-size:12px;cursor:text;border-radius:4px;padding:1px 3px;transition:background .15s}
+.cl-text:hover{background:rgba(0,212,255,0.06)}
 .cl-text.done{text-decoration:line-through;color:var(--text3)}
+.cl-edit-input{flex:1;font-size:12px;background:var(--surface2);border:1.5px solid var(--accent);border-radius:6px;color:var(--text);padding:2px 7px;font-family:inherit;outline:none;min-width:0}
 .cl-del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;padding:0;transition:color .2s}
 .cl-del:hover{color:var(--danger)}
 .team-todo-group{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px}
@@ -1319,7 +1321,7 @@ function renderChecklist(){
          ondrop="clDragDrop(event,${i})">
       <span class="cl-handle" title="드래그로 순서 변경">⠿</span>
       <input type="checkbox" class="cl-check" ${item.done?'checked':''} onchange="toggleClItem(${i})">
-      <span class="cl-text ${item.done?'done':''}">${item.text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>
+      <span class="cl-text ${item.done?'done':''}" onclick="startClEdit(event,${i})" title="클릭해서 수정">${item.text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>
       <button class="cl-del" onclick="removeClItem(${i})">✕</button>
     </div>`).join('');
 }
@@ -1341,6 +1343,43 @@ function toggleClItem(i){
 function removeClItem(i){
   currentChecklist.splice(i,1);
   renderChecklist();
+}
+
+// ── 체크리스트 인라인 편집 ──
+function startClEdit(e, i){
+  e.stopPropagation();
+  const span = e.currentTarget;
+  if(span.querySelector('input')) return; // 이미 편집 중
+
+  const item = currentChecklist[i];
+  const clItem = span.closest('.cl-item');
+
+  // 드래그 비활성화 (편집 중 오작동 방지)
+  clItem.draggable = false;
+
+  // span → input 교체
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'cl-edit-input';
+  input.value = item.text;
+  span.replaceWith(input);
+  input.focus();
+  input.select();
+
+  function commit(){
+    const newText = input.value.trim();
+    if(newText) currentChecklist[i].text = newText;
+    clItem.draggable = true;
+    renderChecklist();
+  }
+
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', function(ev){
+    if(ev.key === 'Enter'){ ev.preventDefault(); input.blur(); }
+    if(ev.key === 'Escape'){ input.value = item.text; input.blur(); }
+  });
+  // 드래그 시작 막기 (input 안에서 텍스트 선택 가능하도록)
+  input.addEventListener('dragstart', function(ev){ ev.preventDefault(); ev.stopPropagation(); });
 }
 
 // ── 체크리스트 드래그 앤 드롭 ──
