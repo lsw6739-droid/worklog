@@ -1051,9 +1051,14 @@ async function loadTodos(){
           if(t.parent_todo_id&&rootMap[t.parent_todo_id]){
             const root=rootMap[t.parent_todo_id];
             return Object.assign({},t,{
-              content:root.content,due_date:root.due_date,
-              note:root.note,checklist:root.checklist,
-              assignee_names:root.assignee_names,assignee_ids:root.assignee_ids
+              title:root.title,
+              content:root.content,
+              due_date:root.due_date,
+              note:root.note,
+              checklist:root.checklist,
+              assignee_names:root.assignee_names,
+              assignee_ids:root.assignee_ids
+              // status는 각자의 상태 유지
             });
           }
           return t;
@@ -1099,7 +1104,22 @@ function renderTodoItem(t,isDone){
 }
 
 
-async function addTodo(){const input=document.getElementById('todo-input'),title=input.value.trim();if(!title)return;try{await fetch(`${API}/todos`,{method:'POST',headers:H,body:JSON.stringify({employee_id:currentUser.id,title,content:title,is_done:false,source:'personal',status:'waiting'})});input.value='';loadTodos();}catch(e){showToast('추가 실패','error');}}
+async function addTodo(){
+  const input=document.getElementById('todo-input'), title=input.value.trim();
+  if(!title) return;
+  try{
+    // title/status 컬럼 포함해서 먼저 시도
+    let res=await fetch(`${API}/todos`,{method:'POST',headers:H,
+      body:JSON.stringify({employee_id:currentUser.id,title,content:title,is_done:false,source:'personal',status:'waiting'})});
+    if(!res.ok){
+      // 컬럼 없는 구버전 DB 호환 fallback
+      res=await fetch(`${API}/todos`,{method:'POST',headers:H,
+        body:JSON.stringify({employee_id:currentUser.id,content:title,is_done:false,source:'personal'})});
+      if(!res.ok) throw new Error(await res.text());
+    }
+    input.value=''; loadTodos();
+  }catch(e){ showToast('추가 실패','error'); }
+}
 // 할일 순서 이동
 let todoOrderCache = [];
 
@@ -1345,7 +1365,13 @@ async function saveTodoDetail(){
 
   try{
     // 1. 원본 업데이트
-    await fetch(API+'/todos?id=eq.'+rootId, {method:'PATCH',headers:H,body:JSON.stringify(updateBody)});
+    let patchRes=await fetch(API+'/todos?id=eq.'+rootId, {method:'PATCH',headers:H,body:JSON.stringify(updateBody)});
+    if(!patchRes.ok){
+      // title/status 컬럼 없는 구버전 DB 호환 fallback
+      const {title:_t,status:_s,...fallbackBody}=updateBody;
+      patchRes=await fetch(API+'/todos?id=eq.'+rootId, {method:'PATCH',headers:H,body:JSON.stringify(fallbackBody)});
+      if(!patchRes.ok) throw new Error(await patchRes.text());
+    }
 
     // 2. 기존 공유본 조회
     const existRes = await fetch(API+'/todos?parent_todo_id=eq.'+rootId+'&select=id,employee_id',{headers:H});
@@ -1509,8 +1535,21 @@ async function loadTeamTodos(){
 }
 
 // NOTICE
+// null = 초기화 전, '' = 공지 없음 확인 완료, '<uuid>' = 마지막 공지 ID
 let lastNoticeId = null;
 let noticePollingTimer = null;
+
+function showNoticePopup(n){
+  document.getElementById('notice-popup-content').innerHTML=
+    '<div style="background:var(--surface2);border-radius:10px;padding:16px;margin-bottom:4px">'
+    +'<div style="font-size:15px;font-weight:700;margin-bottom:10px">'+n.title+'</div>'
+    +'<div style="font-size:13px;color:var(--text2);line-height:1.7">'+n.body+'</div>'
+    +'<div style="font-size:10px;color:var(--text3);margin-top:10px">'+new Date(n.created_at).toLocaleDateString('ko-KR')+'</div>'
+    +'</div>';
+  document.getElementById('modal-notice-popup').dataset.noticeId=n.id;
+  openModal('modal-notice-popup');
+  loadTodos();
+}
 
 function startNoticePolling(){
   // 30초마다 새 공지 확인
@@ -1518,21 +1557,13 @@ function startNoticePolling(){
     try{
       const res = await fetch(API+'/notices?order=created_at.desc&limit=1&select=id,title,body,created_at',{headers:H});
       const notices = await res.json();
-      if(!notices||!notices.length) return;
+      // 공지 없음 → lastNoticeId를 ''로 초기화하고 종료
+      if(!notices||!notices.length){ if(lastNoticeId===null) lastNoticeId=''; return; }
       const n = notices[0];
-      // 새 공지가 있고 아직 안 본 경우
-      if(lastNoticeId && n.id !== lastNoticeId){
+      // lastNoticeId가 초기화됐고 (null이 아님), 새 공지가 있으면 팝업
+      if(lastNoticeId !== null && n.id !== lastNoticeId){
         if(!localStorage.getItem('notice_seen_'+n.id)){
-          document.getElementById('notice-popup-content').innerHTML =
-            '<div style="background:var(--surface2);border-radius:10px;padding:16px;margin-bottom:4px">'
-            +'<div style="font-size:15px;font-weight:700;margin-bottom:10px">'+n.title+'</div>'
-            +'<div style="font-size:13px;color:var(--text2);line-height:1.7">'+n.body+'</div>'
-            +'<div style="font-size:10px;color:var(--text3);margin-top:10px">'+new Date(n.created_at).toLocaleDateString('ko-KR')+'</div>'
-            +'</div>';
-          document.getElementById('modal-notice-popup').dataset.noticeId = n.id;
-          openModal('modal-notice-popup');
-          // To-do도 새로고침
-          loadTodos();
+          showNoticePopup(n);
         }
       }
       lastNoticeId = n.id;
@@ -1543,9 +1574,10 @@ function startNoticePolling(){
 async function loadNoticeBanner(){
   try{
     const res=await fetch(`${API}/notices?order=created_at.desc&limit=1`,{headers:H});
-    const notices=await res.json();if(!notices||!notices.length)return;
+    const notices=await res.json();
+    // 공지 없어도 lastNoticeId를 ''로 설정해서 "초기화 완료" 상태로 만듦
+    if(!notices||!notices.length){ lastNoticeId=''; return; }
     const n=notices[0];
-    // 팝업만 표시 (오늘 안 본 공지만)
     lastNoticeId = n.id; // 초기 공지 ID 저장
     if(!localStorage.getItem('notice_seen_'+n.id)){
       document.getElementById('notice-popup-content').innerHTML=`
@@ -1557,7 +1589,7 @@ async function loadNoticeBanner(){
       document.getElementById('modal-notice-popup').dataset.noticeId=n.id;
       setTimeout(()=>openModal('modal-notice-popup'),600);
     }
-  }catch(e){}
+  }catch(e){ lastNoticeId=lastNoticeId===null?'':lastNoticeId; } // 에러 시에도 초기화
 }
 
 function closeNoticePopup(){
@@ -1572,7 +1604,7 @@ async function postNotice(){
   try{
     await fetch(`${API}/notices`,{method:'POST',headers:H,body:JSON.stringify({title,body,created_by:currentUser.id})});
     const empRes=await fetch(`${API}/employees?select=id`,{headers:H});const emps=await empRes.json();
-    await Promise.all(emps.map(e=>fetch(`${API}/todos`,{method:'POST',headers:H,body:JSON.stringify({employee_id:e.id,content:`[공지] ${title}: ${body}`,is_done:false,source:'notice'})})));
+    await Promise.all(emps.map(e=>fetch(`${API}/todos`,{method:'POST',headers:H,body:JSON.stringify({employee_id:e.id,title:`[공지] ${title}`,content:`[공지] ${title}: ${body}`,is_done:false,source:'notice',status:'waiting'})})));
     document.getElementById('notice-title-input').value='';document.getElementById('notice-body-input').value='';
     showToast(`공지 발송 완료 (${emps.length}명)`,'success');loadNoticeHistory();
   }catch(e){showToast('발송 실패','error');}
