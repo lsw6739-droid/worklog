@@ -60,6 +60,9 @@ select option{background:var(--surface2)}
 .btn-warn{background:var(--warn);color:#000}
 .btn-purple{background:var(--purple);color:#fff}
 .btn-success{background:var(--accent2);color:#000}
+.period-quick-btn{padding:5px 11px;border-radius:8px;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text2);transition:all .2s;white-space:nowrap}
+.period-quick-btn:hover{border-color:var(--accent);color:var(--accent)}
+.period-quick-btn.active{background:rgba(0,212,255,0.15);border-color:var(--accent);color:var(--accent)}
 .btn-sm{padding:5px 10px;font-size:11px;width:auto}
 .btn-row{display:flex;gap:8px}
 .btn-row .btn{flex:1}
@@ -289,8 +292,16 @@ pre{background:var(--surface2);border:1px solid var(--border);border-radius:8px;
     <div class="page" id="page-mylog">
       <div class="card">
         <div class="card-title">🔍 <span>조회 조건</span></div>
-        <div class="filter-row">
-          <input type="month" id="my-month" style="flex:1" onchange="loadMyLogs()">
+        <div class="filter-row" style="flex-wrap:wrap;gap:6px">
+          <button class="period-quick-btn active" id="my-btn-today" onclick="setMyPeriod('today')">오늘</button>
+          <button class="period-quick-btn" id="my-btn-thisweek" onclick="setMyPeriod('thisweek')">이번 주</button>
+          <button class="period-quick-btn" id="my-btn-thismonth" onclick="setMyPeriod('thismonth')">이번 달</button>
+          <button class="period-quick-btn" id="my-btn-lastmonth" onclick="setMyPeriod('lastmonth')">지난 달</button>
+          <div style="display:flex;align-items:center;gap:4px;flex:1;min-width:200px">
+            <input type="date" id="my-start" style="flex:1" onchange="onMyRangeChange()">
+            <span style="color:var(--text3);font-size:11px">~</span>
+            <input type="date" id="my-end" style="flex:1" onchange="onMyRangeChange()">
+          </div>
           <button class="btn btn-secondary btn-sm" onclick="loadMyLogs()">조회</button>
           <button class="btn btn-success btn-sm" onclick="exportMyCSV()">⬇ CSV</button>
         </div>
@@ -333,9 +344,17 @@ pre{background:var(--surface2);border:1px solid var(--border);border-radius:8px;
     <div class="page" id="page-team">
       <div class="card">
         <div class="card-title">🔍 <span>조회 조건</span></div>
-        <div class="filter-row">
-          <input type="month" id="team-month" style="flex:1">
-          <select id="team-member-filter" style="flex:1"><option value="">전체 팀원</option></select>
+        <div class="filter-row" style="flex-wrap:wrap;gap:6px">
+          <button class="period-quick-btn active" id="team-btn-today" onclick="setTeamPeriod('today')">오늘</button>
+          <button class="period-quick-btn" id="team-btn-thisweek" onclick="setTeamPeriod('thisweek')">이번 주</button>
+          <button class="period-quick-btn" id="team-btn-thismonth" onclick="setTeamPeriod('thismonth')">이번 달</button>
+          <button class="period-quick-btn" id="team-btn-lastmonth" onclick="setTeamPeriod('lastmonth')">지난 달</button>
+          <div style="display:flex;align-items:center;gap:4px;flex:1;min-width:200px">
+            <input type="date" id="team-start" style="flex:1" onchange="onTeamRangeChange()">
+            <span style="color:var(--text3);font-size:11px">~</span>
+            <input type="date" id="team-end" style="flex:1" onchange="onTeamRangeChange()">
+          </div>
+          <select id="team-member-filter" style="min-width:100px"><option value="">전체 팀원</option></select>
           <button class="btn btn-secondary btn-sm" onclick="loadTeamStats()">조회</button>
           <button class="btn btn-success btn-sm" onclick="exportTeamCSV()">⬇ CSV</button>
         </div>
@@ -670,7 +689,10 @@ async function initApp(){
   document.getElementById('view-date').value=today();
   document.getElementById('attend-start').value=today();
   document.getElementById('attend-end').value=today();
-  ['my-month','team-month','report-month','goal-month'].forEach(id=>document.getElementById(id).value=ym);
+  ['report-month','goal-month'].forEach(id=>document.getElementById(id).value=ym);
+  // 내이력·팀현황 기간 → 오늘로 초기화
+  const t2=today();
+  ['my-start','my-end','team-start','team-end'].forEach(id=>document.getElementById(id).value=t2);
   document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>switchPage(t.dataset.page)));
   await loadCategories();
   await loadTemplates();
@@ -698,18 +720,16 @@ function switchPage(p){
     document.getElementById('view-date').value = t;
     loadDateLogs();
   } else if(p==='mylog'){
-    // 내 이력 → 이번 달
-    document.getElementById('my-month').value = ym;
-    loadMyLogs();
+    // 내 이력 → 오늘
+    setMyPeriod('today');
   } else if(p==='attend'){
     // 근태 시작일·종료일 → 오늘
     document.getElementById('attend-start').value = t;
     document.getElementById('attend-end').value = t;
     loadMyAttends();
   } else if(p==='team'){
-    // 팀 현황 → 이번 달로 리셋 후 자동 조회
-    document.getElementById('team-month').value = ym;
-    loadTeamStats();
+    // 팀 현황 → 오늘
+    setTeamPeriod('today');
   } else if(p==='teamtodo'){
     // 팀 할일 → 자동 조회
     loadTeamTodos();
@@ -994,9 +1014,60 @@ async function loadDateLogs(){
     renderLogList(document.getElementById('date-log-list'),logs,true);
   }catch(e){el.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><p>Supabase 설정 후 사용 가능</p></div>';}
 }
+// ── 기간 선택 헬퍼 ──
+function calcPeriod(preset){
+  const t=today();
+  const now=new Date(t+'T00:00:00');
+  if(preset==='today') return {start:t, end:t};
+  if(preset==='thisweek'){
+    const mon=new Date(now); mon.setDate(now.getDate()-(now.getDay()||7)+1);
+    const sun=new Date(mon); sun.setDate(mon.getDate()+6);
+    return {start:fmtD(mon), end:fmtD(sun)};
+  }
+  if(preset==='thismonth'){
+    const y=now.getFullYear(),m=now.getMonth();
+    return {start:`${y}-${pad(m+1)}-01`, end:`${y}-${pad(m+1)}-${new Date(y,m+1,0).getDate()}`};
+  }
+  if(preset==='lastmonth'){
+    const d=new Date(now.getFullYear(),now.getMonth()-1,1);
+    const y=d.getFullYear(),m=d.getMonth();
+    return {start:`${y}-${pad(m+1)}-01`, end:`${y}-${pad(m+1)}-${new Date(y,m+1,0).getDate()}`};
+  }
+  return {start:t, end:t};
+}
+function fmtD(d){return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;}
+function pad(n){return String(n).padStart(2,'0');}
+
+function setMyPeriod(preset){
+  const {start,end}=calcPeriod(preset);
+  document.getElementById('my-start').value=start;
+  document.getElementById('my-end').value=end;
+  ['today','thisweek','thismonth','lastmonth'].forEach(p=>{
+    document.getElementById('my-btn-'+p)?.classList.toggle('active',p===preset);
+  });
+  loadMyLogs();
+}
+function onMyRangeChange(){
+  ['today','thisweek','thismonth','lastmonth'].forEach(p=>document.getElementById('my-btn-'+p)?.classList.remove('active'));
+  loadMyLogs();
+}
+function setTeamPeriod(preset){
+  const {start,end}=calcPeriod(preset);
+  document.getElementById('team-start').value=start;
+  document.getElementById('team-end').value=end;
+  ['today','thisweek','thismonth','lastmonth'].forEach(p=>{
+    document.getElementById('team-btn-'+p)?.classList.toggle('active',p===preset);
+  });
+  loadTeamStats();
+}
+function onTeamRangeChange(){
+  ['today','thisweek','thismonth','lastmonth'].forEach(p=>document.getElementById('team-btn-'+p)?.classList.remove('active'));
+  loadTeamStats();
+}
+
 async function loadMyLogs(){
-  const month=document.getElementById('my-month').value;if(!month)return;
-  const [y,m]=month.split('-');const start=`${y}-${m}-01`,end=`${y}-${m}-${new Date(y,m,0).getDate()}`;
+  const start=document.getElementById('my-start').value, end=document.getElementById('my-end').value;
+  if(!start||!end)return;
   try{
     const [logsRes,attendRes]=await Promise.all([
       fetch(`${API}/work_logs?employee_id=eq.${currentUser.id}&log_date=gte.${start}&log_date=lte.${end}&order=log_date.desc&select=*,categories(name)`,{headers:H}),
@@ -1904,8 +1975,9 @@ function sortTeamAttend(col){
 
 // TEAM
 async function loadTeamStats(){
-  const month=document.getElementById('team-month').value,mf=document.getElementById('team-member-filter').value;if(!month)return;
-  const [y,m]=month.split('-');const start=`${y}-${m}-01`,end=`${y}-${m}-${new Date(y,m,0).getDate()}`;
+  const start=document.getElementById('team-start').value, end=document.getElementById('team-end').value;
+  const mf=document.getElementById('team-member-filter').value;
+  if(!start||!end)return;
   try{
     let url=`${API}/work_logs?log_date=gte.${start}&log_date=lte.${end}&select=*,categories(name),employees(name,emp_id)`;if(mf)url+=`&employee_id=eq.${mf}`;
     const [logsRes,attendRes]=await Promise.all([fetch(url,{headers:H}),fetch(`${API}/attends?start_date=lte.${end}&end_date=gte.${start}&select=*,employees(name,emp_id)`,{headers:H})]);
@@ -1967,8 +2039,8 @@ async function generateReport(){
 // CSV
 function toCSV(rows,headers){return[headers,...rows].map(r=>r.map(c=>`"${String(c??'').replace(/"/g,'""')}"`).join(',')).join('\n');}
 function downloadCSV(content,filename){const blob=new Blob(['\uFEFF'+content],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();}
-async function exportMyCSV(){const month=document.getElementById('my-month').value;if(!month)return;const [y,m]=month.split('-');const start=`${y}-${m}-01`,end=`${y}-${m}-${new Date(y,m,0).getDate()}`;try{const res=await fetch(`${API}/work_logs?employee_id=eq.${currentUser.id}&log_date=gte.${start}&log_date=lte.${end}&order=log_date.desc&select=*,categories(name)`,{headers:H});const logs=await res.json();downloadCSV(toCSV(logs.map(l=>[l.log_date,l.categories?.name||'',l.content,l.start_time||'',l.end_time||'',Number(l.hours).toFixed(1),l.note||'']),['날짜','분류','업무내용','시작시간','종료시간','공수(h)','비고']),`내공수_${month}.csv`);showToast('CSV 완료','success');}catch(e){showToast('다운로드 실패','error');}}
-async function exportTeamCSV(){const month=document.getElementById('team-month').value;if(!month)return;const [y,m]=month.split('-');const start=`${y}-${m}-01`,end=`${y}-${m}-${new Date(y,m,0).getDate()}`;try{const res=await fetch(`${API}/work_logs?log_date=gte.${start}&log_date=lte.${end}&order=log_date.desc&select=*,categories(name),employees(name,emp_id)`,{headers:H});const logs=await res.json();downloadCSV(toCSV(logs.map(l=>[l.employees?.name||'',l.employees?.emp_id||'',l.log_date,l.categories?.name||'',l.content,l.start_time||'',l.end_time||'',Number(l.hours).toFixed(1),l.note||'']),['이름','사번','날짜','분류','업무내용','시작시간','종료시간','공수(h)','비고']),`팀공수_${month}.csv`);showToast('팀 CSV 완료','success');}catch(e){showToast('다운로드 실패','error');}}
+async function exportMyCSV(){const start=document.getElementById('my-start').value,end=document.getElementById('my-end').value;if(!start||!end)return;try{const res=await fetch(`${API}/work_logs?employee_id=eq.${currentUser.id}&log_date=gte.${start}&log_date=lte.${end}&order=log_date.desc&select=*,categories(name)`,{headers:H});const logs=await res.json();downloadCSV(toCSV(logs.map(l=>[l.log_date,l.categories?.name||'',l.content,l.start_time||'',l.end_time||'',Number(l.hours).toFixed(1),l.note||'']),['날짜','분류','업무내용','시작시간','종료시간','공수(h)','비고']),`내공수_${start}~${end}.csv`);showToast('CSV 완료','success');}catch(e){showToast('다운로드 실패','error');}}
+async function exportTeamCSV(){const start=document.getElementById('team-start').value,end=document.getElementById('team-end').value;if(!start||!end)return;try{const res=await fetch(`${API}/work_logs?log_date=gte.${start}&log_date=lte.${end}&order=log_date.desc&select=*,categories(name),employees(name,emp_id)`,{headers:H});const logs=await res.json();downloadCSV(toCSV(logs.map(l=>[l.employees?.name||'',l.employees?.emp_id||'',l.log_date,l.categories?.name||'',l.content,l.start_time||'',l.end_time||'',Number(l.hours).toFixed(1),l.note||'']),['이름','사번','날짜','분류','업무내용','시작시간','종료시간','공수(h)','비고']),`팀공수_${start}~${end}.csv`);showToast('팀 CSV 완료','success');}catch(e){showToast('다운로드 실패','error');}}
 async function exportReportCSV(){const month=document.getElementById('report-month').value;if(!month){showToast('월을 선택하세요','error');return;}const [y,m]=month.split('-');const start=`${y}-${m}-01`,end=`${y}-${m}-${new Date(y,m,0).getDate()}`;try{const res=await fetch(`${API}/work_logs?log_date=gte.${start}&log_date=lte.${end}&order=log_date&select=*,categories(name),employees(name,emp_id)`,{headers:H});const logs=await res.json();downloadCSV(toCSV(logs.map(l=>[l.employees?.name||'',l.employees?.emp_id||'',l.log_date,l.categories?.name||'',l.content,l.start_time||'',l.end_time||'',Number(l.hours).toFixed(1),l.note||'']),['이름','사번','날짜','분류','업무내용','시작시간','종료시간','공수(h)','비고']),`월간리포트_${month}.csv`);showToast('리포트 CSV 완료','success');}catch(e){showToast('다운로드 실패','error');}}
 
 // GOAL
