@@ -414,9 +414,50 @@ pre{background:var(--surface2);border:1px solid var(--border);border-radius:8px;
     <div class="page" id="page-admin">
       <div class="card">
         <div class="card-title">📢 팀 <span>공지 작성</span></div>
-        <div class="form-group"><label>공지 제목</label><input type="text" id="notice-title-input" placeholder="공지 제목"></div>
-        <div class="form-group"><label>공지 내용</label><textarea id="notice-body-input" placeholder="팀원 To-do에 자동 추가됩니다"></textarea></div>
-        <button class="btn btn-primary" onclick="postNotice()" style="margin-bottom:12px">📢 공지 발송</button>
+        <!-- 제목 (필수) -->
+        <div class="form-group">
+          <label>제목 <span style="color:var(--danger)">*</span></label>
+          <input type="text" id="notice-title-input" placeholder="공지 제목을 입력하세요">
+        </div>
+        <!-- 내용 (필수) -->
+        <div class="form-group">
+          <label>공지 내용 <span style="color:var(--danger)">*</span></label>
+          <textarea id="notice-body-input" placeholder="공지 내용을 입력하세요" style="min-height:80px"></textarea>
+        </div>
+        <!-- 담당자 (필수) -->
+        <div class="form-group">
+          <label>담당자 <span style="color:var(--danger)">*</span> <span style="color:var(--text3);font-size:10px">(클릭으로 선택 · 복수 가능)</span></label>
+          <div id="notice-assignees" style="display:flex;flex-wrap:wrap;gap:8px;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;min-height:46px"></div>
+        </div>
+        <!-- 배포 방식 -->
+        <div class="form-group">
+          <label>배포 방식 <span style="color:var(--danger)">*</span></label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="period-quick-btn active" id="notice-dist-both"    onclick="setNoticeDist('both')">📢 팝업 + 투두</button>
+            <button class="period-quick-btn"        id="notice-dist-popup"   onclick="setNoticeDist('popup')">🔔 팝업만</button>
+            <button class="period-quick-btn"        id="notice-dist-todo"    onclick="setNoticeDist('todo')">✅ 투두만</button>
+          </div>
+        </div>
+        <!-- 기한일 (선택) -->
+        <div class="form-group" id="notice-duedate-group">
+          <label>기한일 <span style="color:var(--text3);font-size:10px">(선택)</span></label>
+          <input type="date" id="notice-due-date">
+        </div>
+        <!-- 체크리스트 (선택) -->
+        <div class="form-group" id="notice-checklist-group">
+          <label>체크리스트 <span style="color:var(--text3);font-size:10px">(선택)</span></label>
+          <div id="notice-checklist" style="margin-bottom:8px;min-height:4px"></div>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="notice-cl-input" placeholder="항목 입력 후 Enter" style="flex:1;margin-bottom:0" onkeydown="if(event.key==='Enter'){event.preventDefault();addNoticeClItem()}">
+            <button class="btn btn-secondary btn-sm" onclick="addNoticeClItem()">추가</button>
+          </div>
+        </div>
+        <!-- 비고 (선택) -->
+        <div class="form-group">
+          <label>비고 <span style="color:var(--text3);font-size:10px">(선택)</span></label>
+          <textarea id="notice-note-input" placeholder="추가 메모" style="min-height:60px"></textarea>
+        </div>
+        <button class="btn btn-primary" id="notice-post-btn" onclick="postNotice()" style="margin-bottom:12px;width:100%">📢 공지 발송</button>
         <div class="section-title">발송 이력</div>
         <div id="notice-history"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
       </div>
@@ -475,6 +516,12 @@ create table if not exists notices (
   created_by uuid references employees(id),
   created_at timestamptz default now()
 );
+-- 공지 확장 컬럼 (기존 테이블에 추가 실행)
+alter table notices add column if not exists assignee_ids text;
+alter table notices add column if not exists assignee_names text;
+alter table notices add column if not exists due_date date;
+alter table notices add column if not exists checklist jsonb;
+alter table notices add column if not exists dist_mode text default 'both'; -- 'popup','todo','both'
 -- 근태 테이블
 create table if not exists attends (
   id uuid default gen_random_uuid() primary key,
@@ -701,6 +748,11 @@ async function initApp(){
   if(currentUser.is_admin){
     loadUsers(); // 관리자 탭용 (권한 변경 기능 포함)
     loadGoals();loadNoticeHistory();
+    // 공지 작성 UI 초기화 (담당자 칩, 배포방식)
+    setTimeout(function(){
+      renderNoticeAssignees();
+      setNoticeDist('both');
+    }, 300);
   }
 
   // 30초마다 새 공지 확인 (폴링)
@@ -1720,10 +1772,19 @@ let lastNoticeId = null;
 let noticePollingTimer = null;
 
 function showNoticePopup(n){
+  // dist_mode가 'todo' 전용이면 팝업 표시 안 함
+  if(n.dist_mode === 'todo') { loadTodos(); return; }
+
+  const assigneeInfo = n.assignee_names
+    ? `<div style="font-size:10px;color:var(--accent2);margin-top:6px">👤 ${n.assignee_names}</div>` : '';
+  const dueDateInfo = n.due_date
+    ? `<div style="font-size:10px;color:var(--warn);margin-top:4px">📅 기한: ${n.due_date}</div>` : '';
+
   document.getElementById('notice-popup-content').innerHTML=
     '<div style="background:var(--surface2);border-radius:10px;padding:16px;margin-bottom:4px">'
     +'<div style="font-size:15px;font-weight:700;margin-bottom:10px">'+n.title+'</div>'
     +'<div style="font-size:13px;color:var(--text2);line-height:1.7">'+n.body+'</div>'
+    + assigneeInfo + dueDateInfo
     +'<div style="font-size:10px;color:var(--text3);margin-top:10px">'+new Date(n.created_at).toLocaleDateString('ko-KR')+'</div>'
     +'</div>';
   document.getElementById('modal-notice-popup').dataset.noticeId=n.id;
@@ -1735,7 +1796,7 @@ function startNoticePolling(){
   // 30초마다 새 공지 확인
   noticePollingTimer = setInterval(async function(){
     try{
-      const res = await fetch(API+'/notices?order=created_at.desc&limit=1&select=id,title,body,created_at',{headers:H});
+      const res = await fetch(API+'/notices?order=created_at.desc&limit=1&select=id,title,body,created_at,dist_mode,assignee_ids,assignee_names,due_date',{headers:H});
       const notices = await res.json();
       // 공지 없음 → lastNoticeId를 ''로 초기화하고 종료
       if(!notices||!notices.length){ if(lastNoticeId===null) lastNoticeId=''; return; }
@@ -1743,7 +1804,9 @@ function startNoticePolling(){
       // lastNoticeId가 초기화됐고 (null이 아님), 새 공지가 있으면 팝업
       if(lastNoticeId !== null && n.id !== lastNoticeId){
         if(!localStorage.getItem('notice_seen_'+n.id)){
-          showNoticePopup(n);
+          // 담당자가 지정된 경우 본인 포함 여부 확인
+          const isForMe = !n.assignee_ids || n.assignee_ids.split(',').includes(currentUser.id);
+          if(isForMe) showNoticePopup(n);
         }
       }
       lastNoticeId = n.id;
@@ -1753,17 +1816,21 @@ function startNoticePolling(){
 
 async function loadNoticeBanner(){
   try{
-    const res=await fetch(`${API}/notices?order=created_at.desc&limit=1`,{headers:H});
+    const res=await fetch(`${API}/notices?order=created_at.desc&limit=1&select=id,title,body,created_at,dist_mode,assignee_ids,assignee_names,due_date`,{headers:H});
     const notices=await res.json();
     // 공지 없어도 lastNoticeId를 ''로 설정해서 "초기화 완료" 상태로 만듦
     if(!notices||!notices.length){ lastNoticeId=''; return; }
     const n=notices[0];
     lastNoticeId = n.id; // 초기 공지 ID 저장
-    if(!localStorage.getItem('notice_seen_'+n.id)){
+    const isForMe = !n.assignee_ids || n.assignee_ids.split(',').includes(currentUser.id);
+    if(isForMe && n.dist_mode !== 'todo' && !localStorage.getItem('notice_seen_'+n.id)){
+      const assigneeInfo = n.assignee_names ? `<div style="font-size:10px;color:var(--accent2);margin-top:6px">👤 ${n.assignee_names}</div>` : '';
+      const dueDateInfo  = n.due_date ? `<div style="font-size:10px;color:var(--warn);margin-top:4px">📅 기한: ${n.due_date}</div>` : '';
       document.getElementById('notice-popup-content').innerHTML=`
         <div style="background:var(--surface2);border-radius:10px;padding:16px;margin-bottom:4px">
           <div style="font-size:15px;font-weight:700;margin-bottom:10px">${n.title}</div>
           <div style="font-size:13px;color:var(--text2);line-height:1.7">${n.body}</div>
+          ${assigneeInfo}${dueDateInfo}
           <div style="font-size:10px;color:var(--text3);margin-top:10px">${new Date(n.created_at).toLocaleDateString('ko-KR')}</div>
         </div>`;
       document.getElementById('modal-notice-popup').dataset.noticeId=n.id;
@@ -1778,57 +1845,148 @@ function closeNoticePopup(){
   if(noticeId) localStorage.setItem('notice_seen_'+noticeId, '1');
   closeModal('modal-notice-popup');
 }
-let _postingNotice = false; // 이중 실행 방지 플래그
-async function postNotice(){
-  if(_postingNotice) return; // 이미 실행 중이면 차단
-  const title=document.getElementById('notice-title-input').value.trim(),body=document.getElementById('notice-body-input').value.trim();
-  if(!title||!body){showToast('제목과 내용을 입력하세요','error');return;}
+// ── 공지 작성 상태 ──
+let _postingNotice = false;
+let noticeSelectedAssignees = []; // 선택된 담당자 ID 배열 (비어있으면 전체)
+let noticeChecklist = [];
+let noticeDistMode = 'both'; // 'popup' | 'todo' | 'both'
 
-  // 버튼 비활성화
-  const btn=document.querySelector('button[onclick="postNotice()"]');
-  if(btn){btn.disabled=true;btn.textContent='⏳ 발송 중...';}
-  _postingNotice=true;
+function setNoticeDist(mode){
+  noticeDistMode = mode;
+  ['both','popup','todo'].forEach(m=>{
+    document.getElementById('notice-dist-'+m)?.classList.toggle('active', m===mode);
+  });
+  // 투두 전용 필드는 팝업만 선택 시 숨기기
+  const todoOnly = mode !== 'popup';
+  document.getElementById('notice-duedate-group').style.display = todoOnly ? '' : 'none';
+  document.getElementById('notice-checklist-group').style.display = todoOnly ? '' : 'none';
+}
+
+function renderNoticeAssignees(){
+  const el = document.getElementById('notice-assignees');
+  if(!el || !allEmployees.length){ return; }
+  const isAllSelected = noticeSelectedAssignees.length === 0;
+  el.innerHTML =
+    `<div class="assignee-chip ${isAllSelected?'selected':''}" onclick="toggleNoticeAssignee('__all__')" style="${isAllSelected?'border-color:var(--accent);background:rgba(0,212,255,.15);color:var(--accent)':''}">전체</div>` +
+    allEmployees.map(e=>{
+      const sel = noticeSelectedAssignees.includes(e.id);
+      return `<div class="assignee-chip ${sel?'selected':''}" onclick="toggleNoticeAssignee('${e.id}')">${e.name}</div>`;
+    }).join('');
+}
+
+function toggleNoticeAssignee(id){
+  if(id==='__all__'){
+    noticeSelectedAssignees = [];
+  } else {
+    const idx = noticeSelectedAssignees.indexOf(id);
+    if(idx>=0) noticeSelectedAssignees.splice(idx,1);
+    else noticeSelectedAssignees.push(id);
+  }
+  renderNoticeAssignees();
+}
+
+function renderNoticeChecklist(){
+  const el = document.getElementById('notice-checklist');
+  if(!noticeChecklist.length){ el.innerHTML=''; return; }
+  el.innerHTML = noticeChecklist.map((item,i)=>`
+    <div class="cl-item">
+      <span class="cl-handle">⠿</span>
+      <input type="checkbox" class="cl-check" ${item.done?'checked':''} onchange="noticeChecklist[${i}].done=!noticeChecklist[${i}].done">
+      <span class="cl-text ${item.done?'done':''}">${item.text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>
+      <button class="cl-del" onclick="noticeChecklist.splice(${i},1);renderNoticeChecklist()">✕</button>
+    </div>`).join('');
+}
+
+function addNoticeClItem(){
+  const input = document.getElementById('notice-cl-input');
+  const text = input.value.trim(); if(!text) return;
+  noticeChecklist.push({text, done:false});
+  input.value=''; renderNoticeChecklist();
+}
+
+async function postNotice(){
+  if(_postingNotice) return;
+  const title = document.getElementById('notice-title-input').value.trim();
+  const body  = document.getElementById('notice-body-input').value.trim();
+  const dueDate = document.getElementById('notice-due-date').value;
+  const noteVal = document.getElementById('notice-note-input').value.trim();
+
+  // 필수 검증
+  if(!title){ showToast('제목을 입력하세요','error'); return; }
+  if(!body){  showToast('공지 내용을 입력하세요','error'); return; }
+
+  // 담당자: 비어있으면 전체
+  const empRes = await fetch(`${API}/employees?select=id,name`,{headers:H});
+  const allEmps = await empRes.json();
+  const targets = noticeSelectedAssignees.length > 0
+    ? allEmps.filter(e => noticeSelectedAssignees.includes(e.id))
+    : allEmps;
+
+  if(!targets.length){ showToast('담당자를 선택하세요','error'); return; }
+
+  const btn = document.getElementById('notice-post-btn');
+  if(btn){ btn.disabled=true; btn.textContent='⏳ 발송 중...'; }
+  _postingNotice = true;
 
   try{
-    // 1. 공지 저장 후 방금 만든 공지 ID 가져오기
-    const noticeRes=await fetch(`${API}/notices`,{method:'POST',headers:{...H,'Prefer':'return=representation'},body:JSON.stringify({title,body,created_by:currentUser.id})});
-    const noticeData=await noticeRes.json();
-    const noticeId=Array.isArray(noticeData)?noticeData[0]?.id:noticeData?.id;
+    const assigneeIds   = targets.map(e=>e.id).join(',');
+    const assigneeNames = targets.map(e=>e.name).join(', ');
+    const checklistJson = noticeChecklist.length ? JSON.stringify(noticeChecklist) : null;
 
-    // 2. 전체 직원 조회
-    const empRes=await fetch(`${API}/employees?select=id`,{headers:H});
-    const emps=await empRes.json();
+    // 1. 공지 저장
+    const noticeRes = await fetch(`${API}/notices`, {
+      method:'POST',
+      headers:{...H,'Prefer':'return=representation'},
+      body: JSON.stringify({
+        title, body, created_by: currentUser.id,
+        assignee_ids: assigneeIds,
+        assignee_names: assigneeNames,
+        due_date: dueDate || null,
+        checklist: checklistJson,
+        dist_mode: noticeDistMode
+      })
+    });
+    const noticeData = await noticeRes.json();
+    const noticeId = Array.isArray(noticeData) ? noticeData[0]?.id : noticeData?.id;
 
-    // 3. 이 공지에 대한 투두가 이미 있는지 확인 (중복 방지)
+    // 2. 중복 방지
     if(noticeId){
-      const existRes=await fetch(`${API}/todos?source=eq.notice&note=eq.notice_${noticeId}&limit=1`,{headers:H});
-      const exist=await existRes.json();
-      if(exist&&exist.length>0){
-        showToast('이미 발송된 공지입니다','error');
-        return;
-      }
+      const existRes = await fetch(`${API}/todos?source=eq.notice&note=eq.notice_${noticeId}&limit=1`,{headers:H});
+      const exist = await existRes.json();
+      if(exist && exist.length > 0){ showToast('이미 발송된 공지입니다','error'); return; }
     }
 
-    // 4. 각 직원에게 투두 생성 (note에 noticeId 저장 → 중복 방지 키)
-    await Promise.all(emps.map(e=>fetch(`${API}/todos`,{method:'POST',headers:H,body:JSON.stringify({
-      employee_id:e.id,
-      title:`[공지] ${title}`,
-      content:`[공지] ${title}: ${body}`,
-      is_done:false,
-      source:'notice',
-      status:'waiting',
-      note: noticeId ? `notice_${noticeId}` : null
-    })})));
+    // 3. 투두 생성 (todo 또는 both 모드)
+    if(noticeDistMode === 'todo' || noticeDistMode === 'both'){
+      await Promise.all(targets.map(e=>fetch(`${API}/todos`,{method:'POST',headers:H,body:JSON.stringify({
+        employee_id: e.id,
+        title: `[공지] ${title}`,
+        content: `[공지] ${title}: ${body}`,
+        is_done: false,
+        source: 'notice',
+        status: 'waiting',
+        due_date: dueDate || null,
+        checklist: checklistJson,
+        assignee_ids: assigneeIds,
+        assignee_names: assigneeNames,
+        note: noticeId ? `notice_${noticeId}` : null
+      })})));
+    }
 
-    document.getElementById('notice-title-input').value='';
-    document.getElementById('notice-body-input').value='';
-    showToast(`공지 발송 완료 (${emps.length}명)`,'success');
+    // 초기화
+    ['notice-title-input','notice-body-input','notice-note-input'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('notice-due-date').value='';
+    noticeSelectedAssignees=[]; noticeChecklist=[]; noticeDistMode='both';
+    renderNoticeAssignees(); renderNoticeChecklist();
+    setNoticeDist('both');
+
+    const distLabel = noticeDistMode==='popup'?'팝업':noticeDistMode==='todo'?'투두':'팝업+투두';
+    showToast(`공지 발송 완료 (${targets.length}명 · ${distLabel})`,'success');
     loadNoticeHistory();
   }catch(e){
     showToast('발송 실패','error');
   }finally{
-    // 버튼 복원
-    if(btn){btn.disabled=false;btn.textContent='📢 공지 발송';}
+    if(btn){ btn.disabled=false; btn.textContent='📢 공지 발송'; }
     _postingNotice=false;
   }
 }
