@@ -1812,9 +1812,13 @@ let lastNoticeId = null;
 let noticePollingTimer = null;
 
 function showNoticePopup(n){
-  // dist_mode가 'todo' 전용이면 팝업 표시 안 함
-  if(n.dist_mode === 'todo') { loadTodos(); return; }
+  const mode = n.dist_mode || 'both';
 
+  // 투두만 모드: 팝업 없이 투두 목록만 갱신
+  if(mode === 'todo'){ loadTodos(); return; }
+
+  // 팝업 표시 (popup / both)
+  const modeLabel = mode === 'popup' ? '🔔 팝업 알림' : '📢 팝업 + 투두';
   const assigneeInfo = n.assignee_names
     ? `<div style="font-size:10px;color:var(--accent2);margin-top:6px">👤 ${n.assignee_names}</div>` : '';
   const dueDateInfo = n.due_date
@@ -1825,11 +1829,16 @@ function showNoticePopup(n){
     +'<div style="font-size:15px;font-weight:700;margin-bottom:10px">'+n.title+'</div>'
     +'<div style="font-size:13px;color:var(--text2);line-height:1.7">'+n.body+'</div>'
     + assigneeInfo + dueDateInfo
-    +'<div style="font-size:10px;color:var(--text3);margin-top:10px">'+new Date(n.created_at).toLocaleDateString('ko-KR')+'</div>'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">'
+    +'<span style="font-size:10px;color:var(--text3)">'+new Date(n.created_at).toLocaleDateString('ko-KR')+'</span>'
+    +'<span style="font-size:10px;color:var(--accent);font-weight:600">'+modeLabel+'</span>'
+    +'</div>'
     +'</div>';
   document.getElementById('modal-notice-popup').dataset.noticeId=n.id;
   openModal('modal-notice-popup');
-  loadTodos();
+
+  // both 모드일 때는 투두도 함께 갱신
+  if(mode === 'both') loadTodos();
 }
 
 function startNoticePolling(){
@@ -1863,18 +1872,10 @@ async function loadNoticeBanner(){
     const n=notices[0];
     lastNoticeId = n.id; // 초기 공지 ID 저장
     const isForMe = !n.assignee_ids || n.assignee_ids.split(',').includes(currentUser.id);
-    if(isForMe && n.dist_mode !== 'todo' && !localStorage.getItem('notice_seen_'+n.id)){
-      const assigneeInfo = n.assignee_names ? `<div style="font-size:10px;color:var(--accent2);margin-top:6px">👤 ${n.assignee_names}</div>` : '';
-      const dueDateInfo  = n.due_date ? `<div style="font-size:10px;color:var(--warn);margin-top:4px">📅 기한: ${n.due_date}</div>` : '';
-      document.getElementById('notice-popup-content').innerHTML=`
-        <div style="background:var(--surface2);border-radius:10px;padding:16px;margin-bottom:4px">
-          <div style="font-size:15px;font-weight:700;margin-bottom:10px">${n.title}</div>
-          <div style="font-size:13px;color:var(--text2);line-height:1.7">${n.body}</div>
-          ${assigneeInfo}${dueDateInfo}
-          <div style="font-size:10px;color:var(--text3);margin-top:10px">${new Date(n.created_at).toLocaleDateString('ko-KR')}</div>
-        </div>`;
-      document.getElementById('modal-notice-popup').dataset.noticeId=n.id;
-      setTimeout(()=>openModal('modal-notice-popup'),600);
+    if(isForMe && !localStorage.getItem('notice_seen_'+n.id)){
+      // 투두만 모드면 팝업 없이 종료 (투두는 이미 DB에 있음)
+      if((n.dist_mode || 'both') === 'todo') return;
+      setTimeout(()=>showNoticePopup(n), 600);
     }
   }catch(e){ lastNoticeId=lastNoticeId===null?'':lastNoticeId; } // 에러 시에도 초기화
 }
@@ -1979,6 +1980,13 @@ async function postNotice(mode){
         dist_mode: mode
       })
     });
+    // ▼ 저장 실패 시 즉시 중단 (투두 생성 방지)
+    if(!noticeRes.ok){
+      const errBody = await noticeRes.json().catch(()=>({}));
+      const errMsg  = errBody?.message || errBody?.hint || '공지 저장 실패';
+      showToast('⚠️ ' + errMsg, 'error');
+      return;
+    }
     const noticeData = await noticeRes.json();
     const noticeId = Array.isArray(noticeData) ? noticeData[0]?.id : noticeData?.id;
 
@@ -1989,7 +1997,7 @@ async function postNotice(mode){
       if(exist && exist.length > 0){ showToast('이미 발송된 공지입니다','error'); return; }
     }
 
-    // 3. 투두 생성 (todo 또는 both 모드)
+    // 3. 투두 생성 (todo 또는 both 모드만)
     if(mode === 'todo' || mode === 'both'){
       await Promise.all(targets.map(e=>fetch(`${API}/todos`,{method:'POST',headers:H,body:JSON.stringify({
         employee_id: e.id,
@@ -2024,16 +2032,18 @@ async function postNotice(mode){
   }
 }
 async function loadNoticeHistory(){
+  const el=document.getElementById('notice-history');
   try{
-    const res=await fetch(`${API}/notices?order=created_at.desc&limit=20`,{headers:H});
+    const res=await fetch(`${API}/notices?order=created_at.desc&limit=50`,{headers:H});
+    if(!res.ok){ el.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><p>공지 이력 조회 실패</p></div>'; return; }
     const notices=await res.json();
-    const el=document.getElementById('notice-history');
-    // 24시간 이내 공지만 표시
-    const cutoff=new Date(Date.now()-24*60*60*1000);
-    const recent=notices.filter(n=>new Date(n.created_at)>cutoff);
-    if(!recent.length){el.innerHTML='<div class="empty"><div class="empty-icon">📢</div><p>최근 24시간 내 발송된 공지가 없습니다</p></div>';return;}
+    if(!notices||!notices.length){el.innerHTML='<div class="empty"><div class="empty-icon">📢</div><p>발송된 공지가 없습니다</p></div>';return;}
+
+    const distLabel = {'both':'팝업+투두','popup':'팝업만','todo':'투두만'};
+    const distColor = {'both':'var(--accent)','popup':'var(--warn)','todo':'var(--success)'};
+
     const frag = document.createDocumentFragment();
-    recent.forEach(function(n){
+    notices.forEach(function(n){
       const wrap = document.createElement('div');
       wrap.className = 'notice-item';
       wrap.style.position = 'relative';
@@ -2056,12 +2066,27 @@ async function loadNoticeHistory(){
 
       const title = document.createElement('div');
       title.className = 'notice-title';
-      title.style.paddingRight = '80px';
+      title.style.paddingRight = '90px';
       title.textContent = n.title;
 
       const body = document.createElement('div');
       body.className = 'notice-body';
       body.textContent = n.body;
+
+      // 배포방식 + 담당자 뱃지 행
+      const badgeRow = document.createElement('div');
+      badgeRow.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:5px';
+      const mode = n.dist_mode || 'both';
+      const badge = document.createElement('span');
+      badge.textContent = distLabel[mode] || mode;
+      badge.style.cssText = `font-size:10px;font-weight:600;padding:1px 7px;border-radius:10px;background:rgba(0,0,0,.25);border:1px solid ${distColor[mode]||'var(--accent)'};color:${distColor[mode]||'var(--accent)'}`;
+      badgeRow.appendChild(badge);
+      if(n.assignee_names){
+        const asgn = document.createElement('span');
+        asgn.style.cssText = 'font-size:10px;color:var(--text3)';
+        asgn.textContent = '👤 ' + n.assignee_names;
+        badgeRow.appendChild(asgn);
+      }
 
       const meta = document.createElement('div');
       meta.className = 'notice-meta';
@@ -2070,12 +2095,13 @@ async function loadNoticeHistory(){
       wrap.appendChild(btnWrap);
       wrap.appendChild(title);
       wrap.appendChild(body);
+      wrap.appendChild(badgeRow);
       wrap.appendChild(meta);
       frag.appendChild(wrap);
     });
     el.innerHTML = '';
     el.appendChild(frag);
-  }catch(e){}
+  }catch(e){ el.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><p>불러오기 오류: '+e.message+'</p></div>'; }
 }
 
 // ── 공지 수정 모달 상태 ──
