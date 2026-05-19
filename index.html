@@ -1345,8 +1345,13 @@ async function deleteTodo(id){
   try{
     // 공유본(담당자 복사본)도 함께 삭제
     await fetch(`${API}/todos?parent_todo_id=eq.${id}`,{method:'DELETE',headers:H});
-    await fetch(`${API}/todos?id=eq.${id}`,{method:'DELETE',headers:H});
-    loadTodos();
+    const res=await fetch(`${API}/todos?id=eq.${id}`,{method:'DELETE',headers:H});
+    if(!res.ok) throw new Error(await res.text());
+    showToast('삭제됨','success');
+    // 활성 탭에 따라 적절한 리로드 함수 호출
+    const activePage=document.querySelector('.page.active')?.id;
+    if(activePage==='page-teamtodo') loadTeamTodos();
+    else loadTodos();
   }catch(e){showToast('삭제 실패','error');}
 }
 function toggleDoneSection(){doneSectionOpen=!doneSectionOpen;document.getElementById('todo-done-list').style.display=doneSectionOpen?'block':'none';document.getElementById('done-toggle-icon').textContent=doneSectionOpen?'▲':'▼';}
@@ -1699,7 +1704,7 @@ async function loadTeamTodos(){
                     <div style="font-size:12px;font-weight:600;line-height:1.5;color:var(--text);padding-right:24px">${t.title||t.content}</div>
                     ${assignee}${clText}${due}
                   </div>
-                  <button onclick="deleteTodo('${t.id}')" style="position:absolute;top:6px;right:6px;background:none;border:none;color:var(--text3);cursor:pointer;font-size:13px;line-height:1;transition:color .2s" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text3)'">✕</button>
+                  <button onclick="event.stopPropagation();deleteTodo('${t.id}')" style="position:absolute;top:6px;right:6px;background:none;border:none;color:var(--text3);cursor:pointer;font-size:13px;line-height:1;transition:color .2s" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text3)'">✕</button>
                 </div>`;
               }).join('')
           }
@@ -1773,16 +1778,59 @@ function closeNoticePopup(){
   if(noticeId) localStorage.setItem('notice_seen_'+noticeId, '1');
   closeModal('modal-notice-popup');
 }
+let _postingNotice = false; // 이중 실행 방지 플래그
 async function postNotice(){
+  if(_postingNotice) return; // 이미 실행 중이면 차단
   const title=document.getElementById('notice-title-input').value.trim(),body=document.getElementById('notice-body-input').value.trim();
   if(!title||!body){showToast('제목과 내용을 입력하세요','error');return;}
+
+  // 버튼 비활성화
+  const btn=document.querySelector('button[onclick="postNotice()"]');
+  if(btn){btn.disabled=true;btn.textContent='⏳ 발송 중...';}
+  _postingNotice=true;
+
   try{
-    await fetch(`${API}/notices`,{method:'POST',headers:H,body:JSON.stringify({title,body,created_by:currentUser.id})});
-    const empRes=await fetch(`${API}/employees?select=id`,{headers:H});const emps=await empRes.json();
-    await Promise.all(emps.map(e=>fetch(`${API}/todos`,{method:'POST',headers:H,body:JSON.stringify({employee_id:e.id,title:`[공지] ${title}`,content:`[공지] ${title}: ${body}`,is_done:false,source:'notice',status:'waiting'})})));
-    document.getElementById('notice-title-input').value='';document.getElementById('notice-body-input').value='';
-    showToast(`공지 발송 완료 (${emps.length}명)`,'success');loadNoticeHistory();
-  }catch(e){showToast('발송 실패','error');}
+    // 1. 공지 저장 후 방금 만든 공지 ID 가져오기
+    const noticeRes=await fetch(`${API}/notices`,{method:'POST',headers:{...H,'Prefer':'return=representation'},body:JSON.stringify({title,body,created_by:currentUser.id})});
+    const noticeData=await noticeRes.json();
+    const noticeId=Array.isArray(noticeData)?noticeData[0]?.id:noticeData?.id;
+
+    // 2. 전체 직원 조회
+    const empRes=await fetch(`${API}/employees?select=id`,{headers:H});
+    const emps=await empRes.json();
+
+    // 3. 이 공지에 대한 투두가 이미 있는지 확인 (중복 방지)
+    if(noticeId){
+      const existRes=await fetch(`${API}/todos?source=eq.notice&note=eq.notice_${noticeId}&limit=1`,{headers:H});
+      const exist=await existRes.json();
+      if(exist&&exist.length>0){
+        showToast('이미 발송된 공지입니다','error');
+        return;
+      }
+    }
+
+    // 4. 각 직원에게 투두 생성 (note에 noticeId 저장 → 중복 방지 키)
+    await Promise.all(emps.map(e=>fetch(`${API}/todos`,{method:'POST',headers:H,body:JSON.stringify({
+      employee_id:e.id,
+      title:`[공지] ${title}`,
+      content:`[공지] ${title}: ${body}`,
+      is_done:false,
+      source:'notice',
+      status:'waiting',
+      note: noticeId ? `notice_${noticeId}` : null
+    })})));
+
+    document.getElementById('notice-title-input').value='';
+    document.getElementById('notice-body-input').value='';
+    showToast(`공지 발송 완료 (${emps.length}명)`,'success');
+    loadNoticeHistory();
+  }catch(e){
+    showToast('발송 실패','error');
+  }finally{
+    // 버튼 복원
+    if(btn){btn.disabled=false;btn.textContent='📢 공지 발송';}
+    _postingNotice=false;
+  }
 }
 async function loadNoticeHistory(){
   try{
