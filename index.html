@@ -1976,8 +1976,8 @@ async function postNotice(mode){
         assignee_names: assigneeNames,
         due_date: dueDate || null,
         checklist: checklistJson,
-        note: noteVal || null,
         dist_mode: mode
+        // note 컬럼은 notices 테이블에 없으므로 제외 (todos 쪽에서 notice_id 추적용으로만 사용)
       })
     });
     // ▼ 저장 실패 시 즉시 중단 (투두 생성 방지)
@@ -2034,16 +2034,19 @@ async function postNotice(mode){
 async function loadNoticeHistory(){
   const el=document.getElementById('notice-history');
   try{
-    const res=await fetch(`${API}/notices?order=created_at.desc&limit=50`,{headers:H});
+    const res=await fetch(`${API}/notices?order=created_at.desc&limit=30`,{headers:H});
     if(!res.ok){ el.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><p>공지 이력 조회 실패</p></div>'; return; }
     const notices=await res.json();
-    if(!notices||!notices.length){el.innerHTML='<div class="empty"><div class="empty-icon">📢</div><p>발송된 공지가 없습니다</p></div>';return;}
+    // 24시간 이내 공지만 표시
+    const cutoff = new Date(Date.now() - 24*60*60*1000);
+    const recent = notices.filter(n => new Date(n.created_at) > cutoff);
+    if(!recent.length){el.innerHTML='<div class="empty"><div class="empty-icon">📢</div><p>최근 24시간 내 발송된 공지가 없습니다</p></div>';return;}
 
     const distLabel = {'both':'팝업+투두','popup':'팝업만','todo':'투두만'};
     const distColor = {'both':'var(--accent)','popup':'var(--warn)','todo':'var(--success)'};
 
     const frag = document.createDocumentFragment();
-    notices.forEach(function(n){
+    recent.forEach(function(n){
       const wrap = document.createElement('div');
       wrap.className = 'notice-item';
       wrap.style.position = 'relative';
