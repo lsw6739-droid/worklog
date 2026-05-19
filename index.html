@@ -690,6 +690,48 @@ create policy "allow_all" on attends for all using (true);</pre>
     <div class="btn-row"><button class="btn btn-secondary" onclick="closeModal('modal-edit-template')">취소</button><button class="btn btn-primary" onclick="saveEditTemplate()">저장</button></div>
   </div>
 </div>
+<!-- 공지 수정 모달 -->
+<div class="modal-overlay" id="modal-edit-notice">
+  <div class="modal" style="max-width:560px">
+    <input type="hidden" id="edit-notice-id">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <div style="font-size:16px;font-weight:700;color:var(--accent)">✏️ 공지 수정</div>
+      <button onclick="closeModal('modal-edit-notice')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:20px;line-height:1">✕</button>
+    </div>
+    <div class="form-group">
+      <label>제목 <span style="color:var(--danger)">*</span></label>
+      <input type="text" id="en-title" placeholder="공지 제목을 입력하세요">
+    </div>
+    <div class="form-group">
+      <label>공지 내용 <span style="color:var(--danger)">*</span></label>
+      <textarea id="en-body" placeholder="공지 내용을 입력하세요" style="min-height:80px"></textarea>
+    </div>
+    <div class="form-group">
+      <label>담당자 <span style="color:var(--text3);font-size:10px">(클릭으로 선택 · 복수 가능)</span></label>
+      <div id="en-assignees" style="display:flex;flex-wrap:wrap;gap:8px;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;min-height:46px"></div>
+    </div>
+    <div class="form-group">
+      <label>기한일 <span style="color:var(--text3);font-size:10px">(선택)</span></label>
+      <input type="date" id="en-due-date">
+    </div>
+    <div class="form-group">
+      <label>체크리스트 <span style="color:var(--text3);font-size:10px">(선택)</span></label>
+      <div id="en-checklist" style="margin-bottom:8px;min-height:4px"></div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="en-cl-input" placeholder="항목 입력 후 Enter" style="flex:1;margin-bottom:0" onkeydown="if(event.key==='Enter'){event.preventDefault();addEnClItem()}">
+        <button class="btn btn-secondary btn-sm" onclick="addEnClItem()">추가</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>비고 <span style="color:var(--text3);font-size:10px">(선택)</span></label>
+      <textarea id="en-note" placeholder="추가 메모" style="min-height:60px"></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeModal('modal-edit-notice')">취소</button>
+      <button class="btn btn-primary" id="en-save-btn" onclick="saveEditNotice()">💾 저장</button>
+    </div>
+  </div>
+</div>
 <div id="toast"></div>
 <script>
 const SUPABASE_URL='https://uulemznemzjlgzqhrchb.supabase.co';
@@ -1729,17 +1771,21 @@ async function loadTeamTodos(){
     // 칸반 보드 - 가로 스크롤, 세로 한 줄에 한 명
     el.innerHTML = `<div style="display:flex;gap:14px;overflow-x:auto;padding-bottom:12px;align-items:flex-start">
       ${Object.values(byMember).map(m=>{
-        const active = m.todos.filter(t=>!t.is_done);
+        // statusFilter에 따라 표시할 항목 선택
+        const displayTodos = statusFilter==='done' ? m.todos.filter(t=>t.is_done)
+                           : statusFilter==='all'  ? m.todos
+                           : m.todos.filter(t=>!t.is_done);
+        const activeCount = m.todos.filter(t=>!t.is_done).length;
         return `<div style="flex-shrink:0;width:220px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px">
           <!-- 헤더 -->
           <div style="font-size:13px;font-weight:700;color:var(--accent2);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0">
             <span>👤 ${m.name}</span>
-            <span style="font-size:10px;color:var(--text3);background:var(--surface2);border-radius:10px;padding:2px 8px">${active.length}건</span>
+            <span style="font-size:10px;color:var(--text3);background:var(--surface2);border-radius:10px;padding:2px 8px">${activeCount}건</span>
           </div>
           <!-- 할일 목록 세로 -->
-          ${active.length===0
+          ${displayTodos.length===0
             ? '<div style="text-align:center;padding:20px 0;color:var(--text3);font-size:12px">✅ 완료</div>'
-            : active.map(t=>{
+            : displayTodos.map(t=>{
                 const dueBadge = getDueBadge(t.due_date);
                 const assignee = t.assignee_names ? `<div style="font-size:10px;color:var(--text3);margin-top:4px">👤 ${t.assignee_names}</div>` : '';
                 const due = t.due_date ? `<div style="margin-top:5px">${dueBadge}</div>` : '';
@@ -1929,6 +1975,7 @@ async function postNotice(mode){
         assignee_names: assigneeNames,
         due_date: dueDate || null,
         checklist: checklistJson,
+        note: noteVal || null,
         dist_mode: mode
       })
     });
@@ -2031,33 +2078,160 @@ async function loadNoticeHistory(){
   }catch(e){}
 }
 
+// ── 공지 수정 모달 상태 ──
+let enAssignees = [];   // 수정 모달 선택된 담당자 ID 배열
+let enChecklist = [];   // 수정 모달 체크리스트
+let _savingNotice = false;
+
 async function editNotice(id){
-  // 현재 공지 내용 불러오기
   try{
     const res=await fetch(API+'/notices?id=eq.'+id+'&select=*',{headers:H});
     const data=await res.json();
-    if(!data||!data.length)return;
+    if(!data||!data.length) return;
     const n=data[0];
-    const newTitle=prompt('공지 제목 수정',n.title);
-    if(!newTitle)return;
-    const newBody=prompt('공지 내용 수정',n.body);
-    if(!newBody)return;
-    await fetch(API+'/notices?id=eq.'+id,{method:'PATCH',headers:H,body:JSON.stringify({title:newTitle,body:newBody})});
-    // 연결된 To-do 수정
-    const newContent='[공지] '+newTitle+': '+newBody;
-    await fetch(API+'/todos?source=eq.notice',{method:'PATCH',headers:H,body:JSON.stringify({content:newContent})});
-    showToast('공지 수정됨','success');
+
+    // 폼 채우기
+    document.getElementById('edit-notice-id').value = id;
+    document.getElementById('en-title').value = n.title || '';
+    document.getElementById('en-body').value  = n.body  || '';
+    document.getElementById('en-due-date').value = n.due_date || '';
+    document.getElementById('en-note').value  = n.note  || '';
+
+    // 담당자
+    enAssignees = n.assignee_ids ? n.assignee_ids.split(',').filter(Boolean) : [];
+    renderEnAssignees();
+
+    // 체크리스트
+    try{ enChecklist = n.checklist ? JSON.parse(n.checklist) : []; }catch(e){ enChecklist=[]; }
+    renderEnChecklist();
+
+    _savingNotice = false;
+    openModal('modal-edit-notice');
+  }catch(e){ showToast('공지 불러오기 실패','error'); }
+}
+
+function renderEnAssignees(){
+  const el = document.getElementById('en-assignees');
+  if(!el) return;
+  const isAll = enAssignees.length === 0;
+  el.innerHTML =
+    `<div class="assignee-chip ${isAll?'selected':''}" onclick="toggleEnAssignee('__all__')" style="${isAll?'border-color:var(--accent);background:rgba(0,212,255,.15);color:var(--accent)':''}">전체</div>` +
+    allEmployees.map(e=>{
+      const sel = enAssignees.includes(e.id);
+      return `<div class="assignee-chip ${sel?'selected':''}" onclick="toggleEnAssignee('${e.id}')">${e.name}</div>`;
+    }).join('');
+}
+
+function toggleEnAssignee(id){
+  if(id==='__all__'){ enAssignees=[]; }
+  else{
+    const idx=enAssignees.indexOf(id);
+    if(idx>=0) enAssignees.splice(idx,1); else enAssignees.push(id);
+  }
+  renderEnAssignees();
+}
+
+function renderEnChecklist(){
+  const el = document.getElementById('en-checklist');
+  if(!enChecklist.length){ el.innerHTML=''; return; }
+  el.innerHTML = enChecklist.map((item,i)=>`
+    <div class="cl-item">
+      <span class="cl-handle">⠿</span>
+      <input type="checkbox" class="cl-check" ${item.done?'checked':''} onchange="enChecklist[${i}].done=!enChecklist[${i}].done">
+      <span class="cl-text ${item.done?'done':''}" onclick="startEnClEdit(event,${i})" title="클릭해서 수정">${item.text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>
+      <button class="cl-del" onclick="enChecklist.splice(${i},1);renderEnChecklist()">✕</button>
+    </div>`).join('');
+}
+
+function addEnClItem(){
+  const input = document.getElementById('en-cl-input');
+  const text = input.value.trim(); if(!text) return;
+  enChecklist.push({text, done:false});
+  input.value=''; renderEnChecklist();
+}
+
+function startEnClEdit(e, i){
+  e.stopPropagation();
+  const span = e.currentTarget;
+  if(span.tagName==='INPUT') return;
+  const item = enChecklist[i];
+  const clItem = span.closest('.cl-item');
+  clItem.draggable = false;
+  const input = document.createElement('input');
+  input.type='text'; input.className='cl-edit-input'; input.value=item.text;
+  span.replaceWith(input); input.focus(); input.select();
+  function commit(){ const t=input.value.trim(); if(t) enChecklist[i].text=t; clItem.draggable=true; renderEnChecklist(); }
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', function(ev){
+    if(ev.key==='Enter'){ ev.preventDefault(); input.blur(); }
+    if(ev.key==='Escape'){ input.value=item.text; input.blur(); }
+  });
+  input.addEventListener('dragstart', function(ev){ ev.preventDefault(); ev.stopPropagation(); });
+}
+
+async function saveEditNotice(){
+  if(_savingNotice) return;
+  const id    = document.getElementById('edit-notice-id').value;
+  const title = document.getElementById('en-title').value.trim();
+  const body  = document.getElementById('en-body').value.trim();
+  const dueDate = document.getElementById('en-due-date').value;
+  const note  = document.getElementById('en-note').value.trim();
+
+  if(!title){ showToast('제목을 입력하세요','error'); return; }
+  if(!body){  showToast('공지 내용을 입력하세요','error'); return; }
+
+  // 담당자
+  const empRes = await fetch(`${API}/employees?select=id,name`,{headers:H});
+  const allEmps = await empRes.json();
+  const targets = enAssignees.length > 0
+    ? allEmps.filter(e=>enAssignees.includes(e.id))
+    : allEmps;
+  const assigneeIds   = targets.map(e=>e.id).join(',');
+  const assigneeNames = targets.map(e=>e.name).join(', ');
+  const checklistJson = enChecklist.length ? JSON.stringify(enChecklist) : null;
+
+  const btn = document.getElementById('en-save-btn');
+  if(btn){ btn.disabled=true; btn.textContent='⏳ 저장 중...'; }
+  _savingNotice = true;
+
+  try{
+    // 1. 공지 수정
+    await fetch(`${API}/notices?id=eq.${id}`,{method:'PATCH',headers:H,body:JSON.stringify({
+      title, body,
+      assignee_ids: assigneeIds,
+      assignee_names: assigneeNames,
+      due_date: dueDate || null,
+      checklist: checklistJson,
+      note: note || null
+    })});
+
+    // 2. 연결된 투두 수정 (해당 공지 note로 정확히 필터)
+    await fetch(`${API}/todos?source=eq.notice&note=eq.notice_${id}`,{method:'PATCH',headers:H,body:JSON.stringify({
+      title: `[공지] ${title}`,
+      content: `[공지] ${title}: ${body}`,
+      due_date: dueDate || null,
+      checklist: checklistJson,
+      assignee_ids: assigneeIds,
+      assignee_names: assigneeNames
+    })});
+
+    closeModal('modal-edit-notice');
+    showToast('공지 수정됨 ✓','success');
     loadNoticeHistory();
-  }catch(e){showToast('수정 실패','error');}
+  }catch(e){
+    showToast('수정 실패','error');
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent='💾 저장'; }
+    _savingNotice=false;
+  }
 }
 
 async function deleteNotice(id){
   if(!confirm('공지를 삭제할까요? 팀원 To-do에서도 삭제됩니다.'))return;
   try{
-    // 공지 삭제
+    // 해당 공지의 To-do만 삭제 (note 필드로 정확히 필터링)
+    await fetch(API+'/todos?source=eq.notice&note=eq.notice_'+id,{method:'DELETE',headers:H});
     await fetch(API+'/notices?id=eq.'+id,{method:'DELETE',headers:H});
-    const cutoff=new Date(Date.now()-25*60*60*1000).toISOString();
-    await fetch(API+'/todos?source=eq.notice&created_at=gte.'+cutoff,{method:'DELETE',headers:H});
     showToast('공지 및 관련 To-do 삭제됨','success');
     loadNoticeHistory();
   }catch(e){showToast('삭제 실패','error');}
