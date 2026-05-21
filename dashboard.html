@@ -765,12 +765,11 @@ function animateNum(id, target, dec) {
 // ─── BAR CHART ───
 function renderBarChart(logs) {
   const byMember = {};
-  allEmployees.forEach(e => byMember[e.id] = {name:e.name, hours:0, planH:0});
-  logs.forEach(l => { if(byMember[l.employee_id]) { byMember[l.employee_id].hours += Number(l.hours); byMember[l.employee_id].planH += Number(l.plan_hours||0); }});
+  allEmployees.forEach(e => byMember[e.id] = {name:e.name, hours:0});
+  logs.forEach(l => { if(byMember[l.employee_id]) { byMember[l.employee_id].hours += Number(l.hours); }});
   const sorted = Object.values(byMember).sort((a,b)=>b.hours-a.hours);
   const labels = sorted.map(v=>v.name);
   const data = sorted.map(v=>v.hours);
-  const planData = sorted.map(v=>v.planH);
 
   destroyChart('chart-bar');
   charts['chart-bar'] = new Chart(document.getElementById('chart-bar'), {
@@ -778,8 +777,7 @@ function renderBarChart(logs) {
     data:{
       labels,
       datasets:[
-        {label:'실제 공수',data,backgroundColor:sorted.map(v=>{ const e=allEmployees.find(x=>x.name===v.name); return getMemberColor(e?.id)+'cc'; }),borderRadius:6,borderSkipped:false},
-        {label:'예상 공수',data:planData,backgroundColor:cc().planBar,borderColor:cc().planBorder,borderWidth:1,borderRadius:6,borderSkipped:false}
+        {label:'실제 공수',data,backgroundColor:sorted.map(v=>{ const e=allEmployees.find(x=>x.name===v.name); return getMemberColor(e?.id)+'cc'; }),borderRadius:6,borderSkipped:false}
       ]
     },
     options:{
