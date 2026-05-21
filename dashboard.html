@@ -107,6 +107,7 @@ input.date-range:focus{outline:none;border-color:var(--accent)}
 .matrix-table td:hover{background:rgba(0,212,255,0.08)}
 .matrix-table td.name-cell{text-align:left;font-family:'Noto Sans KR',sans-serif;font-weight:600;font-size:12px;color:var(--text);cursor:pointer}
 .matrix-table td.name-cell:hover{color:var(--accent2)}
+.matrix-table th.row-header:hover{color:var(--accent);background:rgba(0,212,255,0.07)}
 .matrix-table td.total-cell{font-weight:700;color:var(--accent2)}
 .matrix-table tr:last-child td{border-bottom:none;font-weight:700;color:var(--accent);background:rgba(0,212,255,0.03)}
 .matrix-table tr.selected-row td{background:rgba(0,255,157,0.05)}
@@ -593,10 +594,13 @@ function buildFilterChips() {
 function syncAllBtn(type) {
   if (type === 'member') {
     const allBtn = document.getElementById('m-all');
-    if (allBtn) allBtn.classList.toggle('active', filters.members.length === 0);
+    // 필터 없음(전체) OR 모든 인원이 명시 선택된 경우 → 전체 비활성(개별 선택 상태)
+    const allExplicit = allEmployees.length > 0 && filters.members.length === allEmployees.length;
+    if (allBtn) allBtn.classList.toggle('active', filters.members.length === 0 && !allExplicit);
   } else {
     const allBtn = document.getElementById('c-all');
-    if (allBtn) allBtn.classList.toggle('active', filters.categories.length === 0);
+    const allExplicit = allCategories.length > 0 && filters.categories.length === allCategories.length;
+    if (allBtn) allBtn.classList.toggle('active', filters.categories.length === 0 && !allExplicit);
   }
 }
 
@@ -619,9 +623,20 @@ function selectAllMembers() {
 }
 
 function selectAllCategories() {
-  filters.categories = [];
-  document.querySelectorAll('[id^="c-"]').forEach(el => el.classList.remove('active-cat'));
-  document.getElementById('c-all')?.classList.add('active');
+  const allBtn = document.getElementById('c-all');
+  const isActive = allBtn?.classList.contains('active');
+
+  if (isActive) {
+    // 전체가 이미 선택된 상태 → 전체 해제 (모든 개별 카테고리를 명시적으로 선택 상태로 전환)
+    filters.categories = allCategories.map(c => c.id);
+    document.querySelectorAll('[id^="c-"]').forEach(el => el.classList.add('active-cat'));
+    allBtn?.classList.remove('active');
+  } else {
+    // 전체 선택
+    filters.categories = [];
+    document.querySelectorAll('[id^="c-"]').forEach(el => el.classList.remove('active-cat'));
+    allBtn?.classList.add('active');
+  }
   applyFilters();
 }
 
@@ -826,10 +841,14 @@ function renderMatrix(logs) {
 
   function heatClass(v){ if(!v)return 'heat-0'; const r=v/maxCell; return r<.1?'heat-1':r<.25?'heat-2':r<.5?'heat-3':r<.75?'heat-4':'heat-5'; }
 
+  const matAllActive = filters.members.length === 0;
+  const matAllExplicit = filters.members.length === allEmployees.length && allEmployees.length > 0;
   document.getElementById('matrix-table').innerHTML = `
     <table class="matrix-table">
       <thead><tr>
-        <th class="row-header">이름</th>
+        <th class="row-header" onclick="selectAllMembers()" style="cursor:pointer;user-select:none" title="전체 선택/해제">
+          ${matAllActive ? '✅ 전체' : matAllExplicit ? '☑️ 전체' : '이름'}
+        </th>
         ${cats.map(c=>`<th>${c}</th>`).join('')}
         <th>합계</th>
       </tr></thead>
