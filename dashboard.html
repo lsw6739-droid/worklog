@@ -777,7 +777,7 @@ function renderBarChart(logs) {
     data:{
       labels,
       datasets:[
-        {label:'실제 공수',data,backgroundColor:sorted.map(v=>{ const e=allEmployees.find(x=>x.name===v.name); return getMemberColor(e?.id)+'cc'; }),borderRadius:6,borderSkipped:false}
+        {label:'실제 공수',data,backgroundColor:sorted.map(v=>{ const e=allEmployees.find(x=>x.name===v.name); return getMemberColor(e?.id)+'cc'; }),borderRadius:6,borderSkipped:false,barPercentage:0.5,categoryPercentage:0.7}
       ]
     },
     options:{

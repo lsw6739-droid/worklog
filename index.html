@@ -161,6 +161,7 @@ tr:hover td{background:rgba(0,0,0,0.02)}
 .modal-overlay.open{display:flex}
 .modal{background:#fff;border:1px solid rgba(0,0,0,0.1);border-radius:14px;padding:22px;width:100%;max-width:480px;max-height:92vh;overflow-y:auto;animation:slideUp .22s ease;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
 @keyframes slideUp{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes fadeInBanner{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
 .modal-title{font-size:15px;font-weight:700;margin-bottom:18px;color:var(--text)}
 
 /* ─ MISC ─ */
@@ -810,6 +811,11 @@ create policy "allow_all" on attends for all using (true);</pre>
       <span>📤</span>
       <span>공유된 할일 · <strong>상태·체크리스트·메모</strong>만 수정할 수 있습니다 (제목·담당자는 작성자만 변경 가능)</span>
     </div>
+    <!-- 실시간 업데이트 배너 -->
+    <div id="detail-realtime-banner" style="display:none;align-items:center;gap:8px;background:rgba(0,113,227,.08);border:1px solid rgba(0,113,227,.25);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:11px;color:var(--accent);animation:fadeInBanner .3s ease">
+      <span style="font-size:14px;animation:spin 1s linear 1">🔄</span>
+      <span id="detail-realtime-msg">다른 담당자가 방금 저장했습니다 · 내용이 자동으로 업데이트되었습니다</span>
+    </div>
     <!-- 상태 + 제목 -->
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
       <button class="status-toggle-btn waiting" id="detail-status-btn" onclick="toggleTodoStatus()">⏸ 대기</button>
@@ -938,11 +944,91 @@ create policy "allow_all" on attends for all using (true);</pre>
   </div>
 </div>
 <div id="toast"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 const SUPABASE_URL='https://uulemznemzjlgzqhrchb.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1bGVtem5lbXpqbGd6cWhyY2hiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MTc3MzQsImV4cCI6MjA5Mzk5MzczNH0.cy3jWrFez0pO0vl3nOOUMiv-511IzQiTcNxTK8Jejrg';
 const API=`${SUPABASE_URL}/rest/v1`;
 const H={'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Prefer':'return=representation'};
+
+// ─── Supabase Realtime 클라이언트 ───
+const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let _realtimeChannel = null;
+
+function _subscribeTodoRealtime(rootId) {
+  _unsubscribeTodoRealtime();
+  _realtimeChannel = _sb
+    .channel('todo-detail-' + rootId)
+    .on('postgres_changes', {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'todos',
+      filter: 'id=eq.' + rootId
+    }, function(payload) {
+      // 모달이 닫혔거나 다른 할일로 바뀐 경우 무시
+      const modal = document.getElementById('modal-todo-detail');
+      const curId = document.getElementById('detail-todo-id').value;
+      if (!modal || !modal.classList.contains('open') || curId !== String(rootId)) return;
+      // 내가 방금 저장한 경우는 saveTodoDetail에서 이미 처리 → 무시 플래그
+      if (window._myOwnSave) { window._myOwnSave = false; return; }
+      _applyRemoteTodoUpdate(payload.new);
+    })
+    .subscribe();
+}
+
+function _unsubscribeTodoRealtime() {
+  if (_realtimeChannel) {
+    _sb.removeChannel(_realtimeChannel);
+    _realtimeChannel = null;
+  }
+}
+
+function _applyRemoteTodoUpdate(newData) {
+  currentTodoData = newData;
+
+  // 현재 포커스된 필드는 덮어쓰지 않음 (타이핑 중 보호)
+  const focused = document.activeElement;
+
+  function safeSet(id, val) {
+    const el = document.getElementById(id);
+    if (!el || el === focused) return;
+    el.value = val || '';
+  }
+
+  safeSet('detail-title',    newData.title || newData.content || '');
+  safeSet('detail-content',  newData.content || '');
+  safeSet('detail-due-date', newData.due_date || '');
+  safeSet('detail-note',     newData.note || '');
+
+  // 상태
+  const status = newData.status || 'waiting';
+  const hiddenStatus = document.getElementById('detail-status');
+  const statusBtn    = document.getElementById('detail-status-btn');
+  if (hiddenStatus) hiddenStatus.value = status;
+  if (statusBtn) {
+    if (status === 'active') { statusBtn.textContent = '▶ 진행'; statusBtn.className = 'status-toggle-btn active'; }
+    else                     { statusBtn.textContent = '⏸ 대기'; statusBtn.className = 'status-toggle-btn waiting'; }
+  }
+
+  // 체크리스트
+  try { currentChecklist = newData.checklist ? JSON.parse(newData.checklist) : []; } catch(e) { currentChecklist = []; }
+  renderChecklist();
+
+  // 담당자
+  selectedAssignees = newData.assignee_ids ? newData.assignee_ids.split(',').filter(Boolean) : [];
+  renderAssigneeChips();
+
+  // 배너 표시
+  const banner = document.getElementById('detail-realtime-banner');
+  if (banner) {
+    banner.style.animation = 'none';
+    banner.offsetHeight; // reflow
+    banner.style.animation = 'fadeInBanner .3s ease';
+    banner.style.display = 'flex';
+    clearTimeout(banner._t);
+    banner._t = setTimeout(function() { banner.style.display = 'none'; }, 5000);
+  }
+}
 const ATTEND_LABELS={annual:'연차',half:'반차',quarter:'반반차',other:'기타'};
 const ATTEND_HOURS={annual:8,half:4,quarter:2,other:0};
 let currentUser=null,categories=[],allEmployees=[],templates=[];
@@ -1735,6 +1821,7 @@ async function openTodoDetail(id){
   if(lbl) lbl.innerHTML='담당자 <span style="color:var(--text3);font-size:10px">(클릭으로 선택 · 복수 가능)</span>';
 
   openModal('modal-todo-detail');
+  _subscribeTodoRealtime(t.id); // 실시간 구독 시작
 }
 
 function renderAssigneeChips(){
@@ -1935,6 +2022,7 @@ async function saveTodoDetail(){
       return Promise.resolve();
     }));
 
+    window._myOwnSave = true; // 내가 저장한 Realtime 이벤트는 무시
     closeModal('modal-todo-detail');
     showToast('저장됨','success');
     loadTodos();
@@ -2851,7 +2939,10 @@ async function submitPasteData(){
 // UTILS
 function today(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function openModal(id){document.getElementById(id).classList.add('open');if(id==='modal-template-pick')openTemplateModal();}
-function closeModal(id){document.getElementById(id).classList.remove('open');}
+function closeModal(id){
+  document.getElementById(id).classList.remove('open');
+  if(id==='modal-todo-detail'){ _unsubscribeTodoRealtime(); }
+}
 document.querySelectorAll('.modal-overlay').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
 let toastTimer;
 function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className=`show ${type}`;clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.className='',3000);}
