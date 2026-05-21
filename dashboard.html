@@ -130,7 +130,7 @@ input.date-range:focus{outline:none;border-color:var(--accent)}
 .heatmap-cell.level-4{background:rgba(0,255,157,0.4)}
 .heatmap-cell.level-5{background:rgba(255,165,2,0.5)}
 .heatmap-cell.level-6{background:rgba(255,71,87,0.6)}
-.heatmap-days{display:flex;gap:3px;padding-left:28px;margin-bottom:2px}
+.heatmap-days{display:flex;gap:3px;padding-left:0;margin-bottom:2px}
 .heatmap-day{width:28px;text-align:center;font-size:9px;color:var(--text3)}
 
 /* RADAR */
@@ -383,6 +383,11 @@ const H = {'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorizatio
 let allLogs = [], allEmployees = [], allCategories = [], monthGoal = 160;
 let filters = { members: [], categories: [] };
 let charts = {};
+let memberColorMap = {};  // empId → fixed color
+
+function getMemberColor(empId) {
+  return memberColorMap[empId] || COLORS[0];
+}
 let radarSelected = [];
 
 // 근태 상수
@@ -514,6 +519,8 @@ async function loadData() {
     ]);
     allLogs = await logsRes.json();
     allEmployees = await empRes.json();
+    // 인원별 고정 색상 맵 빌드
+    allEmployees.forEach((e, i) => { memberColorMap[e.id] = COLORS[i % COLORS.length]; });
     allCategories = await catRes.json();
     const attends = await attendRes.json();
 
@@ -535,6 +542,8 @@ async function loadData() {
     allCategories = [{id:'c1',name:'제조'},{id:'c2',name:'QA'},{id:'c3',name:'문서관리'},{id:'c4',name:'교육'},{id:'c5',name:'회의'},{id:'c6',name:'기타'},{id:'attend-virtual',name:'근태'}];
     allLogs = generateDemoData();
     monthGoal = getWorkingDays(start, end) * 8;
+    // 데모 데이터도 색상 맵 빌드
+    allEmployees.forEach((e, i) => { memberColorMap[e.id] = COLORS[i % COLORS.length]; });
   }
 
   filters = { members:[], categories:[] };
@@ -592,9 +601,20 @@ function syncAllBtn(type) {
 }
 
 function selectAllMembers() {
-  filters.members = [];
-  document.querySelectorAll('[id^="m-"]').forEach(el => el.classList.remove('active-member'));
-  document.getElementById('m-all')?.classList.add('active');
+  const allBtn = document.getElementById('m-all');
+  const isActive = allBtn?.classList.contains('active');
+
+  if (isActive) {
+    // 전체가 이미 선택된 상태 → 전체 해제 (모든 개별 멤버를 명시적으로 선택 상태로 전환)
+    filters.members = allEmployees.map(e => e.id);
+    document.querySelectorAll('[id^="m-"]').forEach(el => el.classList.add('active-member'));
+    allBtn?.classList.remove('active');
+  } else {
+    // 전체 선택
+    filters.members = [];
+    document.querySelectorAll('[id^="m-"]').forEach(el => el.classList.remove('active-member'));
+    allBtn?.classList.add('active');
+  }
   applyFilters();
 }
 
@@ -720,7 +740,7 @@ function renderBarChart(logs) {
     data:{
       labels,
       datasets:[
-        {label:'실제 공수',data,backgroundColor:labels.map((_,i)=>COLORS[i%COLORS.length]+'cc'),borderRadius:6,borderSkipped:false},
+        {label:'실제 공수',data,backgroundColor:sorted.map(v=>{ const e=allEmployees.find(x=>x.name===v.name); return getMemberColor(e?.id)+'cc'; }),borderRadius:6,borderSkipped:false},
         {label:'예상 공수',data:planData,backgroundColor:'rgba(255,255,255,0.08)',borderColor:'rgba(255,255,255,0.2)',borderWidth:1,borderRadius:6,borderSkipped:false}
       ]
     },
@@ -866,17 +886,17 @@ function renderTrendChart(logs) {
   });
 
   const members = allEmployees.filter(e=>logs.some(l=>l.employee_id===e.id));
-  const datasets = members.map((e,i)=>({
+  const datasets = members.map((e)=>({
     label:e.name,
     data:keys.map(k=>bucketMap[k]?.[e.id]||0),
-    borderColor:COLORS[i%COLORS.length],
-    backgroundColor:COLORS[i%COLORS.length]+'20',
+    borderColor:getMemberColor(e.id),
+    backgroundColor:getMemberColor(e.id)+'20',
     borderWidth:2, pointRadius:byDay?3:4, pointHoverRadius:6, tension:.4, fill:false
   }));
 
-  document.getElementById('trend-legend').innerHTML = members.map((e,i)=>`
+  document.getElementById('trend-legend').innerHTML = members.map((e)=>`
     <div class="trend-leg-item" onclick="toggleMemberFilter('${e.id}','${e.name}')">
-      <div class="trend-leg-dot" style="background:${COLORS[i%COLORS.length]}"></div>${e.name}
+      <div class="trend-leg-dot" style="background:${getMemberColor(e.id)}"></div>${e.name}
     </div>`).join('');
 
   destroyChart('chart-trend');
@@ -909,20 +929,20 @@ function renderRadarChart(logs) {
     byMemberCat[l.employee_id][c]=(byMemberCat[l.employee_id][c]||0)+Number(l.hours);
   });
 
-  const datasets = members.map((e,i)=>({
+  const datasets = members.map((e)=>({
     label:e.name,
     data:cats.map(c=>byMemberCat[e.id]?.[c]||0),
-    backgroundColor:COLORS[i%COLORS.length]+'30',
-    borderColor:COLORS[i%COLORS.length],
-    borderWidth:2, pointBackgroundColor:COLORS[i%COLORS.length], pointRadius:3
+    backgroundColor:getMemberColor(e.id)+'30',
+    borderColor:getMemberColor(e.id),
+    borderWidth:2, pointBackgroundColor:getMemberColor(e.id), pointRadius:3
   }));
 
   // Selector buttons
   const isAll = radarSelected.length === allEmployees.length;
   document.getElementById('radar-selector').innerHTML =
     `<button class="radar-btn ${isAll?'active':''}" onclick="toggleRadarAll()" style="${isAll?'border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,0.1)':''}">전체</button>` +
-    allEmployees.map((e,i)=>`
-    <button class="radar-btn ${radarSelected.includes(e.id)?'active':''}" onclick="toggleRadar('${e.id}')" style="${radarSelected.includes(e.id)?`border-color:${COLORS[i%COLORS.length]};color:${COLORS[i%COLORS.length]};background:${COLORS[i%COLORS.length]}20`:''}">${e.name}</button>`).join('');
+    allEmployees.map((e)=>`
+    <button class="radar-btn ${radarSelected.includes(e.id)?'active':''}" onclick="toggleRadar('${e.id}')" style="${radarSelected.includes(e.id)?`border-color:${getMemberColor(e.id)};color:${getMemberColor(e.id)};background:${getMemberColor(e.id)}20`:''}">${e.name}</button>`).join('');
 
   destroyChart('chart-radar');
   charts['chart-radar'] = new Chart(document.getElementById('chart-radar'),{
