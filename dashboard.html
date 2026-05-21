@@ -390,6 +390,9 @@ function toggleDbTheme(){
   localStorage.setItem('wl_theme', next);
   const btn = document.getElementById('db-theme-btn');
   if(btn) btn.textContent = next === 'dark' ? '☀️' : '🌙';
+  // 차트 색상 재적용 후 전체 재렌더링
+  applyChartDefaults();
+  applyFilters();
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━
@@ -776,13 +779,13 @@ function renderBarChart(logs) {
       labels,
       datasets:[
         {label:'실제 공수',data,backgroundColor:sorted.map(v=>{ const e=allEmployees.find(x=>x.name===v.name); return getMemberColor(e?.id)+'cc'; }),borderRadius:6,borderSkipped:false},
-        {label:'예상 공수',data:planData,backgroundColor:'rgba(255,255,255,0.08)',borderColor:'rgba(255,255,255,0.2)',borderWidth:1,borderRadius:6,borderSkipped:false}
+        {label:'예상 공수',data:planData,backgroundColor:cc().planBar,borderColor:cc().planBorder,borderWidth:1,borderRadius:6,borderSkipped:false}
       ]
     },
     options:{
       indexAxis:'y', responsive:true, maintainAspectRatio:true,
       plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.x.toFixed(1)}h`}}},
-      scales:{x:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#7aa8d4',font:{size:10}}},y:{grid:{display:false},ticks:{color:'#e8f4ff',font:{size:11,weight:'600'}}}},
+      scales:{x:{grid:{color:cc().grid},ticks:{color:cc().tick,font:{size:10}}},y:{grid:{display:false},ticks:{color:cc().tickStrong,font:{size:11,weight:'600'}}}},
       onClick:(e,els)=>{
         if(!els.length) return;
         const name = labels[els[0].index];
@@ -811,7 +814,7 @@ function renderPieChart(logs) {
       responsive:true, maintainAspectRatio:true,
       cutout:'60%',
       plugins:{
-        legend:{position:'bottom',labels:{color:'#7aa8d4',font:{size:10},boxWidth:10,padding:8}},
+        legend:{position:'bottom',labels:{color:cc().legend,font:{size:10},boxWidth:10,padding:8}},
         tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.parsed.toFixed(1)}h (${(ctx.parsed/sorted.reduce((s,x)=>s+x[1],0)*100).toFixed(0)}%)`}}
       },
       onClick:(e,els)=>{
@@ -834,7 +837,7 @@ function renderGauge(logs) {
 
   document.getElementById('gauge-wrap').innerHTML = `
     <svg class="gauge-svg" width="160" height="90" viewBox="0 0 160 90">
-      <path d="M 15 85 A 65 65 0 0 1 145 85" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="12" stroke-linecap="round"/>
+      <path d="M 15 85 A 65 65 0 0 1 145 85" fill="none" stroke="var(--surface2)" stroke-width="12" stroke-linecap="round"/>
       <path d="M 15 85 A 65 65 0 0 1 145 85" fill="none" stroke="${color}" stroke-width="12" stroke-linecap="round"
         stroke-dasharray="${deg/180*204} 204" style="filter:drop-shadow(0 0 6px ${color})"/>
       <text x="80" y="80" text-anchor="middle" fill="${color}" font-family="JetBrains Mono" font-size="20" font-weight="700">${(pct*100).toFixed(0)}%</text>
@@ -948,8 +951,8 @@ function renderTrendChart(logs) {
         title:{display:true,text:byDay?'일별 공수':'주별 공수',color:'#3d6a9e',font:{size:10}}
       },
       scales:{
-        x:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#7aa8d4',font:{size:10},maxTicksLimit:14}},
-        y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#7aa8d4',font:{size:10}},beginAtZero:true}
+        x:{grid:{color:cc().grid},ticks:{color:cc().tick,font:{size:10},maxTicksLimit:14}},
+        y:{grid:{color:cc().grid},ticks:{color:cc().tick,font:{size:10}},beginAtZero:true}
       }
     }
   });
@@ -986,7 +989,7 @@ function renderRadarChart(logs) {
   charts['chart-radar'] = new Chart(document.getElementById('chart-radar'),{
     type:'radar',data:{labels:cats,datasets},
     options:{responsive:true,maintainAspectRatio:true,
-      scales:{r:{grid:{color:'rgba(255,255,255,0.08)'},angleLines:{color:'rgba(255,255,255,0.08)'},pointLabels:{color:'#7aa8d4',font:{size:10}},ticks:{color:'rgba(255,255,255,0.3)',font:{size:8},backdropColor:'transparent'}}},
+      scales:{r:{grid:{color:cc().gridR},angleLines:{color:cc().gridR},pointLabels:{color:cc().radarPoint,font:{size:10}},ticks:{color:cc().radarTick,font:{size:8},backdropColor:'transparent'}}},
       plugins:{legend:{display:false}}}
   });
 }
@@ -1205,8 +1208,8 @@ async function renderMonthlyTrend() {
     }]},
     options:{responsive:true,maintainAspectRatio:true,
       plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.parsed.y.toFixed(1)}h`}}},
-      scales:{x:{grid:{display:false},ticks:{color:'#7aa8d4',font:{size:10}}},
-              y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#7aa8d4',font:{size:10}},beginAtZero:true}}}
+      scales:{x:{grid:{display:false},ticks:{color:cc().tick,font:{size:10}}},
+              y:{grid:{color:cc().grid},ticks:{color:cc().tick,font:{size:10}},beginAtZero:true}}}
   });
 }
 
@@ -1224,9 +1227,29 @@ function showTooltip(msg) {
   tooltipTimer = setTimeout(()=>t.style.display='none', 2000);
 }
 
+// ─── CHART THEME COLORS ───
+function cc() {
+  const mac = document.documentElement.getAttribute('data-theme') === 'mac';
+  return {
+    tick:        mac ? 'rgba(0,0,0,0.55)'  : '#7aa8d4',
+    tickStrong:  mac ? 'rgba(0,0,0,0.82)'  : '#e8f4ff',
+    grid:        mac ? 'rgba(0,0,0,0.07)'  : 'rgba(255,255,255,0.05)',
+    gridR:       mac ? 'rgba(0,0,0,0.10)'  : 'rgba(255,255,255,0.08)',
+    legend:      mac ? 'rgba(0,0,0,0.55)'  : '#7aa8d4',
+    radarTick:   mac ? 'rgba(0,0,0,0.35)'  : 'rgba(255,255,255,0.3)',
+    radarPoint:  mac ? 'rgba(0,0,0,0.65)'  : '#7aa8d4',
+    planBar:     mac ? 'rgba(0,0,0,0.08)'  : 'rgba(255,255,255,0.08)',
+    planBorder:  mac ? 'rgba(0,0,0,0.20)'  : 'rgba(255,255,255,0.2)',
+  };
+}
+function applyChartDefaults() {
+  const mac = document.documentElement.getAttribute('data-theme') === 'mac';
+  Chart.defaults.color = mac ? 'rgba(0,0,0,0.55)' : '#7aa8d4';
+  Chart.defaults.borderColor = mac ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.05)';
+}
+
 // Chart.js global defaults
-Chart.defaults.color = '#7aa8d4';
-Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
+applyChartDefaults();
 Chart.defaults.font.family = "'Noto Sans KR', sans-serif";
 
 // ─── PDF EXPORT ───
