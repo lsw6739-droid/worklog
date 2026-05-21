@@ -188,6 +188,51 @@ input.date-range:focus{outline:none;border-color:var(--accent)}
   .kpi-row{grid-template-columns:repeat(2,1fr)}
 }
 
+/* ══════════════════════════════════
+   macOS LIGHT THEME (data-theme="mac")
+   ══════════════════════════════════ */
+html[data-theme="mac"]{
+  --bg:#f0f0f5;--surface:#ffffff;--surface2:#f5f5f7;--surface3:#e9e9ed;
+  --border:rgba(0,0,0,0.1);--border2:rgba(0,0,0,0.15);
+  --accent:#0071e3;--accent2:#34c759;--accent3:#af52de;
+  --danger:#ff3b30;--warn:#ff9500;--pink:#ff6b6b;
+  --text:rgba(0,0,0,0.85);--text2:rgba(0,0,0,0.5);--text3:rgba(0,0,0,0.28);
+  --glow:0 2px 12px rgba(0,113,227,0.15);--shadow:0 4px 20px rgba(0,0,0,0.1);
+}
+html[data-theme="mac"] body{background:#f0f0f5}
+html[data-theme="mac"] body::before{display:none}
+html[data-theme="mac"] .db-header{background:rgba(248,248,250,.95);border-color:rgba(0,0,0,.1)}
+html[data-theme="mac"] .filter-bar{background:#fff;border-color:rgba(0,0,0,.08)}
+html[data-theme="mac"] .filter-chip{background:#f5f5f7;border-color:rgba(0,0,0,.1);color:rgba(0,0,0,.5)}
+html[data-theme="mac"] .filter-chip:hover{border-color:var(--accent);color:var(--accent)}
+html[data-theme="mac"] .filter-chip.active{background:rgba(0,113,227,.1);border-color:var(--accent);color:var(--accent)}
+html[data-theme="mac"] .filter-chip.active-member{background:rgba(52,199,89,.1);border-color:var(--accent2);color:var(--accent2)}
+html[data-theme="mac"] .filter-chip.active-cat{background:rgba(175,82,222,.1);border-color:var(--accent3);color:var(--accent3)}
+html[data-theme="mac"] select.filter-select{background:#f5f5f7;border-color:rgba(0,0,0,.1);color:rgba(0,0,0,.85);color-scheme:light}
+html[data-theme="mac"] .period-btn{background:#f5f5f7;border-color:rgba(0,0,0,.1);color:rgba(0,0,0,.5)}
+html[data-theme="mac"] .period-btn:hover{border-color:var(--accent);color:var(--accent)}
+html[data-theme="mac"] .period-btn.active{background:rgba(0,113,227,.1);border-color:var(--accent);color:var(--accent)}
+html[data-theme="mac"] input.date-range{background:#f5f5f7;border-color:rgba(0,0,0,.1);color:rgba(0,0,0,.85);color-scheme:light}
+html[data-theme="mac"] .db-back{background:#f5f5f7;border-color:rgba(0,0,0,.1);color:rgba(0,0,0,.5)}
+html[data-theme="mac"] .db-back:hover{border-color:var(--accent);color:var(--accent)}
+html[data-theme="mac"] .kpi-card{background:#fff;border-color:rgba(0,0,0,.08)}
+html[data-theme="mac"] .kpi-card::before{background:none}
+html[data-theme="mac"] .kpi-card:hover{border-color:rgba(0,113,227,.3);box-shadow:0 2px 12px rgba(0,113,227,.1)}
+html[data-theme="mac"] .chart-card{background:#fff;border-color:rgba(0,0,0,.08)}
+html[data-theme="mac"] .chart-card-header{border-color:rgba(0,0,0,.06)}
+html[data-theme="mac"] .chart-title{color:rgba(0,0,0,.85)}
+html[data-theme="mac"] .member-row:hover,.html[data-theme="mac"] .cat-row:hover{background:rgba(0,0,0,.03)}
+html[data-theme="mac"] .week-row:hover{background:rgba(0,0,0,.03)}
+html[data-theme="mac"] .week-member-bar-bg{background:rgba(0,0,0,.07)}
+html[data-theme="mac"] ::-webkit-scrollbar-track{background:#f0f0f5}
+html[data-theme="mac"] ::-webkit-scrollbar-thumb{background:rgba(0,0,0,.2)}
+html[data-theme="mac"] .active-filter-bar{background:rgba(0,113,227,.05);border-color:rgba(0,113,227,.1)}
+html[data-theme="mac"] .custom-tooltip{background:#fff;border-color:rgba(0,0,0,.1);color:rgba(0,0,0,.85)}
+html[data-theme="mac"] .db-spinner{border-color:rgba(0,0,0,.1);border-top-color:var(--accent)}
+
+/* theme toggle */
+.db-theme-btn{background:rgba(128,128,128,.1);border:1px solid var(--border);color:var(--text2);border-radius:8px;padding:5px 8px;font-size:15px;cursor:pointer;font-family:inherit;transition:all .2s;line-height:1}
+.db-theme-btn:hover{border-color:var(--accent);color:var(--accent)}
 </style>
 </head>
 <body>
@@ -211,6 +256,7 @@ input.date-range:focus{outline:none;border-color:var(--accent)}
       <input type="date" class="date-range" id="date-end" onchange="onRangeChange()">
     </div>
     <button id="pdf-btn" class="db-back" onclick="exportDashboardPDF()" style="border-color:rgba(0,255,157,0.4);color:var(--accent2);min-width:80px">🖨️ PDF 출력</button>
+    <button class="db-theme-btn" id="db-theme-btn" onclick="toggleDbTheme()" title="테마 전환"></button>
     <a href="index.html" class="db-back">← 앱으로</a>
   </div>
 </div>
@@ -307,6 +353,24 @@ input.date-range:focus{outline:none;border-color:var(--accent)}
 <div class="custom-tooltip" id="custom-tooltip"></div>
 
 <script>
+/* ── THEME ── */
+(function(){
+  const t = localStorage.getItem('wl_theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', t);
+  window.addEventListener('DOMContentLoaded', function(){
+    const btn = document.getElementById('db-theme-btn');
+    if(btn) btn.textContent = t === 'dark' ? '☀️' : '🌙';
+  });
+})();
+function toggleDbTheme(){
+  const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+  const next = cur === 'dark' ? 'mac' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('wl_theme', next);
+  const btn = document.getElementById('db-theme-btn');
+  if(btn) btn.textContent = next === 'dark' ? '☀️' : '🌙';
+}
+
 // ━━━━━━━━━━━━━━━━━━━━━━━
 const SUPABASE_URL = 'https://uulemznemzjlgzqhrchb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1bGVtem5lbXpqbGd6cWhyY2hiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MTc3MzQsImV4cCI6MjA5Mzk5MzczNH0.cy3jWrFez0pO0vl3nOOUMiv-511IzQiTcNxTK8Jejrg';
