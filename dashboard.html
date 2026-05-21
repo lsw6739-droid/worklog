@@ -938,8 +938,7 @@ function renderTrendChart(logs) {
 // ─── RADAR CHART ───
 function renderRadarChart(logs) {
   const cats = allCategories.map(c=>c.name);
-  if (!radarSelected.length) radarSelected = allEmployees.map(e=>e.id);
-
+  // radarSelected가 비어있으면 전체 해제 상태 → 빈 차트
   const members = allEmployees.filter(e=>radarSelected.includes(e.id));
   const byMemberCat = {};
   logs.forEach(l=>{
@@ -972,24 +971,35 @@ function renderRadarChart(logs) {
   });
 }
 
-function toggleRadarAll() {
-  radarSelected = allEmployees.map(e=>e.id);
-  renderRadarChart(allLogs.filter(l=>{
+function _radarFilteredLogs() {
+  return allLogs.filter(l=>{
     if(filters.members.length&&!filters.members.includes(l.employee_id))return false;
     if(filters.categories.length&&!filters.categories.includes(l.category_id))return false;
     return true;
-  }));
+  });
+}
+
+function toggleRadarAll() {
+  const isAll = radarSelected.length === allEmployees.length;
+  if (isAll) {
+    // 전체 선택 상태 → 전체 해제 (아무도 선택 안 된 상태)
+    radarSelected = [];
+  } else {
+    // 전체 선택
+    radarSelected = allEmployees.map(e=>e.id);
+  }
+  renderRadarChart(_radarFilteredLogs());
 }
 
 function toggleRadar(id) {
   const idx = radarSelected.indexOf(id);
-  if (idx>=0) { if(radarSelected.length>1) radarSelected.splice(idx,1); }
-  else { radarSelected.push(id); }
-  renderRadarChart(allLogs.filter(l=>{
-    if(filters.members.length&&!filters.members.includes(l.employee_id))return false;
-    if(filters.categories.length&&!filters.categories.includes(l.category_id))return false;
-    return true;
-  }));
+  if (idx >= 0) {
+    radarSelected.splice(idx, 1); // 선택 해제 (1명만 남아도 해제 허용)
+  } else {
+    radarSelected.push(id);
+  }
+  // radarSelected가 비어있으면 전체 해제 상태 유지 (전체 버튼으로 복귀 가능)
+  renderRadarChart(_radarFilteredLogs());
 }
 
 // ─── HEATMAP ───
