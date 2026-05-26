@@ -1636,11 +1636,10 @@ function renderTodoItem(t,isDone){
 
 let _addTodoLock = false;
 async function addTodo(){
-  if(_addTodoLock) return;
   const input=document.getElementById('todo-input'), title=input.value.trim();
-  if(!title) return;
+  if(!title || _addTodoLock) return;
   _addTodoLock = true;
-  input.value = ''; // 즉시 비워서 중복 제출 방지
+  input.value = ''; // 항상 즉시 비우기
   try{
     // title/status 컬럼 포함해서 먼저 시도
     let res=await fetch(`${API}/todos`,{method:'POST',headers:H,
@@ -1652,7 +1651,7 @@ async function addTodo(){
       if(!res.ok) throw new Error(await res.text());
     }
     loadTodos();
-  }catch(e){ showToast('추가 실패','error'); input.value=title; } // 실패시 복구
+  }catch(e){ showToast('추가 실패','error'); input.value=title; }
   finally{ _addTodoLock = false; }
 }
 // 할일 순서 이동
