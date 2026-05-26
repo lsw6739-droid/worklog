@@ -479,7 +479,7 @@ html[data-theme="dark"] .badge-warn{background:rgba(255,159,10,.18);color:#ff9f0
               <span id="todo-count" style="font-size:10px;color:var(--text3)"></span>
             </div>
             <div style="display:flex;gap:8px;margin-bottom:12px">
-              <input type="text" id="todo-input" placeholder="할일 입력 후 Enter" style="flex:1;margin-bottom:0" onkeydown="if(event.key==='Enter')addTodo()">
+              <input type="text" id="todo-input" placeholder="할일 입력 후 Enter" style="flex:1;margin-bottom:0" onkeydown="if(event.key==='Enter'){event.preventDefault();addTodo()}">
               <button class="btn btn-primary btn-sm" onclick="addTodo()">추가</button>
             </div>
             <div id="todo-list"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
@@ -1634,9 +1634,13 @@ function renderTodoItem(t,isDone){
 }
 
 
+let _addTodoLock = false;
 async function addTodo(){
+  if(_addTodoLock) return;
   const input=document.getElementById('todo-input'), title=input.value.trim();
   if(!title) return;
+  _addTodoLock = true;
+  input.value = ''; // 즉시 비워서 중복 제출 방지
   try{
     // title/status 컬럼 포함해서 먼저 시도
     let res=await fetch(`${API}/todos`,{method:'POST',headers:H,
@@ -1647,8 +1651,9 @@ async function addTodo(){
         body:JSON.stringify({employee_id:currentUser.id,content:title,is_done:false,source:'personal'})});
       if(!res.ok) throw new Error(await res.text());
     }
-    input.value=''; loadTodos();
-  }catch(e){ showToast('추가 실패','error'); }
+    loadTodos();
+  }catch(e){ showToast('추가 실패','error'); input.value=title; } // 실패시 복구
+  finally{ _addTodoLock = false; }
 }
 // 할일 순서 이동
 let todoOrderCache = [];
