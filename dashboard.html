@@ -432,8 +432,19 @@ function attendToLogs(attends, employees, periodStart, periodEnd){
   attends.forEach(function(a){
     const emp = empMap[a.employee_id];
     if(!emp) return;
-    const dailyH = ATTEND_HOURS_DAILY[a.attend_type] || 0;
-    if(!dailyH) return; // 기타(0h)는 제외
+
+    // 기타 타입: exclude_hours를 평일 일수로 나눠 하루치 계산
+    let dailyH;
+    if(a.attend_type === 'other'){
+      let wdays = 0;
+      let tmp = new Date(a.start_date + 'T00:00:00');
+      const tmpEnd = new Date(a.end_date + 'T00:00:00');
+      while(tmp <= tmpEnd){ if(tmp.getDay()!==0&&tmp.getDay()!==6) wdays++; tmp.setDate(tmp.getDate()+1); }
+      dailyH = wdays > 0 ? (Number(a.exclude_hours)||0) / wdays : 0;
+    } else {
+      dailyH = ATTEND_HOURS_DAILY[a.attend_type] || 0;
+    }
+    if(!dailyH) return; // 시간이 0이면 표시 안 함
 
     let d = new Date(a.start_date + 'T00:00:00');
     const endD = new Date(a.end_date + 'T00:00:00');
