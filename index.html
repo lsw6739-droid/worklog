@@ -538,6 +538,16 @@ html[data-theme="dark"] .badge-warn{background:rgba(255,159,10,.18);color:#ff9f0
           </select>
         </div>
         <div class="form-group" id="attend-note-group" style="display:none"><label>내용 (기타 사유)</label><input type="text" id="attend-note" placeholder="사유를 입력하세요"></div>
+        <div class="form-group" id="attend-hours-group" style="display:none">
+          <label>제외 시간 <span style="font-size:10px;color:var(--text3)">하루 기준</span></label>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="adjustAttendHours(-1)" style="min-width:48px">－1h</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="adjustAttendHours(-0.5)" style="min-width:54px">－30분</button>
+            <span id="attend-hours-display" style="font-size:20px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--warn);min-width:64px;text-align:center">0h</span>
+            <button type="button" class="btn btn-primary btn-sm" onclick="adjustAttendHours(0.5)" style="min-width:54px">＋30분</button>
+            <button type="button" class="btn btn-primary btn-sm" onclick="adjustAttendHours(1)" style="min-width:48px">＋1h</button>
+          </div>
+        </div>
         <button class="btn btn-warn" onclick="submitAttend()">근태 등록</button>
       </div>
       <div class="card">
@@ -2586,7 +2596,24 @@ async function deleteNotice(id){
 }
 
 // ATTEND
-function toggleAttendNote(){document.getElementById('attend-note-group').style.display=document.getElementById('attend-type').value==='other'?'block':'none';}
+let _attendOtherHours = 0;
+
+function adjustAttendHours(delta) {
+  _attendOtherHours = Math.round((Math.max(0, Math.min(8, _attendOtherHours + delta))) * 10) / 10;
+  const h = Math.floor(_attendOtherHours);
+  const m = Math.round((_attendOtherHours % 1) * 60);
+  let display = h > 0 && m > 0 ? `${h}h ${m}분` : h > 0 ? `${h}h` : m > 0 ? `${m}분` : '0h';
+  document.getElementById('attend-hours-display').textContent = display;
+}
+
+function toggleAttendNote() {
+  const type = document.getElementById('attend-type').value;
+  const isOther = type === 'other';
+  document.getElementById('attend-note-group').style.display  = isOther ? 'block' : 'none';
+  document.getElementById('attend-hours-group').style.display = isOther ? 'block' : 'none';
+  if (isOther) { _attendOtherHours = 0; document.getElementById('attend-hours-display').textContent = '0h'; }
+}
+
 async function submitAttend(){
   const start=document.getElementById('attend-start').value,end=document.getElementById('attend-end').value;
   const type=document.getElementById('attend-type').value,note=document.getElementById('attend-note').value.trim();
@@ -2595,13 +2622,18 @@ async function submitAttend(){
   if(type==='other'&&!note){showToast('기타 사유를 입력하세요','error');return;}
   let days=0,d=new Date(start);const e=new Date(end);
   while(d<=e){const dw=d.getDay();if(dw!==0&&dw!==6)days++;d.setDate(d.getDate()+1);}
-  const excludeH=ATTEND_HOURS[type]*days;
+  const perDay = type==='other' ? _attendOtherHours : ATTEND_HOURS[type];
+  const excludeH = perDay * days;
   try{
     await fetch(`${API}/attends`,{method:'POST',headers:H,body:JSON.stringify({employee_id:currentUser.id,start_date:start,end_date:end,attend_type:type,note:note||null,exclude_hours:excludeH})});
     ['attend-note'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('attend-start').value=today();document.getElementById('attend-end').value=today();
-    document.getElementById('attend-type').value='annual';document.getElementById('attend-note-group').style.display='none';
-    showToast(`근태 등록됨 (${excludeH}h 제외)`,'success');loadMyAttends();
+    document.getElementById('attend-type').value='annual';
+    document.getElementById('attend-note-group').style.display='none';
+    document.getElementById('attend-hours-group').style.display='none';
+    _attendOtherHours=0;
+    const label = excludeH>0 ? `${excludeH}h 제외` : '시간 미차감';
+    showToast(`근태 등록됨 (${label})`,'success');loadMyAttends();
   }catch(e){showToast('등록 실패','error');}
 }
 let _myAttendData=[], _myAttendSort={col:'start_date',dir:'desc'};
