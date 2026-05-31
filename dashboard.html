@@ -169,8 +169,6 @@ input.date-range:focus{outline:none;border-color:var(--accent)}
 .week-member-val{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--accent2);width:50px;text-align:right;white-space:nowrap}
 
 /* GAUGE */
-.gauge-wrap{display:flex;align-items:center;justify-content:center;padding:10px 0}
-.gauge-svg{overflow:visible}
 
 /* LOADING */
 .db-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px;color:var(--text3)}
@@ -416,7 +414,7 @@ let radarSelected = [];
 
 // 근태 상수
 const ATTEND_HOURS_DAILY = {annual:8, half:4, quarter:2, other:0};
-const ATTEND_LABELS_DB   = {annual:'연차', half:'반차', quarter:'반반차', other:'기타근태'};
+const ATTEND_LABELS_DB   = {annual:'연차', half:'반차', quarter:'반반차', other:'기타'};
 
 // 로컬 날짜 → YYYY-MM-DD (toISOString은 UTC 기준이라 한국에서 날짜 오류 발생)
 function dateToStr(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
@@ -589,6 +587,7 @@ async function loadData() {
 
 function generateDemoData() {
   const logs = [];
+  const diffs = ['low','mid','high'];
   const start = document.getElementById('date-start').value || dateToStr(new Date()).slice(0,8)+'01';
   const [y,m] = start.split('-');
   const days = new Date(y,m,0).getDate();
@@ -837,24 +836,6 @@ function renderPieChart(logs) {
 }
 
 // ─── GAUGE ───
-function renderGauge(logs) {
-  const totalH = logs.reduce((s,l)=>s+Number(l.hours),0);
-  const teamTarget = monthGoal * (allEmployees.length||1);
-  const pct = Math.min(totalH/teamTarget, 1);
-  const color = pct>=0.8?'#ff4757':pct>=0.6?'#ffa502':'#00d4ff';
-  const deg = pct * 180;
-
-  document.getElementById('gauge-wrap').innerHTML = `
-    <svg class="gauge-svg" width="160" height="90" viewBox="0 0 160 90">
-      <path d="M 15 85 A 65 65 0 0 1 145 85" fill="none" stroke="var(--surface2)" stroke-width="12" stroke-linecap="round"/>
-      <path d="M 15 85 A 65 65 0 0 1 145 85" fill="none" stroke="${color}" stroke-width="12" stroke-linecap="round"
-        stroke-dasharray="${deg/180*204} 204" style="filter:drop-shadow(0 0 6px ${color})"/>
-      <text x="80" y="80" text-anchor="middle" fill="${color}" font-family="JetBrains Mono" font-size="20" font-weight="700">${(pct*100).toFixed(0)}%</text>
-    </svg>`;
-  document.getElementById('gauge-detail').innerHTML = `
-    실적 <strong style="color:var(--accent2)">${totalH.toFixed(1)}h</strong> / 목표 <strong style="color:var(--text2)">${teamTarget.toFixed(0)}h</strong>`;
-}
-
 // ─── MATRIX ───
 function renderMatrix(logs) {
   const cats = [...new Set(logs.map(l=>l.categories?.name||'기타'))].sort();
