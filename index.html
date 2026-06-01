@@ -2008,32 +2008,43 @@ async function saveTodoDetail(){
       if(!patchRes.ok) throw new Error(await patchRes.text());
     }
 
-    // 2. 기존 공유본 조회
-    const existRes=await fetch(API+'/todos?parent_todo_id=eq.'+rootId+'&select=id,employee_id',{headers:H});
-    const existShared=await existRes.json();
-    const existMap={};
-    existShared.forEach(function(s){existMap[s.employee_id]=s.id;});
-
-    // 3. 원본 소유자 제외한 담당자 목록
-    const ownerId=currentTodoData.employee_id||currentUser.id;
-    const others=selectedAssignees.filter(function(aid){return aid!==ownerId;});
-
-    // 4. 공유본 전체 동기화 (status·checklist·note 포함 — 완전히 동일하게)
-    await Promise.all(others.map(function(aid){
-      if(existMap[aid]){
-        return fetch(API+'/todos?id=eq.'+existMap[aid],{method:'PATCH',headers:H,body:JSON.stringify(updateBody)});
-      } else {
-        return fetch(API+'/todos',{method:'POST',headers:H,body:JSON.stringify(
-          Object.assign({},updateBody,{employee_id:aid,is_done:false,source:'assigned',parent_todo_id:rootId})
-        )});
+    if(currentTodoData.source === 'notice'){
+      // 공지 todo: note 필드의 notice_XXXXX 식별자로 같은 공지를 받은 전원 동기화
+      const noticeNote = currentTodoData.note; // 'notice_XXXXX'
+      if(noticeNote){
+        const noticeBody = Object.assign({}, updateBody, {note: noticeNote}); // note 식별자 보존
+        await fetch(API+'/todos?source=eq.notice&note=eq.'+noticeNote+'&id=neq.'+rootId,
+          {method:'PATCH', headers:H, body:JSON.stringify(noticeBody)});
       }
-    }));
+    } else {
+      // 일반 공유 todo: parent_todo_id 기반 동기화
+      // 2. 기존 공유본 조회
+      const existRes=await fetch(API+'/todos?parent_todo_id=eq.'+rootId+'&select=id,employee_id',{headers:H});
+      const existShared=await existRes.json();
+      const existMap={};
+      existShared.forEach(function(s){existMap[s.employee_id]=s.id;});
 
-    // 5. 담당자에서 제거된 사람 → 공유본 삭제
-    await Promise.all(Object.keys(existMap).map(function(aid){
-      if(!others.includes(aid)) return fetch(API+'/todos?id=eq.'+existMap[aid],{method:'DELETE',headers:H});
-      return Promise.resolve();
-    }));
+      // 3. 원본 소유자 제외한 담당자 목록
+      const ownerId=currentTodoData.employee_id||currentUser.id;
+      const others=selectedAssignees.filter(function(aid){return aid!==ownerId;});
+
+      // 4. 공유본 전체 동기화 (status·checklist·note 포함 — 완전히 동일하게)
+      await Promise.all(others.map(function(aid){
+        if(existMap[aid]){
+          return fetch(API+'/todos?id=eq.'+existMap[aid],{method:'PATCH',headers:H,body:JSON.stringify(updateBody)});
+        } else {
+          return fetch(API+'/todos',{method:'POST',headers:H,body:JSON.stringify(
+            Object.assign({},updateBody,{employee_id:aid,is_done:false,source:'assigned',parent_todo_id:rootId})
+          )});
+        }
+      }));
+
+      // 5. 담당자에서 제거된 사람 → 공유본 삭제
+      await Promise.all(Object.keys(existMap).map(function(aid){
+        if(!others.includes(aid)) return fetch(API+'/todos?id=eq.'+existMap[aid],{method:'DELETE',headers:H});
+        return Promise.resolve();
+      }));
+    }
 
     window._myOwnSave = true; // 내가 저장한 Realtime 이벤트는 무시
     closeModal('modal-todo-detail');
