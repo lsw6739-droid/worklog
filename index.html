@@ -566,6 +566,7 @@ html[data-theme="dark"] .badge-warn{background:rgba(255,159,10,.18);color:#ff9f0
         <div class="card-title">🔍 <span>조회 조건</span></div>
         <div class="filter-row" style="flex-wrap:wrap;gap:6px">
           <button class="period-quick-btn active" id="team-btn-today" onclick="setTeamPeriod('today')">오늘</button>
+          <button class="period-quick-btn" id="team-btn-yesterday" onclick="setTeamPeriod('yesterday')">어제</button>
           <button class="period-quick-btn" id="team-btn-thisweek" onclick="setTeamPeriod('thisweek')">이번 주</button>
           <button class="period-quick-btn" id="team-btn-thismonth" onclick="setTeamPeriod('thismonth')">이번 달</button>
           <button class="period-quick-btn" id="team-btn-lastmonth" onclick="setTeamPeriod('lastmonth')">지난 달</button>
@@ -1500,6 +1501,7 @@ function calcPeriod(preset){
   const t=today();
   const now=new Date(t+'T00:00:00');
   if(preset==='today') return {start:t, end:t};
+  if(preset==='yesterday'){const y=new Date(now);y.setDate(now.getDate()-1);const ys=fmtD(y);return {start:ys,end:ys};}
   if(preset==='thisweek'){
     const mon=new Date(now); mon.setDate(now.getDate()-(now.getDay()||7)+1);
     const sun=new Date(mon); sun.setDate(mon.getDate()+6);
@@ -1536,13 +1538,13 @@ function setTeamPeriod(preset){
   const {start,end}=calcPeriod(preset);
   document.getElementById('team-start').value=start;
   document.getElementById('team-end').value=end;
-  ['today','thisweek','thismonth','lastmonth'].forEach(p=>{
+  ['today','yesterday','thisweek','thismonth','lastmonth'].forEach(p=>{
     document.getElementById('team-btn-'+p)?.classList.toggle('active',p===preset);
   });
   loadTeamStats();
 }
 function onTeamRangeChange(){
-  ['today','thisweek','thismonth','lastmonth'].forEach(p=>document.getElementById('team-btn-'+p)?.classList.remove('active'));
+  ['today','yesterday','thisweek','thismonth','lastmonth'].forEach(p=>document.getElementById('team-btn-'+p)?.classList.remove('active'));
   loadTeamStats();
 }
 
