@@ -1150,7 +1150,7 @@ function switchPage(p){
 
 // CATEGORIES
 async function loadCategories(){
-  try{const res=await fetch(`${API}/categories?is_active=eq.true&order=created_at`,{headers:H});categories=await res.json();}
+  try{const res=await fetch(`${API}/categories?is_active=eq.true&order=sort_order.asc,created_at.asc`,{headers:H});categories=await res.json();}
   catch(e){categories=[{id:'1',name:'제조'},{id:'2',name:'QA'},{id:'3',name:'문서관리'},{id:'4',name:'교육'},{id:'5',name:'회의'},{id:'6',name:'기타'}];}
   const opts=categories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
   ['log-category','edit-log-category','edit-tpl-category'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<option value="">분류 선택...</option>'+opts;});
@@ -1165,40 +1165,110 @@ async function toggleCategory(id,active){
   try{await fetch(`${API}/categories?id=eq.${id}`,{method:'PATCH',headers:H,body:JSON.stringify({is_active:!active})});}catch(e){}
   await loadCategories();
 }
+let _catDragSrcIdx = null;
+let _catAllList = []; // 전체 카테고리 (비활성 포함) 순서 관리용
+
 function renderCategoryList(){
-  fetch(API+'/categories?order=created_at',{headers:H}).then(r=>r.json()).then(function(all){
+  fetch(API+'/categories?order=sort_order.asc,created_at.asc',{headers:H}).then(r=>r.json()).then(function(all){
+    _catAllList = all;
     const el = document.getElementById('category-list');
+    el.innerHTML = '<div style="font-size:11px;color:var(--text3);margin-bottom:8px">⠿ 드래그로 순서 변경</div>';
     const frag = document.createDocumentFragment();
-    all.forEach(function(c){
+
+    all.forEach(function(c, i){
       const row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);gap:8px';
+      row.dataset.catIdx = i;
+      row.draggable = true;
+      row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:9px 6px;border-bottom:1px solid var(--border);cursor:default;border-radius:6px;transition:background .1s;position:relative';
+
+      // 드래그 핸들
+      const handle = document.createElement('span');
+      handle.textContent = '⠿';
+      handle.title = '드래그로 순서 변경';
+      handle.style.cssText = 'color:var(--text3);cursor:grab;font-size:14px;flex-shrink:0;padding:0 2px';
+
+      // 이름 + 뱃지
       const nameSpan = document.createElement('span');
       nameSpan.style.cssText = 'font-size:13px;flex:1';
       nameSpan.innerHTML = c.name + ' <span class="badge ' + (c.is_active?'badge-green':'badge-red') + '">' + (c.is_active?'활성':'비활성') + '</span>';
+
+      // 버튼
       const btnDiv = document.createElement('div');
-      btnDiv.style.cssText = 'display:flex;gap:6px';
+      btnDiv.style.cssText = 'display:flex;gap:6px;flex-shrink:0';
+
       const editBtn = document.createElement('button');
       editBtn.className = 'btn btn-secondary btn-sm';
       editBtn.textContent = '수정';
       editBtn.onclick = function(){ openEditCategory(c.id, c.name); };
+
       const toggleBtn = document.createElement('button');
       toggleBtn.className = 'btn btn-secondary btn-sm';
       toggleBtn.textContent = c.is_active ? '비활성화' : '활성화';
       toggleBtn.onclick = function(){ toggleCategory(c.id, c.is_active); };
+
       const delBtn = document.createElement('button');
       delBtn.className = 'btn btn-danger btn-sm';
       delBtn.textContent = '삭제';
       delBtn.onclick = function(){ deleteCategory(c.id, c.name); };
+
       btnDiv.appendChild(editBtn);
       btnDiv.appendChild(toggleBtn);
       btnDiv.appendChild(delBtn);
+      row.appendChild(handle);
       row.appendChild(nameSpan);
       row.appendChild(btnDiv);
+
+      // 드래그 이벤트
+      row.addEventListener('dragstart', function(e){
+        _catDragSrcIdx = i;
+        e.dataTransfer.effectAllowed = 'move';
+        setTimeout(function(){ row.style.opacity = '0.3'; }, 0);
+      });
+      row.addEventListener('dragend', function(){
+        row.style.opacity = '';
+        document.querySelectorAll('#category-list [data-cat-idx]').forEach(function(el){
+          el.style.borderTop = '';
+          el.style.borderBottom = '1px solid var(--border)';
+        });
+      });
+      row.addEventListener('dragover', function(e){
+        e.preventDefault();
+        document.querySelectorAll('#category-list [data-cat-idx]').forEach(function(el){
+          el.style.borderTop = '';
+          el.style.borderBottom = '1px solid var(--border)';
+        });
+        const rect = row.getBoundingClientRect();
+        const isTop = e.clientY < rect.top + rect.height / 2;
+        if(isTop){ row.style.borderTop = '2px solid var(--accent)'; row.style.borderBottom = ''; }
+        else { row.style.borderBottom = '2px solid var(--accent)'; }
+      });
+      row.addEventListener('drop', function(e){
+        e.preventDefault();
+        if(_catDragSrcIdx === null || _catDragSrcIdx === i){ _catDragSrcIdx = null; return; }
+        const rect = row.getBoundingClientRect();
+        const isTop = e.clientY < rect.top + rect.height / 2;
+        const moved = _catAllList.splice(_catDragSrcIdx, 1)[0];
+        let insertAt = isTop ? i : i + 1;
+        if(_catDragSrcIdx < i) insertAt--;
+        _catAllList.splice(insertAt, 0, moved);
+        _catDragSrcIdx = null;
+        saveCategoryOrder();
+      });
+
       frag.appendChild(row);
     });
-    el.innerHTML = '';
     el.appendChild(frag);
   }).catch(function(){});
+}
+
+async function saveCategoryOrder(){
+  try{
+    await Promise.all(_catAllList.map(function(c, i){
+      return fetch(API+'/categories?id=eq.'+c.id, {method:'PATCH', headers:H, body:JSON.stringify({sort_order: i})});
+    }));
+    showToast('순서 저장됨','success');
+    loadCategories();
+  }catch(e){ showToast('순서 저장 실패','error'); }
 }
 function openEditCategory(id,name){const n=prompt('분류명 수정',name);if(!n||n.trim()===name)return;fetch(`${API}/categories?id=eq.${id}`,{method:'PATCH',headers:H,body:JSON.stringify({name:n.trim()})}).then(()=>{loadCategories();showToast('수정됨','success');});}
 async function deleteCategory(id,name){if(!confirm(`'${name}' 삭제할까요?\n연결된 일지가 있으면 비활성화를 이용하세요.`))return;try{await fetch(`${API}/categories?id=eq.${id}`,{method:'DELETE',headers:H});await loadCategories();showToast(`'${name}' 삭제됨`,'success');}catch(e){showToast('삭제 실패 - 비활성화를 이용하세요','error');}}
