@@ -3095,7 +3095,20 @@ function closeModal(id){
   document.getElementById(id).classList.remove('open');
   if(id==='modal-todo-detail'){ _unsubscribeTodoRealtime(); }
 }
-document.querySelectorAll('.modal-overlay').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
+document.querySelectorAll('.modal-overlay').forEach(el=>el.addEventListener('click',async e=>{
+  if(e.target!==el) return;
+  if(el.id==='modal-todo-detail'){
+    // 제목이 있으면 자동저장 후 닫기
+    const title=document.getElementById('detail-title')?.value.trim();
+    if(title && currentTodoData){
+      try{
+        await saveTodoDetail();
+        return; // saveTodoDetail 내부에서 closeModal 호출
+      }catch(err){}
+    }
+  }
+  el.classList.remove('open');
+}));
 let toastTimer;
 function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className=`show ${type}`;clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.className='',3000);}
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('login-screen').style.display!=='none')doLogin();});
