@@ -1865,7 +1865,30 @@ function toggleTodoStatus(){
 
 // ─── TODO 상세 ───
 let currentChecklist = [];
+let _openChecklistIds = []; // 팝업 열릴 때의 항목 ID 스냅샷 (병합 기준)
 let selectedAssignees = [];
+
+function _genClId(){ return 'cl_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+
+async function _mergeChecklist(todoId, localList, openIds){
+  try{
+    const res = await fetch(API+'/todos?id=eq.'+todoId+'&select=checklist',{headers:H});
+    const rows = await res.json();
+    const raw = rows[0]?.checklist;
+    const serverList = raw ? (()=>{ try{ return JSON.parse(raw); }catch(e){ return []; } })() : [];
+    // 서버 항목에 ID 없으면 부여 (구버전 데이터 대응)
+    serverList.forEach(function(s){ if(!s.id) s.id = _genClId(); });
+
+    const openSet = new Set(openIds);
+    const localIds = new Set(localList.map(function(c){ return c.id; }).filter(Boolean));
+
+    // 열린 이후 다른 사람이 추가한 항목만 로컬 끝에 덧붙임
+    const extras = serverList.filter(function(s){ return s.id && !openSet.has(s.id) && !localIds.has(s.id); });
+    return localList.concat(extras);
+  }catch(e){
+    return localList;
+  }
+}
 let currentTodoData = null;
 
 async function openTodoDetail(id){
@@ -1899,6 +1922,9 @@ async function openTodoDetail(id){
 
   // 체크리스트
   try{ currentChecklist = t.checklist ? JSON.parse(t.checklist) : []; }catch(e){ currentChecklist=[]; }
+  // 기존 항목에 ID 없으면 부여 후 스냅샷 저장 (병합 기준점)
+  currentChecklist.forEach(function(c){ if(!c.id) c.id = _genClId(); });
+  _openChecklistIds = currentChecklist.map(function(c){ return c.id; });
   renderChecklist();
 
   // 담당자 (누구나 수정 가능)
@@ -1968,7 +1994,7 @@ function addChecklistItem(){
   const input = document.getElementById('checklist-input');
   const text = input.value.trim();
   if(!text) return;
-  currentChecklist.push({text, done:false});
+  currentChecklist.push({id:_genClId(), text, done:false});
   input.value='';
   renderChecklist();
 }
@@ -1976,7 +2002,7 @@ function addChecklistItem(){
 function addChecklistHeader(){
   const input = document.getElementById('checklist-input');
   const text = input.value.trim() || '제목';
-  currentChecklist.push({type:'header', text});
+  currentChecklist.push({id:_genClId(), type:'header', text});
   input.value='';
   renderChecklist();
 }
@@ -2095,7 +2121,8 @@ async function saveTodoDetail(){
   const assigneeNames = selectedAssignees.map(function(aid){
     const e=allEmployees.find(function(x){return x.id===aid;}); return e?e.name:'';
   }).filter(Boolean).join(', ');
-  const checklistJson = currentChecklist.length ? JSON.stringify(currentChecklist) : null;
+  const mergedChecklist = await _mergeChecklist(rootId, currentChecklist, _openChecklistIds);
+  const checklistJson = mergedChecklist.length ? JSON.stringify(mergedChecklist) : null;
 
   // 루트와 모든 공유본에 동일하게 적용할 필드
   const updateBody = {
