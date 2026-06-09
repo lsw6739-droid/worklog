@@ -1911,7 +1911,9 @@ async function openTodoDetail(id){
   document.getElementById('detail-title').value    = t.title || t.content || '';
   document.getElementById('detail-content').value  = t.content || '';
   document.getElementById('detail-due-date').value = t.due_date || '';
-  document.getElementById('detail-note').value     = t.note || '';
+  // 공지 투두: 비고 필드에 내부 식별자(notice_XXXXX) 노출 방지
+  document.getElementById('detail-note').value =
+    (t.source === 'notice' && t.note && t.note.startsWith('notice_')) ? '' : (t.note || '');
 
   // 상태
   const status = t.status || 'waiting';
@@ -2124,10 +2126,15 @@ async function saveTodoDetail(){
   const mergedChecklist = await _mergeChecklist(rootId, currentChecklist, _openChecklistIds);
   const checklistJson = mergedChecklist.length ? JSON.stringify(mergedChecklist) : null;
 
+  // 공지 투두: note 식별자(notice_XXXXX) 항상 보존 (사용자 입력으로 덮어쓰지 않음)
+  const preservedNote = (currentTodoData && currentTodoData.source === 'notice' &&
+    currentTodoData.note && currentTodoData.note.startsWith('notice_'))
+    ? currentTodoData.note : (note || null);
+
   // 루트와 모든 공유본에 동일하게 적용할 필드
   const updateBody = {
     title:todoTitle, content:todoContent||todoTitle, status:todoStatus,
-    due_date:dueDate||null, note:note||null, checklist:checklistJson,
+    due_date:dueDate||null, note:preservedNote, checklist:checklistJson,
     assignee_ids:assigneeIds||null, assignee_names:assigneeNames||null
   };
 
@@ -2473,8 +2480,8 @@ async function postNotice(mode){
     if(mode === 'todo' || mode === 'both'){
       await Promise.all(targets.map(e=>fetch(`${API}/todos`,{method:'POST',headers:H,body:JSON.stringify({
         employee_id: e.id,
-        title: `[공지] ${title}`,
-        content: `[공지] ${title}: ${body}`,
+        title: title,
+        content: body,
         is_done: false,
         source: 'notice',
         status: 'waiting',
@@ -2708,8 +2715,8 @@ async function saveEditNotice(){
 
     // 2. 연결된 투두 수정 (해당 공지 note로 정확히 필터)
     await fetch(`${API}/todos?source=eq.notice&note=eq.notice_${id}`,{method:'PATCH',headers:H,body:JSON.stringify({
-      title: `[공지] ${title}`,
-      content: `[공지] ${title}: ${body}`,
+      title: title,
+      content: body,
       due_date: dueDate || null,
       checklist: checklistJson,
       assignee_ids: assigneeIds,
