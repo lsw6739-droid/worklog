@@ -962,5 +962,108 @@
         ]
       }
     ]
+  },
+  {
+    "time": "19:37",
+    "changes": [
+      {
+        "action": "added",
+        "title": "휴대용 시계 점검",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "ㅡㅡㅡㅡㅡㅡ먼미래 할일ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "ㅡㅡㅡㅡㅡㅡ오늘 할일ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "BPR 검토",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "공정시간 수립",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "ㅡㅡㅡㅡㅡㅡ이번주 할일ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "ㅡㅡㅡㅡㅡㅡ이번달 할일ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "PP 밀링 BPR 툴 작성",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "deleted",
+        "title": "정기점검 확인",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "deleted",
+        "title": "원료 ED 포장 문서 작성",
+        "employee": "이상우",
+        "details": []
+      },
+      {
+        "action": "deleted",
+        "title": "PP 밀링 BPR 툴 수립",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "deleted",
+        "title": "휴대용 시계 점검",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "deleted",
+        "title": "김형성 이번주 할일",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "deleted",
+        "title": "[공지] [안전관리팀] 2026년 2분기 정기안전보건교육(모두의 러닝) 수강 안내의 건",
+        "employee": "이상우",
+        "details": []
+      },
+      {
+        "action": "deleted",
+        "title": "김형성 오늘 할일",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "<<보고 필요 사항>>",
+        "employee": "이상우",
+        "details": [
+          "🗑 라벨 프로그램 사용 방법 및 검토 요청"
+        ]
+      }
+    ]
   }
 ]
