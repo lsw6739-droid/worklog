@@ -1047,10 +1047,6 @@ function _applyRemoteTodoUpdate(newData) {
     else                     { statusBtn.textContent = '⏸ 대기'; statusBtn.className = 'status-toggle-btn waiting'; }
   }
 
-  // 체크리스트
-  try { currentChecklist = newData.checklist ? JSON.parse(newData.checklist) : []; } catch(e) { currentChecklist = []; }
-  renderChecklist();
-
   // 담당자
   selectedAssignees = newData.assignee_ids ? newData.assignee_ids.split(',').filter(Boolean) : [];
   renderAssigneeChips();
