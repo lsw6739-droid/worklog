@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>백업 조회</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f7;color:#1d1d1f;padding:24px}
+  h1{font-size:20px;font-weight:700;margin-bottom:20px}
+  .top{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+  select{padding:8px 12px;border-radius:8px;border:1px solid #d2d2d7;font-size:14px;background:#fff;cursor:pointer}
+  input[type=text]{padding:8px 12px;border-radius:8px;border:1px solid #d2d2d7;font-size:14px;background:#fff;width:220px}
+  .badge{font-size:11px;padding:2px 7px;border-radius:10px;font-weight:600}
+  .badge-done{background:#d1fae5;color:#065f46}
+  .badge-wait{background:#f3f4f6;color:#6b7280}
+  .card{background:#fff;border-radius:12px;padding:16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+  .card-title{font-size:15px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+  .card-meta{font-size:12px;color:#6b7280;margin-bottom:10px}
+  .cl-list{list-style:none;padding:0}
+  .cl-list li{font-size:13px;padding:4px 0;display:flex;align-items:flex-start;gap:8px;border-bottom:1px solid #f0f0f0}
+  .cl-list li:last-child{border-bottom:none}
+  .cl-check{flex-shrink:0;margin-top:2px}
+  .cl-text.done{text-decoration:line-through;color:#9ca3af}
+  .cl-header{font-size:11px;font-weight:700;color:#0071e3;padding:6px 0 2px;list-style:none}
+  .no-cl{font-size:12px;color:#9ca3af;font-style:italic}
+  .empty{text-align:center;padding:60px;color:#9ca3af}
+  .loading{text-align:center;padding:60px;color:#6b7280}
+  .content-box{font-size:13px;color:#374151;background:#f9fafb;border-radius:6px;padding:8px 10px;margin-bottom:8px;white-space:pre-wrap}
+  .tag{font-size:10px;padding:1px 6px;border-radius:4px;background:rgba(0,113,227,.1);color:#0071e3;font-weight:600}
+</style>
+</head>
+<body>
+<h1>📦 백업 조회</h1>
+
+<div class="top">
+  <select id="date-select" onchange="loadBackup()"><option>날짜 불러오는 중...</option></select>
+  <input type="text" id="search" placeholder="투두 제목 검색..." oninput="renderTodos()">
+  <span id="count" style="font-size:13px;color:#6b7280"></span>
+</div>
+
+<div id="content" class="loading">날짜 목록 불러오는 중...</div>
+
+<script>
+const REPO = 'lsw6739-droid/worklog';
+const BRANCH = 'main';
+let allTodos = [];
+let allEmployees = [];
+
+async function fetchJSON(url){
+  const r = await fetch(url);
+  if(!r.ok) throw new Error(r.status);
+  return r.json();
+}
+
+function rawUrl(path){
+  return `https://raw.githubusercontent.com/${REPO}/${BRANCH}/${path}`;
+}
+
+async function init(){
+  try{
+    const dirs = await fetchJSON(`https://api.github.com/repos/${REPO}/contents/backups`);
+    const dates = dirs.filter(d=>d.type==='dir').map(d=>d.name).sort().reverse();
+    if(!dates.length){ document.getElementById('content').innerHTML='<div class="empty">백업 없음<br><small>Actions 탭에서 Run workflow를 실행해주세요</small></div>'; return; }
+    const sel = document.getElementById('date-select');
+    sel.innerHTML = dates.map(d=>`<option value="${d}">${d}</option>`).join('');
+    loadBackup();
+  }catch(e){
+    document.getElementById('content').innerHTML='<div class="empty">⚠️ 백업 목록 불러오기 실패<br><small>백업 파일이 아직 없거나 GitHub 접근 오류</small></div>';
+  }
+}
+
+async function loadBackup(){
+  const date = document.getElementById('date-select').value;
+  if(!date) return;
+  document.getElementById('content').innerHTML='<div class="loading">불러오는 중...</div>';
+  try{
+    const [todos, emps] = await Promise.all([
+      fetchJSON(rawUrl(`backups/${date}/todos.json`)).catch(()=>[]),
+      fetchJSON(rawUrl(`backups/${date}/employees.json`)).catch(()=>[])
+    ]);
+    allTodos = todos;
+    allEmployees = emps;
+    renderTodos();
+  }catch(e){
+    document.getElementById('content').innerHTML='<div class="empty">⚠️ 데이터 불러오기 실패</div>';
+  }
+}
+
+function getEmpName(id){
+  const e = allEmployees.find(x=>x.id===id);
+  return e ? e.name : '';
+}
+
+function renderTodos(){
+  const q = document.getElementById('search').value.trim().toLowerCase();
+  let list = allTodos.filter(t=>!t.parent_todo_id); // 원본만
+  if(q) list = list.filter(t=>(t.title||t.content||'').toLowerCase().includes(q));
+
+  document.getElementById('count').textContent = `${list.length}개`;
+
+  if(!list.length){
+    document.getElementById('content').innerHTML='<div class="empty">검색 결과 없음</div>';
+    return;
+  }
+
+  document.getElementById('content').innerHTML = list.map(t=>{
+    const title = t.title || t.content || '(제목 없음)';
+    const empName = getEmpName(t.employee_id);
+    const isDone = t.is_done;
+    let cl = [];
+    try{ cl = t.checklist ? JSON.parse(t.checklist) : []; }catch(e){}
+
+    const clHtml = cl.length
+      ? '<ul class="cl-list">'+cl.map(item=>{
+          if(item.type==='header') return `<li class="cl-header">▣ ${esc(item.text)}</li>`;
+          return `<li><input type="checkbox" class="cl-check" ${item.done?'checked':''} disabled>
+            <span class="cl-text ${item.done?'done':''}">${esc(item.text)}</span></li>`;
+        }).join('')+'</ul>'
+      : '<div class="no-cl">체크리스트 없음</div>';
+
+    const contentText = (t.content && t.content !== title) ? `<div class="content-box">${esc(t.content)}</div>` : '';
+    const srcTag = t.source==='notice' ? '<span class="tag">공지</span>' : '';
+
+    return `<div class="card">
+      <div class="card-title">
+        <span class="badge ${isDone?'badge-done':'badge-wait'}">${isDone?'완료':'진행'}</span>
+        ${srcTag} ${esc(title)}
+      </div>
+      <div class="card-meta">${empName ? '👤 '+empName : ''}${t.due_date ? '  📅 '+t.due_date : ''}${t.created_at ? '  🕐 '+t.created_at.slice(0,10) : ''}</div>
+      ${contentText}
+      ${clHtml}
+    </div>`;
+  }).join('');
+}
+
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+init();
+</script>
+</body>
+</html>
