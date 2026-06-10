@@ -1,0 +1,7 @@
+[{"id":"6244c9aa-8c18-4b62-aa76-0ef426d6a5c0","name":"이상우","emp_id":"2020016","is_admin":true,"created_at":"2026-05-11T00:03:16.665308+00:00"}, 
+ {"id":"8fe1c363-0f31-404f-bd7a-b1ca10d92c50","name":"유태규","emp_id":"2019061","is_admin":false,"created_at":"2026-05-14T02:50:05.005552+00:00"}, 
+ {"id":"cc92566d-4c6b-44ac-ac53-d48622151eca","name":"김경원","emp_id":"2020056","is_admin":false,"created_at":"2026-05-14T02:50:21.088461+00:00"}, 
+ {"id":"0e6bbd4b-e092-4f1b-91dd-ae70d829ceaa","name":"김동효","emp_id":"2020065","is_admin":false,"created_at":"2026-05-14T02:50:31.737266+00:00"}, 
+ {"id":"5c2b89e7-32ff-4deb-b516-cdcc5a51178d","name":"김형성","emp_id":"2021011","is_admin":false,"created_at":"2026-05-14T02:50:44.976117+00:00"}, 
+ {"id":"adb5d3e0-6be8-4bc1-a201-2a54aaa3f71a","name":"이주영","emp_id":"2023074","is_admin":false,"created_at":"2026-05-14T02:50:53.826482+00:00"}, 
+ {"id":"dc3651c5-d5db-4255-ab7a-ad6b8e00c017","name":"임승완","emp_id":"2019025","is_admin":true,"created_at":"2026-05-11T00:56:59.898136+00:00"}]
