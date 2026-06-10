@@ -409,6 +409,7 @@ html[data-theme="dark"] .badge-warn{background:rgba(255,159,10,.18);color:#ff9f0
       <div class="tab admin-only" data-page="teamtodo" style="display:none">✅ 팀 할일</div>
       <div class="tab admin-only" data-page="report" style="display:none">📄 리포트</div>
       <div class="tab admin-only" data-page="admin" style="display:none">⚙️ 관리</div>
+      <div class="tab admin-only" data-page="changelog" style="display:none">📋 변경이력</div>
       <a class="tab admin-only" href="dashboard.html" style="display:none;text-decoration:none">📈 대시보드</a>
     </nav>
     <div class="sb-footer">
@@ -631,6 +632,25 @@ html[data-theme="dark"] .badge-warn{background:rgba(255,159,10,.18);color:#ff9f0
       </div>
       <div id="report-output"></div>
     </div>
+    <!-- 변경이력 (관리자) -->
+    <div class="page" id="page-changelog">
+      <div class="card">
+        <div class="card-title">📋 투두 <span>변경이력</span></div>
+        <div class="filter-row" style="flex-wrap:wrap;gap:8px">
+          <select id="cl-date-select" onchange="loadChangelog()" style="flex:1;min-width:120px;margin-bottom:0"></select>
+          <input type="text" id="cl-search" placeholder="제목 / 담당자 검색" oninput="renderChangelog()" style="flex:2;margin-bottom:0">
+        </div>
+        <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+          <button class="btn btn-sm" id="cl-btn-all"      onclick="setClFilter('all')"      style="border-radius:20px;font-size:11px;background:var(--text);color:#fff;border-color:var(--text)">전체</button>
+          <button class="btn btn-secondary btn-sm" id="cl-btn-added"    onclick="setClFilter('added')"    style="border-radius:20px;font-size:11px">➕ 추가</button>
+          <button class="btn btn-secondary btn-sm" id="cl-btn-deleted"  onclick="setClFilter('deleted')"  style="border-radius:20px;font-size:11px">🗑 삭제</button>
+          <button class="btn btn-secondary btn-sm" id="cl-btn-modified" onclick="setClFilter('modified')" style="border-radius:20px;font-size:11px">✏️ 수정</button>
+          <span id="cl-count" style="margin-left:auto;font-size:12px;color:var(--text3);align-self:center"></span>
+        </div>
+      </div>
+      <div id="cl-content"><div class="empty"><div class="empty-icon">📋</div><p>날짜를 선택하세요</p></div></div>
+    </div>
+
     <!-- 관리 -->
     <div class="page" id="page-admin">
       <div class="card">
@@ -1146,7 +1166,82 @@ function switchPage(p){
   } else if(p==='report'){
     // 리포트 → 이번 달
     document.getElementById('report-month').value = ym;
+  } else if(p==='changelog'){
+    initChangelog();
   }
+}
+
+// ─── 변경이력 ───
+const CL_REPO = 'lsw6739-droid/worklog';
+let _clLogData = [], _clFilter = 'all', _clInited = false;
+
+async function initChangelog(){
+  if(_clInited) return;
+  _clInited = true;
+  const sel = document.getElementById('cl-date-select');
+  sel.innerHTML = '<option>불러오는 중...</option>';
+  try{
+    const files = await fetch(`https://api.github.com/repos/${CL_REPO}/contents/logs`).then(r=>r.json());
+    const dates = files.filter(f=>f.name.match(/^\d{4}-\d{2}-\d{2}\.json$/)).map(f=>f.name.replace('.json','')).sort().reverse();
+    if(!dates.length){ sel.innerHTML='<option>이력 없음</option>'; return; }
+    sel.innerHTML = dates.map(d=>`<option value="${d}">${d}</option>`).join('');
+    loadChangelog();
+  }catch(e){ sel.innerHTML='<option>불러오기 실패</option>'; }
+}
+
+async function loadChangelog(){
+  const date = document.getElementById('cl-date-select').value;
+  if(!date || date.includes('중') || date.includes('실패') || date.includes('없음')) return;
+  document.getElementById('cl-content').innerHTML = '<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
+  try{
+    const url = `https://raw.githubusercontent.com/${CL_REPO}/main/logs/${date}.json`;
+    _clLogData = await fetch(url).then(r=>{ if(!r.ok) throw new Error(); return r.json(); });
+    renderChangelog();
+  }catch(e){ document.getElementById('cl-content').innerHTML='<div class="empty"><div class="empty-icon">📋</div><p>이 날짜의 이력이 없습니다</p></div>'; }
+}
+
+function setClFilter(f){
+  _clFilter = f;
+  const styles = {all:'background:var(--text);color:#fff;border-color:var(--text)', added:'background:rgba(16,185,129,.15);color:var(--success);border-color:var(--success)', deleted:'background:rgba(255,71,87,.15);color:var(--danger);border-color:var(--danger)', modified:'background:rgba(0,113,227,.15);color:var(--accent);border-color:var(--accent)'};
+  ['all','added','deleted','modified'].forEach(id=>{
+    const btn = document.getElementById('cl-btn-'+id);
+    if(btn) btn.style.cssText = 'border-radius:20px;font-size:11px;'+(f===id ? styles[id] : '');
+  });
+  renderChangelog();
+}
+
+function renderChangelog(){
+  const q = (document.getElementById('cl-search')?.value||'').trim().toLowerCase();
+  let total = 0;
+  const blocks = [];
+  (_clLogData||[]).forEach(function(block){
+    const filtered = block.changes.filter(function(c){
+      if(_clFilter !== 'all' && c.action !== _clFilter) return false;
+      if(!q) return true;
+      return (c.title||'').toLowerCase().includes(q) || (c.employee||'').toLowerCase().includes(q);
+    });
+    if(filtered.length){ blocks.push({time:block.time, changes:filtered}); total+=filtered.length; }
+  });
+  document.getElementById('cl-count').textContent = total ? `총 ${total}건` : '';
+  if(!blocks.length){ document.getElementById('cl-content').innerHTML='<div class="empty"><div class="empty-icon">📋</div><p>표시할 이력이 없습니다</p></div>'; return; }
+  const LABEL = {added:'추가', deleted:'삭제', modified:'수정'};
+  const COLORS = {added:'var(--success)', deleted:'var(--danger)', modified:'var(--accent)'};
+  document.getElementById('cl-content').innerHTML = blocks.map(function(block){
+    return `<div style="margin-bottom:16px">
+      <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:8px;display:flex;align-items:center;gap:8px">🕐 ${block.time}<span style="flex:1;height:1px;background:var(--border);display:inline-block"></span></div>
+      ${block.changes.map(function(c){
+        const col = COLORS[c.action]||'var(--text3)';
+        return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:6px;border-left:3px solid ${col}">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;background:${col}22;color:${col}">${LABEL[c.action]||c.action}</span>
+            <span style="font-size:14px;font-weight:600;color:var(--text)">${esc(c.title)}</span>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:${(c.details&&c.details.length)?'6px':'0'}">👤 ${esc(c.employee)}</div>
+          ${(c.details&&c.details.length)?'<div style="display:flex;flex-direction:column;gap:2px">'+c.details.map(function(d){ return `<div style="font-size:12px;color:var(--text2);padding:2px 0 2px 10px;border-left:2px solid var(--border)">${esc(d)}</div>`; }).join('')+'</div>':''}
+        </div>`;
+      }).join('')}
+    </div>`;
+  }).join('');
 }
 
 // CATEGORIES
