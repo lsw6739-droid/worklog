@@ -6,42 +6,76 @@
 <title>변경 이력 조회</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f7;color:#1d1d1f;padding:24px}
-  h1{font-size:20px;font-weight:700;margin-bottom:20px}
-  .top{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
-  select{padding:8px 12px;border-radius:8px;border:1px solid #d2d2d7;font-size:14px;background:#fff;cursor:pointer}
-  input{padding:8px 12px;border-radius:8px;border:1px solid #d2d2d7;font-size:14px;background:#fff;width:200px}
-  .count{font-size:13px;color:#6b7280}
-  .time-block{margin-bottom:16px}
-  .time-label{font-size:12px;font-weight:700;color:#6b7280;margin-bottom:6px;padding-left:4px}
-  .entry{display:flex;align-items:flex-start;gap:10px;background:#fff;border-radius:10px;padding:12px 14px;margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
-  .action-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0;margin-top:1px}
-  .added{background:#d1fae5;color:#065f46}
-  .deleted{background:#fee2e2;color:#991b1b}
-  .modified{background:#dbeafe;color:#1e40af}
-  .entry-body{flex:1}
-  .entry-title{font-size:14px;font-weight:600;margin-bottom:2px}
-  .entry-meta{font-size:12px;color:#6b7280;margin-bottom:4px}
-  .entry-detail{font-size:12px;color:#4b5563;padding:2px 0;border-left:2px solid #e5e7eb;padding-left:8px;margin-top:2px}
-  .empty{text-align:center;padding:60px;color:#9ca3af;font-size:14px}
-  .loading{text-align:center;padding:60px;color:#6b7280;font-size:14px}
-  .summary{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap}
-  .summary-chip{font-size:12px;padding:4px 10px;border-radius:8px;font-weight:600}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;color:#1d1d1f;min-height:100vh;text-align:left}
+
+  .header{background:#fff;border-bottom:1px solid #e5e7eb;padding:16px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .header h1{font-size:17px;font-weight:700;color:#111}
+  .header-right{display:flex;align-items:center;gap:10px;margin-left:auto;flex-wrap:wrap}
+  select{padding:7px 10px;border-radius:8px;border:1px solid #d1d5db;font-size:13px;background:#f9fafb;cursor:pointer;color:#374151}
+  .search-wrap{position:relative}
+  .search-wrap input{padding:7px 10px 7px 30px;border-radius:8px;border:1px solid #d1d5db;font-size:13px;background:#f9fafb;width:180px;color:#374151}
+  .search-wrap::before{content:'🔍';position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:12px}
+
+  .toolbar{padding:12px 24px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#fff;border-bottom:1px solid #e5e7eb}
+  .filter-btn{padding:5px 14px;border-radius:20px;border:1.5px solid #d1d5db;font-size:12px;font-weight:600;cursor:pointer;background:#fff;color:#6b7280;transition:all .15s}
+  .filter-btn.active-all{background:#1d1d1f;border-color:#1d1d1f;color:#fff}
+  .filter-btn.active-added{background:#d1fae5;border-color:#059669;color:#065f46}
+  .filter-btn.active-deleted{background:#fee2e2;border-color:#dc2626;color:#991b1b}
+  .filter-btn.active-modified{background:#dbeafe;border-color:#2563eb;color:#1e40af}
+  .summary-chips{display:flex;gap:6px;margin-left:auto}
+  .chip{font-size:11px;padding:3px 9px;border-radius:10px;font-weight:600}
+  .chip-added{background:#d1fae5;color:#065f46}
+  .chip-deleted{background:#fee2e2;color:#991b1b}
+  .chip-modified{background:#dbeafe;color:#1e40af}
+
+  .main{max-width:760px;padding:20px 24px}
+
+  .time-block{margin-bottom:20px}
+  .time-label{font-size:11px;font-weight:700;color:#9ca3af;margin-bottom:8px;display:flex;align-items:center;gap:6px;letter-spacing:.3px}
+  .time-label::after{content:'';flex:1;height:1px;background:#e5e7eb}
+
+  .entry{display:flex;align-items:flex-start;gap:10px;background:#fff;border-radius:10px;padding:13px 15px;margin-bottom:6px;box-shadow:0 1px 2px rgba(0,0,0,.06);border:1px solid #f3f4f6}
+  .action-badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:8px;white-space:nowrap;flex-shrink:0;margin-top:2px}
+  .badge-added{background:#d1fae5;color:#065f46}
+  .badge-deleted{background:#fee2e2;color:#991b1b}
+  .badge-modified{background:#dbeafe;color:#1e40af}
+  .entry-body{flex:1;min-width:0}
+  .entry-title{font-size:14px;font-weight:600;color:#111;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .entry-meta{font-size:11px;color:#9ca3af;margin-bottom:5px}
+  .details-list{display:flex;flex-direction:column;gap:2px}
+  .entry-detail{font-size:12px;color:#4b5563;padding:2px 0 2px 10px;border-left:2px solid #e5e7eb;line-height:1.5}
+
+  .empty{padding:40px 0;color:#9ca3af;font-size:14px;text-align:left}
+  .loading{padding:40px 0;color:#6b7280;font-size:14px;text-align:left}
 </style>
 </head>
 <body>
-<h1>📋 투두 변경 이력</h1>
-<div class="top">
-  <select id="date-select" onchange="loadLog()"><option>날짜 불러오는 중...</option></select>
-  <input type="text" id="search" placeholder="투두 제목 / 담당자 검색" oninput="render()">
-  <span class="count" id="count"></span>
+
+<div class="header">
+  <h1>📋 투두 변경 이력</h1>
+  <div class="header-right">
+    <select id="date-select" onchange="loadLog()"><option>날짜 불러오는 중...</option></select>
+    <div class="search-wrap">
+      <input type="text" id="search" placeholder="제목 / 담당자 검색" oninput="render()">
+    </div>
+  </div>
 </div>
-<div class="summary" id="summary"></div>
-<div id="content" class="loading">불러오는 중...</div>
+
+<div class="toolbar">
+  <button class="filter-btn active-all" id="btn-all"    onclick="setFilter('all')">전체</button>
+  <button class="filter-btn"           id="btn-added"   onclick="setFilter('added')">➕ 추가</button>
+  <button class="filter-btn"           id="btn-deleted" onclick="setFilter('deleted')">🗑 삭제</button>
+  <button class="filter-btn"           id="btn-modified" onclick="setFilter('modified')">✏️ 수정</button>
+  <div class="summary-chips" id="summary"></div>
+</div>
+
+<div class="main">
+  <div id="content" class="loading">불러오는 중...</div>
+</div>
 
 <script>
 const REPO='lsw6739-droid/worklog', BRANCH='main';
-let logData=[];
+let logData=[], activeFilter='all';
 
 async function fetchJSON(url){ const r=await fetch(url); if(!r.ok) throw new Error(r.status); return r.json(); }
 
@@ -67,33 +101,51 @@ async function loadLog(){
   }catch(e){ document.getElementById('content').innerHTML='<div class="empty">이 날짜의 이력이 없습니다</div>'; }
 }
 
+function setFilter(f){
+  activeFilter=f;
+  ['all','added','deleted','modified'].forEach(id=>{
+    const btn=document.getElementById('btn-'+id);
+    btn.className='filter-btn'+(f===id?' active-'+id:'');
+  });
+  render();
+}
+
 function render(){
   const q=document.getElementById('search').value.trim().toLowerCase();
   let added=0,deleted=0,modified=0;
   const blocks=[];
+
   logData.forEach(block=>{
-    const filtered=block.changes.filter(c=>!q||(c.title||'').toLowerCase().includes(q)||(c.employee||'').toLowerCase().includes(q));
+    const filtered=block.changes.filter(c=>{
+      if(activeFilter!=='all' && c.action!==activeFilter) return false;
+      if(!q) return true;
+      return (c.title||'').toLowerCase().includes(q)||(c.employee||'').toLowerCase().includes(q);
+    });
     if(filtered.length){
       blocks.push({time:block.time,changes:filtered});
       filtered.forEach(c=>{ if(c.action==='added') added++; else if(c.action==='deleted') deleted++; else modified++; });
     }
   });
+
   const total=added+deleted+modified;
-  document.getElementById('count').textContent=`총 ${total}건`;
   document.getElementById('summary').innerHTML=total
-    ?`<span class="summary-chip added">➕ 추가 ${added}</span><span class="summary-chip deleted">🗑 삭제 ${deleted}</span><span class="summary-chip modified">✏️ 수정 ${modified}</span>`:'';
-  if(!blocks.length){ document.getElementById('content').innerHTML='<div class="empty">변경 이력이 없습니다</div>'; return; }
+    ?`<span class="chip chip-added">➕ ${added}</span><span class="chip chip-deleted">🗑 ${deleted}</span><span class="chip chip-modified">✏️ ${modified}</span>`:'';
+
+  if(!blocks.length){ document.getElementById('content').innerHTML='<div class="empty">표시할 이력이 없습니다</div>'; return; }
+
   const LABEL={added:'추가',deleted:'삭제',modified:'수정'};
+  const BADGE={added:'badge-added',deleted:'badge-deleted',modified:'badge-modified'};
+
   document.getElementById('content').innerHTML=blocks.map(block=>`
     <div class="time-block">
       <div class="time-label">🕐 ${block.time}</div>
       ${block.changes.map(c=>`
         <div class="entry">
-          <span class="action-badge ${c.action}">${LABEL[c.action]||c.action}</span>
+          <span class="action-badge ${BADGE[c.action]||''}">${LABEL[c.action]||c.action}</span>
           <div class="entry-body">
             <div class="entry-title">${esc(c.title)}</div>
             <div class="entry-meta">👤 ${esc(c.employee)}</div>
-            ${(c.details||[]).map(d=>`<div class="entry-detail">${esc(d)}</div>`).join('')}
+            ${(c.details||[]).length?`<div class="details-list">${(c.details||[]).map(d=>`<div class="entry-detail">${esc(d)}</div>`).join('')}</div>`:''}
           </div>
         </div>`).join('')}
     </div>`).join('');
