@@ -1876,13 +1876,13 @@ async function _mergeChecklist(todoId, localList, openIds){
     const rows = await res.json();
     const raw = rows[0]?.checklist;
     const serverList = raw ? (()=>{ try{ return JSON.parse(raw); }catch(e){ return []; } })() : [];
-    // 서버 항목에 ID 없으면 부여 (구버전 데이터 대응)
-    serverList.forEach(function(s){ if(!s.id) s.id = _genClId(); });
+    // ID 없는 서버 항목은 기존 데이터 → 새로 ID를 부여하지 않음
+    // (새로 붙이면 openIds와 달라져서 모두 "새 항목"으로 오인되어 중복 발생)
 
     const openSet = new Set(openIds);
     const localIds = new Set(localList.map(function(c){ return c.id; }).filter(Boolean));
 
-    // 열린 이후 다른 사람이 추가한 항목만 로컬 끝에 덧붙임
+    // ID가 있고, 열릴 때 없었고, 로컬에도 없는 항목만 추가 (다른 사람이 이후에 추가한 것)
     const extras = serverList.filter(function(s){ return s.id && !openSet.has(s.id) && !localIds.has(s.id); });
     return localList.concat(extras);
   }catch(e){
