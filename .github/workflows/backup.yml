@@ -1,34 +1,115 @@
-name: Daily Supabase Backup
+name: Todo Change Logger
 
 on:
   schedule:
-    - cron: '0 15 * * *'  # 매일 자정 KST (UTC 15:00 = KST 00:00)
-    - cron: '0 3 * * *'   # 매일 정오 KST  (UTC 03:00 = KST 12:00)
+    - cron: '*/30 * * * *'
   workflow_dispatch:
 
 jobs:
-  backup:
+  log-changes:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+
     steps:
       - uses: actions/checkout@v4
-      - name: Fetch Supabase tables
+
+      - name: Fetch and compare todos
         run: |
-          DATE=$(TZ='Asia/Seoul' date '+%Y-%m-%d_%H00')
-          mkdir -p backups/$DATE
+          mkdir -p logs
           SUPABASE_URL="https://uulemznemzjlgzqhrchb.supabase.co"
           KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1bGVtem5lbXpqbGd6cWhyY2hiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MTc3MzQsImV4cCI6MjA5Mzk5MzczNH0.cy3jWrFez0pO0vl3nOOUMiv-511IzQiTcNxTK8Jejrg"
-          for TABLE in todos employees categories notices attends; do
-            curl -s "${SUPABASE_URL}/rest/v1/${TABLE}?select=*&limit=5000" \
-              -H "apikey: ${KEY}" \
-              -H "Authorization: Bearer ${KEY}" \
-              -o backups/$DATE/${TABLE}.json
-          done
+          curl -s "${SUPABASE_URL}/rest/v1/todos?select=*&limit=5000" \
+            -H "apikey: ${KEY}" -H "Authorization: Bearer ${KEY}" \
+            -o /tmp/current.json
+          curl -s "${SUPABASE_URL}/rest/v1/employees?select=id,name" \
+            -H "apikey: ${KEY}" -H "Authorization: Bearer ${KEY}" \
+            -o /tmp/employees.json
+          python3 << 'PYEOF'
+import json, os, datetime
+
+with open('/tmp/current.json') as f:
+    current = json.load(f)
+with open('/tmp/employees.json') as f:
+    employees = {e['id']: e['name'] for e in json.load(f)}
+
+state_file = 'logs/state.json'
+previous = []
+if os.path.exists(state_file):
+    with open(state_file) as f:
+        previous = json.load(f)
+
+prev_map = {t['id']: t for t in previous}
+curr_map = {t['id']: t for t in current}
+changes = []
+
+for tid, t in curr_map.items():
+    if tid not in prev_map and not t.get('parent_todo_id'):
+        changes.append({'action':'added','title':t.get('title') or t.get('content',''),'employee':employees.get(t.get('employee_id'),'?')})
+
+for tid, t in prev_map.items():
+    if tid not in curr_map and not t.get('parent_todo_id'):
+        changes.append({'action':'deleted','title':t.get('title') or t.get('content',''),'employee':employees.get(t.get('employee_id'),'?')})
+
+for tid in set(prev_map) & set(curr_map):
+    p, c = prev_map[tid], curr_map[tid]
+    if c.get('parent_todo_id'): continue
+    diffs = []
+    if p.get('is_done') != c.get('is_done'):
+        diffs.append('완료처리' if c.get('is_done') else '완료취소')
+    if (p.get('title') or p.get('content','')) != (c.get('title') or c.get('content','')):
+        diffs.append('제목 변경')
+    if p.get('status') != c.get('status'):
+        diffs.append(f"상태→{c.get('status','')}")
+    if p.get('checklist') != c.get('checklist'):
+        diffs.append('체크리스트 변경')
+    if p.get('due_date') != c.get('due_date'):
+        diffs.append(f"기한→{c.get('due_date') or '없음'}")
+    if diffs:
+        changes.append({'action':'modified','title':c.get('title') or c.get('content',''),'employee':employees.get(c.get('employee_id'),'?'),'detail':', '.join(diffs)})
+
+tz = datetime.timezone(datetime.timedelta(hours=9))
+now = datetime.datetime.now(tz)
+date_str = now.strftime('%Y-%m-%d')
+time_str = now.strftime('%H:%M')
+
+if changes:
+    log_file = f'logs/{date_str}.json'
+    log = []
+    if os.path.exists(log_file):
+        with open(log_file) as f:
+            log = json.load(f)
+    log.append({'time': time_str, 'changes': changes})
+    with open(log_file, 'w', encoding='utf-8') as f:
+        json.dump(log, f, ensure_ascii=False, indent=2)
+    print(f"변경 {len(changes)}건 기록")
+else:
+    print("변경 없음")
+
+with open('logs/state.json', 'w', encoding='utf-8') as f:
+    json.dump(current, f, ensure_ascii=False)
+PYEOF
+
+      - name: Delete logs older than 7 days
+        run: |
+          python3 << 'PYEOF'
+import os, datetime
+tz = datetime.timezone(datetime.timedelta(hours=9))
+today = datetime.datetime.now(tz).date()
+cutoff = today - datetime.timedelta(days=7)
+for fname in os.listdir('logs'):
+    if fname.match if False else (len(fname)==15 and fname.endswith('.json')):
+        try:
+            fdate = datetime.date.fromisoformat(fname[:10])
+            if fdate < cutoff:
+                os.remove(f'logs/{fname}')
+                print(f'삭제: {fname}')
+        except: pass
+PYEOF
+
       - name: Commit and push
         run: |
-          DATE=$(TZ='Asia/Seoul' date '+%Y-%m-%d_%H00')
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add backups/
-          git diff --staged --quiet && echo "skip" || (git commit -m "backup: $DATE" && git push)
+          git add logs/
+          git diff --staged --quiet && echo "skip" || (git commit -m "log: $(TZ='Asia/Seoul' date '+%Y-%m-%d %H:%M')" && git push)
