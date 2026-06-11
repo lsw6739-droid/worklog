@@ -2275,7 +2275,7 @@ async function saveTodoDetail(){
         if(missing.length){
           await Promise.all(missing.map(function(aid){
             return fetch(API+'/todos',{method:'POST',headers:H,body:JSON.stringify(
-              Object.assign({}, noticeBody, {employee_id:aid, is_done:false})
+              Object.assign({}, noticeBody, {employee_id:aid, is_done:false, parent_todo_id:rootId})
             )});
           }));
         }
@@ -2603,19 +2603,31 @@ async function postNotice(mode){
 
     // 3. 투두 생성 (todo 또는 both 모드만)
     if(mode === 'todo' || mode === 'both'){
-      await Promise.all(targets.map(e=>fetch(`${API}/todos`,{method:'POST',headers:H,body:JSON.stringify({
-        employee_id: e.id,
-        title: title,
-        content: body,
-        is_done: false,
-        source: 'notice',
-        status: 'waiting',
-        due_date: dueDate || null,
-        checklist: checklistJson,
-        assignee_ids: assigneeIds,
-        assignee_names: assigneeNames,
+      const todoBase = {
+        title, content: body, is_done: false, source: 'notice', status: 'waiting',
+        due_date: dueDate||null, checklist: checklistJson,
+        assignee_ids: assigneeIds, assignee_names: assigneeNames,
         note: noticeId ? `notice_${noticeId}` : null
-      })})));
+      };
+      // 발송자가 수신자에 포함되면 발송자 = 마스터, 아니면 첫 번째 수신자 = 마스터
+      const masterTarget = targets.find(function(e){ return e.id === currentUser.id; }) || targets[0];
+      const otherTargets = targets.filter(function(e){ return e.id !== masterTarget.id; });
+      // 마스터 투두 먼저 생성 (ID 획득)
+      const masterRes = await fetch(`${API}/todos`,{
+        method:'POST',
+        headers:Object.assign({},H,{'Prefer':'return=representation'}),
+        body:JSON.stringify(Object.assign({},todoBase,{employee_id:masterTarget.id}))
+      });
+      const masterData = await masterRes.json();
+      const masterId = Array.isArray(masterData) ? masterData[0]?.id : masterData?.id;
+      // 나머지 수신자 투두 생성 (마스터에 연결)
+      if(otherTargets.length && masterId){
+        await Promise.all(otherTargets.map(function(e){
+          return fetch(`${API}/todos`,{method:'POST',headers:H,
+            body:JSON.stringify(Object.assign({},todoBase,{employee_id:e.id,parent_todo_id:masterId}))
+          });
+        }));
+      }
     }
 
     // 초기화
