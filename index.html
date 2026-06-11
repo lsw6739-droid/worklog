@@ -635,7 +635,7 @@ html[data-theme="dark"] .badge-warn{background:rgba(255,159,10,.18);color:#ff9f0
     <!-- 변경이력 (관리자) -->
     <div class="page" id="page-changelog">
       <div class="card">
-        <div class="card-title">📋 투두 <span>변경이력</span></div>
+        <div class="card-title" style="display:flex;align-items:center">📋 투두 <span style="margin-left:4px">변경이력</span><button onclick="openSnapshotModal()" class="btn btn-secondary btn-sm" style="margin-left:auto;border-radius:20px;font-size:11px;padding:4px 12px">📦 전체 DB</button></div>
         <div class="filter-row" style="flex-wrap:wrap;gap:8px">
           <select id="cl-date-select" onchange="loadChangelog()" style="flex:1;min-width:120px;margin-bottom:0"></select>
           <input type="text" id="cl-search" placeholder="제목 / 담당자 검색" oninput="renderChangelog()" style="flex:2;margin-bottom:0">
@@ -801,6 +801,26 @@ create policy "allow_all" on attends for all using (true);</pre>
   </div><!-- /#app-body -->
 </div>
 <!-- MODALS -->
+<!-- 전체 DB 스냅샷 모달 -->
+<div class="modal-overlay" id="modal-snapshot">
+  <div class="modal" style="max-width:560px;max-height:90vh;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-shrink:0">
+      <div style="font-size:15px;font-weight:700">📦 전체 투두 DB</div>
+      <button onclick="document.getElementById('modal-snapshot').classList.remove('open')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:20px;line-height:1">✕</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-shrink:0;flex-wrap:wrap">
+      <select id="snap-date-select" onchange="loadSnapshot()" style="flex:1;min-width:120px;margin-bottom:0"></select>
+      <input type="text" id="snap-search" placeholder="제목 / 담당자 검색" oninput="renderSnapshot()" style="flex:2;min-width:140px;margin-bottom:0">
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:12px;flex-shrink:0;flex-wrap:wrap">
+      <button id="snap-btn-all"    onclick="setSnapFilter('all')"    class="btn btn-sm" style="border-radius:20px;font-size:11px;background:var(--text);color:#fff;border-color:var(--text)">전체</button>
+      <button id="snap-btn-active" onclick="setSnapFilter('active')" class="btn btn-secondary btn-sm" style="border-radius:20px;font-size:11px">진행중</button>
+      <button id="snap-btn-done"   onclick="setSnapFilter('done')"   class="btn btn-secondary btn-sm" style="border-radius:20px;font-size:11px">완료</button>
+      <span id="snap-count" style="margin-left:auto;font-size:12px;color:var(--text3);align-self:center"></span>
+    </div>
+    <div id="snap-content" style="overflow-y:auto;flex:1"><div class="empty"><div class="empty-icon">📦</div><p>날짜를 선택하세요</p></div></div>
+  </div>
+</div>
 <!-- 공지 팝업 모달 -->
 <div class="modal-overlay" id="modal-notice-popup">
   <div class="modal" style="max-width:480px">
@@ -3238,6 +3258,89 @@ document.querySelectorAll('.modal-overlay').forEach(el=>el.addEventListener('cli
 let toastTimer;
 function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className=`show ${type}`;clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.className='',3000);}
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('login-screen').style.display!=='none')doLogin();});
+
+// ─── 전체 DB 스냅샷 뷰어 ───
+const SNAP_REPO = 'lsw6739-droid/worklog';
+let _snapData = [], _snapFilter = 'all', _snapInited = false;
+
+async function openSnapshotModal(){
+  document.getElementById('modal-snapshot').classList.add('open');
+  if(_snapInited) return;
+  _snapInited = true;
+  const sel = document.getElementById('snap-date-select');
+  sel.innerHTML = '<option>불러오는 중...</option>';
+  try{
+    const files = await fetch(`https://api.github.com/repos/${SNAP_REPO}/contents/snapshots`).then(r=>r.json());
+    const dates = files.filter(f=>f.name.match(/^\d{4}-\d{2}-\d{2}\.json$/)).map(f=>f.name.replace('.json','')).sort().reverse();
+    if(!dates.length){ sel.innerHTML='<option>스냅샷 없음</option>'; return; }
+    sel.innerHTML = dates.map(d=>`<option value="${d}">${d}</option>`).join('');
+    loadSnapshot();
+  }catch(e){ sel.innerHTML='<option>불러오기 실패</option>'; }
+}
+
+async function loadSnapshot(){
+  const date = document.getElementById('snap-date-select').value;
+  if(!date||date.includes('중')||date.includes('실패')||date.includes('없음')) return;
+  document.getElementById('snap-content').innerHTML = '<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
+  try{
+    const url = `https://raw.githubusercontent.com/${SNAP_REPO}/main/snapshots/${date}.json`;
+    _snapData = await fetch(url).then(r=>{ if(!r.ok) throw new Error(); return r.json(); });
+    renderSnapshot();
+  }catch(e){ document.getElementById('snap-content').innerHTML='<div class="empty"><div class="empty-icon">📦</div><p>이 날짜의 스냅샷이 없습니다</p></div>'; }
+}
+
+function setSnapFilter(f){
+  _snapFilter = f;
+  ['all','active','done'].forEach(function(id){
+    const btn = document.getElementById('snap-btn-'+id);
+    if(!btn) return;
+    if(id === f){
+      btn.style.background = 'var(--text)'; btn.style.color = '#fff'; btn.style.borderColor = 'var(--text)';
+    } else {
+      btn.style.background = ''; btn.style.color = ''; btn.style.borderColor = '';
+    }
+  });
+  renderSnapshot();
+}
+
+function renderSnapshot(){
+  const q = (document.getElementById('snap-search')?.value||'').trim().toLowerCase();
+  let list = (_snapData||[]).filter(function(t){
+    if(_snapFilter === 'active' && t.is_done) return false;
+    if(_snapFilter === 'done' && !t.is_done) return false;
+    if(!q) return true;
+    return (t.title||'').toLowerCase().includes(q) ||
+           (t.employee_name||'').toLowerCase().includes(q) ||
+           (t.assignee_names||'').toLowerCase().includes(q);
+  });
+  const cnt = document.getElementById('snap-count');
+  if(cnt) cnt.textContent = list.length ? `총 ${list.length}건` : '';
+  if(!list.length){
+    document.getElementById('snap-content').innerHTML = '<div class="empty"><div class="empty-icon">📦</div><p>표시할 항목이 없습니다</p></div>';
+    return;
+  }
+  document.getElementById('snap-content').innerHTML = list.map(function(t){
+    const cl = (t.checklist||[]).filter(function(c){ return c.type !== 'header'; });
+    const done = cl.filter(function(c){ return c.done; }).length;
+    const clBar = cl.length ? `<div style="font-size:11px;color:var(--text3);margin:4px 0 6px">체크리스트 ${done}/${cl.length}</div>
+      <div style="height:4px;background:var(--border);border-radius:2px;margin-bottom:8px">
+        <div style="height:4px;background:var(--success);border-radius:2px;width:${cl.length?Math.round(done/cl.length*100):0}%"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:2px">
+        ${cl.map(function(c){ return `<div style="font-size:12px;color:${c.done?'var(--text3)':'var(--text2)'};padding:2px 0 2px 10px;border-left:2px solid var(--border);${c.done?'text-decoration:line-through':''}">${c.done?'✅ ':'☐ '}${esc(c.text)}</div>`; }).join('')}
+      </div>` : '';
+    const statusColor = t.is_done ? 'var(--success)' : (t.status==='active' ? 'var(--accent)' : 'var(--text3)');
+    const statusLabel = t.is_done ? '완료' : (t.status==='active' ? '진행' : '대기');
+    return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:13px 15px;margin-bottom:8px;border-left:3px solid ${statusColor}">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;background:${statusColor}22;color:${statusColor}">${statusLabel}</span>
+        <span style="font-size:14px;font-weight:600;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.title)}</span>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:${cl.length?'6px':'0'}">👤 ${esc(t.employee_name)}${t.assignee_names?` · 담당: ${esc(t.assignee_names)}`:''}${t.due_date?` · 기한: ${t.due_date}`:''}${t.note?' · '+esc(t.note):''}</div>
+      ${clBar}
+    </div>`;
+  }).join('');
+}
 </script>
 </body>
 </html>
