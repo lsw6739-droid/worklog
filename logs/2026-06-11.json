@@ -594,5 +594,138 @@
         ]
       }
     ]
+  },
+  {
+    "time": "20:53",
+    "changes": [
+      {
+        "action": "added",
+        "title": "부서업무회의 준비",
+        "employee": "임승완",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "화요일 회의 10시 30분 연기 메일 보내기",
+        "employee": "임승완",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "QMS 유지보수 건 확인",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "공정시간 수립",
+        "employee": "김형성",
+        "details": [
+          "TP02"
+        ]
+      },
+      {
+        "action": "deleted",
+        "title": "김경원 선임 인수인계",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "BR BPR 작성 Tool에도 MX-119 장비 Tool 추가 필요",
+        "employee": "김경원",
+        "details": [
+          "기한: 없음 → 2026-07-31"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "FRM DR023-03 제품별 발행 문서 목록 개정 필요",
+        "employee": "김경원",
+        "details": [
+          "기한: 2026-06-30 → 2026-07-10"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "PP 밀링 BPR 툴 작성",
+        "employee": "김형성",
+        "details": [
+          "완료처리",
+          "기한: 없음 → 2026-06-11"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "SG CHT 오류 소급",
+        "employee": "김경원",
+        "details": [
+          "제목: SG소급건 → SG CHT 오류 소급"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "독립형 기기로그북관리기준",
+        "employee": "김경원",
+        "details": [
+          "제목: 독립형기기로그북관리기준 → 독립형 기기로그북관리기준",
+          "기한: 없음 → 2026-06-15"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "LTW 수정(QA요청)",
+        "employee": "김경원",
+        "details": [
+          "제목: LTW수정건 → LTW 수정(QA요청)",
+          "상태: waiting → active",
+          "➕ 제조팀 단순수정 진행",
+          "➕ QA 문의사항 확인"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "BPR 검토",
+        "employee": "김형성",
+        "details": [
+          "완료처리",
+          "기한: 없음 → 2026-06-11"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "[공지] [안전관리팀] 2026년 2분기 정기안전보건교육(모두의 러닝) 수강 안내의 건",
+        "employee": "김경원",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "로그북 발행 제조팀 교육안 설립",
+        "employee": "김경원",
+        "details": [
+          "기한: 없음 → 2026-06-15",
+          "✅ 팀장 보고 완료"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "공정시간 수립",
+        "employee": "김형성",
+        "details": [
+          "완료처리",
+          "기한: 없음 → 2026-06-11"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "RG01126E010 수정",
+        "employee": "김경원",
+        "details": [
+          "상태: waiting → active"
+        ]
+      }
+    ]
   }
 ]
