@@ -19,5 +19,30 @@
         ]
       }
     ]
+  },
+  {
+    "time": "09:08",
+    "changes": [
+      {
+        "action": "added",
+        "title": "LTW수정건",
+        "employee": "김경원",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "SG소급건",
+        "employee": "김경원",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "김경원 선임 인수인계",
+        "employee": "김형성",
+        "details": [
+          "➕ RG02 BPR BCR 페이지 번호 바뀔 예정인데 김신애 책임 이번주 연차임 다음주 김신애 책임 복귀 후 제출 예정"
+        ]
+      }
+    ]
   }
 ]
