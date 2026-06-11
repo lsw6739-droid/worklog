@@ -1,0 +1,39 @@
+name: Weekly Todo Snapshot
+
+on:
+  schedule:
+    - cron: '0 15 * * 0'  # 매주 일요일 00:00 KST
+  workflow_dispatch:
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch todos from Supabase
+        run: |
+          SUPABASE_URL="https://uulemznemzjlgzqhrchb.supabase.co"
+          KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1bGVtem5lbXpqbGd6cWhyY2hiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MTc3MzQsImV4cCI6MjA5Mzk5MzczNH0.cy3jWrFez0pO0vl3nOOUMiv-511IzQiTcNxTK8Jejrg"
+          curl -s "${SUPABASE_URL}/rest/v1/todos?select=*&limit=5000" \
+            -H "apikey: ${KEY}" -H "Authorization: Bearer ${KEY}" \
+            -o /tmp/current.json
+          curl -s "${SUPABASE_URL}/rest/v1/employees?select=id,name" \
+            -H "apikey: ${KEY}" -H "Authorization: Bearer ${KEY}" \
+            -o /tmp/employees.json
+
+      - name: Save weekly snapshot
+        run: python3 .github/scripts/weekly_snapshot.py
+
+      - name: Cleanup snapshots older than 1 year
+        run: python3 .github/scripts/cleanup_snapshots.py
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add snapshots/
+          git diff --staged --quiet && echo "skip" || (git commit -m "snapshot: $(TZ='Asia/Seoul' date '+%Y-%m-%d')" && git push)
