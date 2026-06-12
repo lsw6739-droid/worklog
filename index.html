@@ -2267,18 +2267,6 @@ async function saveTodoDetail(){
         // 기존 공지 투두 업데이트
         await fetch(API+'/todos?source=eq.notice&note=eq.'+noticeNote+'&id=neq.'+rootId,
           {method:'PATCH', headers:H, body:JSON.stringify(noticeBody)});
-        // 삭제된 공지 투두 복구: assignee 중 투두가 없는 사람 재생성
-        const existRes = await fetch(API+'/todos?source=eq.notice&note=eq.'+noticeNote+'&select=employee_id',{headers:H});
-        const existing = await existRes.json();
-        const existIds = new Set(existing.map(function(t){ return t.employee_id; }));
-        const missing = selectedAssignees.filter(function(aid){ return !existIds.has(aid); });
-        if(missing.length){
-          await Promise.all(missing.map(function(aid){
-            return fetch(API+'/todos',{method:'POST',headers:H,body:JSON.stringify(
-              Object.assign({}, noticeBody, {employee_id:aid, is_done:false, parent_todo_id:rootId})
-            )});
-          }));
-        }
       }
     } else {
       // 일반 공유 todo: parent_todo_id 기반 동기화
