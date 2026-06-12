@@ -3105,67 +3105,80 @@ let _empDragSrcIdx = null;
 function renderUserTable(){
   const el = document.getElementById('user-list-table');
   if(!allEmployees.length){ el.innerHTML='<div class="empty"><div class="empty-icon">👥</div><p>직원이 없습니다</p></div>'; return; }
-  el.innerHTML = '<div style="font-size:11px;color:var(--text3);margin-bottom:8px">⠿ 드래그로 팀 할일 칸반 순서 변경</div>';
+
+  const wrapper = document.createElement('div');
+  const hint = document.createElement('div');
+  hint.style.cssText = 'font-size:11px;color:var(--text3);margin-bottom:8px';
+  hint.textContent = '⠿ 드래그로 팀 할일 칸반 순서 변경';
+  wrapper.appendChild(hint);
+
+  const table = document.createElement('table');
+  table.innerHTML = `<thead><tr>
+    <th style="width:28px"></th>
+    <th>이름</th>
+    <th>사번</th>
+    <th>권한</th>
+    <th></th>
+  </tr></thead>`;
+  const tbody = document.createElement('tbody');
 
   allEmployees.forEach(function(e, i){
-    const row = document.createElement('div');
-    row.dataset.empIdx = String(i);
-    row.draggable = true;
-    row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:9px 6px;border-bottom:1px solid var(--border);border-radius:6px;position:relative;transition:opacity .15s';
+    const tr = document.createElement('tr');
+    tr.dataset.empIdx = String(i);
+    tr.draggable = true;
+    tr.style.transition = 'opacity .15s';
 
-    const handle = document.createElement('span');
-    handle.textContent = '⠿';
-    handle.style.cssText = 'color:var(--text3);cursor:grab;font-size:14px;flex-shrink:0;user-select:none';
+    const tdHandle = document.createElement('td');
+    tdHandle.innerHTML = '<span style="color:var(--text3);cursor:grab;font-size:14px;user-select:none">⠿</span>';
 
-    const nameSpan = document.createElement('span');
-    nameSpan.style.cssText = 'font-size:13px;font-weight:600;flex:1;pointer-events:none;user-select:none';
-    nameSpan.textContent = e.name;
+    const tdName = document.createElement('td');
+    tdName.textContent = e.name;
+    tdName.style.pointerEvents = 'none';
 
-    const empIdSpan = document.createElement('span');
-    empIdSpan.style.cssText = 'font-size:11px;color:var(--text3);font-family:monospace;pointer-events:none';
-    empIdSpan.textContent = e.emp_id;
+    const tdEmpId = document.createElement('td');
+    tdEmpId.textContent = e.emp_id;
+    tdEmpId.style.cssText = 'font-family:monospace;font-size:11px;pointer-events:none';
 
-    const badge = document.createElement('span');
-    badge.className = 'badge ' + (e.is_admin ? 'badge-blue' : 'badge-green');
-    badge.textContent = e.is_admin ? '관리자' : '직원';
-    badge.style.pointerEvents = 'none';
+    const tdRole = document.createElement('td');
+    tdRole.innerHTML = `<span class="badge ${e.is_admin?'badge-blue':'badge-green'}" style="pointer-events:none">${e.is_admin?'관리자':'직원'}</span>`;
 
-    const btnDiv = document.createElement('div');
-    btnDiv.style.cssText = 'display:flex;gap:6px;flex-shrink:0';
-
+    const tdAction = document.createElement('td');
     if(e.id !== currentUser.id){
-      const adminBtn = document.createElement('button');
-      adminBtn.className = 'btn btn-secondary btn-sm';
-      adminBtn.textContent = e.is_admin ? '권한해제' : '관리자부여';
-      adminBtn.draggable = false;
-      adminBtn.onclick = function(){ toggleAdmin(e.id, e.is_admin); };
-      btnDiv.appendChild(adminBtn);
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-secondary btn-sm';
+      btn.textContent = e.is_admin ? '권한해제' : '관리자부여';
+      btn.draggable = false;
+      btn.onclick = function(){ toggleAdmin(e.id, e.is_admin); };
+      tdAction.appendChild(btn);
     } else {
-      const selfSpan = document.createElement('span');
-      selfSpan.style.cssText = 'color:var(--text3);font-size:11px';
-      selfSpan.textContent = '본인';
-      btnDiv.appendChild(selfSpan);
+      tdAction.innerHTML = '<span style="color:var(--text3);font-size:11px">본인</span>';
     }
 
-    row.appendChild(handle); row.appendChild(nameSpan); row.appendChild(empIdSpan);
-    row.appendChild(badge); row.appendChild(btnDiv);
-    el.appendChild(row);
+    tr.appendChild(tdHandle); tr.appendChild(tdName); tr.appendChild(tdEmpId);
+    tr.appendChild(tdRole); tr.appendChild(tdAction);
+    tbody.appendChild(tr);
   });
+
+  table.appendChild(tbody);
+  wrapper.appendChild(table);
+  el.innerHTML = '';
+  el.appendChild(wrapper);
+
+  function clearEmpIndicators(){ el.querySelectorAll('[data-emp-idx]').forEach(function(r){ r.style.outline=''; r.style.boxShadow=''; }); }
 
   el.ondragover = function(e){
     e.preventDefault();
     const target = e.target.closest('[data-emp-idx]');
-    el.querySelectorAll('[data-emp-idx]').forEach(function(r){ r.style.borderTop=''; r.style.borderBottom='1px solid var(--border)'; });
+    clearEmpIndicators();
     if(!target) return;
     const rect = target.getBoundingClientRect();
     const isTop = e.clientY < rect.top + rect.height / 2;
-    if(isTop){ target.style.borderTop='2px solid var(--accent)'; target.style.borderBottom=''; }
-    else { target.style.borderBottom='2px solid var(--accent)'; }
+    target.style.boxShadow = isTop ? '0 -2px 0 var(--accent)' : '0 2px 0 var(--accent)';
   };
   el.ondrop = function(e){
     e.preventDefault();
-    el.querySelectorAll('[data-emp-idx]').forEach(function(r){ r.style.borderTop=''; r.style.borderBottom='1px solid var(--border)'; });
     const target = e.target.closest('[data-emp-idx]');
+    clearEmpIndicators();
     if(_empDragSrcIdx === null || !target){ _empDragSrcIdx = null; return; }
     const targetIdx = parseInt(target.dataset.empIdx);
     if(_empDragSrcIdx === targetIdx){ _empDragSrcIdx = null; return; }
@@ -3178,21 +3191,15 @@ function renderUserTable(){
     _empDragSrcIdx = null;
     saveEmployeeOrder();
   };
-  el.ondragleave = function(e){
-    if(!el.contains(e.relatedTarget)){
-      el.querySelectorAll('[data-emp-idx]').forEach(function(r){ r.style.borderTop=''; r.style.borderBottom='1px solid var(--border)'; });
-    }
-  };
-  el.querySelectorAll('[data-emp-idx]').forEach(function(row){
+  el.ondragleave = function(e){ if(!el.contains(e.relatedTarget)) clearEmpIndicators(); };
+
+  tbody.querySelectorAll('[data-emp-idx]').forEach(function(row){
     row.addEventListener('dragstart', function(e){
       _empDragSrcIdx = parseInt(row.dataset.empIdx);
       e.dataTransfer.effectAllowed = 'move';
       setTimeout(function(){ row.style.opacity='0.35'; }, 0);
     });
-    row.addEventListener('dragend', function(){
-      row.style.opacity='';
-      el.querySelectorAll('[data-emp-idx]').forEach(function(r){ r.style.borderTop=''; r.style.borderBottom='1px solid var(--border)'; });
-    });
+    row.addEventListener('dragend', function(){ row.style.opacity=''; clearEmpIndicators(); });
   });
 }
 
