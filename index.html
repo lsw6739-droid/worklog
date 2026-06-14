@@ -1552,7 +1552,10 @@ async function checkTimeOverlap(date, startTime, endTime, excludeId){
 }
 
 // LOGS
-async function submitLog(){
+let _submittingLog = false;
+// 일지 저장 공통 로직 (continueMode=true면 시작시간 이어받기)
+async function _saveLog(continueMode){
+  if(_submittingLog) return;
   const date=document.getElementById('log-date').value,catId=document.getElementById('log-category').value;
   const content=document.getElementById('log-content').value.trim();
   const startTime=document.getElementById('log-start-time').value,endTime=document.getElementById('log-end-time').value;
@@ -1560,40 +1563,32 @@ async function submitLog(){
   const note=document.getElementById('log-note').value.trim();
   if(!date||!catId||!content||!startTime||!endTime){showToast('날짜·분류·내용·시간은 필수','error');return;}
   if(!hours||hours<=0){showToast('종료시간이 시작시간보다 빨라요','error');return;}
-  const overlap=await checkTimeOverlap(date,startTime,endTime,null);
-  if(overlap){showToast('⚠️ 다른 업무와 시간이 겹칩니다','error');return;}
+  _submittingLog = true;
   try{
-    await fetch(`${API}/work_logs`,{method:'POST',headers:H,body:JSON.stringify({employee_id:currentUser.id,category_id:catId,log_date:date,content,hours,note:note||null,start_time:startTime,end_time:endTime})});
-    ['log-content','log-note','log-start-time','log-end-time','log-category'].forEach(id=>document.getElementById(id).value='');
-    document.getElementById('log-hours').value='';document.getElementById('calc-hours-display').textContent='-';
-    showToast('저장됨','success');loadDateLogs();
+    const overlap=await checkTimeOverlap(date,startTime,endTime,null);
+    if(overlap){showToast('⚠️ 다른 업무와 시간이 겹칩니다','error');return;}
+    const res=await fetch(`${API}/work_logs`,{method:'POST',headers:H,body:JSON.stringify({employee_id:currentUser.id,category_id:catId,log_date:date,content,hours,note:note||null,start_time:startTime,end_time:endTime})});
+    if(!res.ok) throw new Error(await res.text());
+    if(continueMode){
+      // 종료시간을 다음 시작시간으로 이어받기
+      const nextStart=endTime;
+      ['log-content','log-note','log-end-time','log-category'].forEach(id=>document.getElementById(id).value='');
+      document.getElementById('log-start-time').value=nextStart;
+      document.getElementById('log-hours').value='';
+      document.getElementById('calc-hours-display').textContent='-';
+      showToast('저장됨 · 시작시간 이어받기','success');
+      loadDateLogs();
+      setTimeout(function(){ document.getElementById('log-content').focus(); }, 100);
+    } else {
+      ['log-content','log-note','log-start-time','log-end-time','log-category'].forEach(id=>document.getElementById(id).value='');
+      document.getElementById('log-hours').value='';document.getElementById('calc-hours-display').textContent='-';
+      showToast('저장됨','success');loadDateLogs();
+    }
   }catch(e){showToast('저장 실패','error');}
+  finally{ _submittingLog = false; }
 }
-
-async function submitLogAndContinue(){
-  const date=document.getElementById('log-date').value,catId=document.getElementById('log-category').value;
-  const content=document.getElementById('log-content').value.trim();
-  const startTime=document.getElementById('log-start-time').value,endTime=document.getElementById('log-end-time').value;
-  const hours=parseFloat(document.getElementById('log-hours').value);
-  const note=document.getElementById('log-note').value.trim();
-  if(!date||!catId||!content||!startTime||!endTime){showToast('날짜·분류·내용·시간은 필수','error');return;}
-  if(!hours||hours<=0){showToast('종료시간이 시작시간보다 빨라요','error');return;}
-  const overlap=await checkTimeOverlap(date,startTime,endTime,null);
-  if(overlap){showToast('⚠️ 다른 업무와 시간이 겹칩니다','error');return;}
-  try{
-    await fetch(`${API}/work_logs`,{method:'POST',headers:H,body:JSON.stringify({employee_id:currentUser.id,category_id:catId,log_date:date,content,hours,note:note||null,start_time:startTime,end_time:endTime})});
-    // 종료시간을 다음 시작시간으로 이어받기
-    const nextStart=endTime;
-    ['log-content','log-note','log-end-time','log-category'].forEach(id=>document.getElementById(id).value='');
-    document.getElementById('log-start-time').value=nextStart;
-    document.getElementById('log-hours').value='';
-    document.getElementById('calc-hours-display').textContent='-';
-    showToast('저장됨 · 시작시간 이어받기','success');
-    loadDateLogs();
-    // 업무내용 입력창으로 포커스
-    setTimeout(function(){ document.getElementById('log-content').focus(); }, 100);
-  }catch(e){showToast('저장 실패','error');}
-}
+function submitLog(){ return _saveLog(false); }
+function submitLogAndContinue(){ return _saveLog(true); }
 function setViewDate(val){document.getElementById('view-date').value=val==='today'?today():val;loadDateLogs();}
 async function loadDateLogs(){
   const el=document.getElementById('today-logs'),date=document.getElementById('view-date').value;
@@ -1727,12 +1722,19 @@ function renderLogList(el,logs,editable){
     return `<tr>
     <td style="white-space:nowrap;font-size:11px">${l.log_date}</td>
     <td><span class="badge badge-blue">${l.categories?.name||'-'}</span></td>
-    <td style="max-width:220px;word-break:break-all;font-size:11px">${l.content}</td>
+    <td style="max-width:220px;word-break:break-all;font-size:11px">${esc(l.content)}</td>
     <td style="font-size:11px;color:var(--text2);white-space:nowrap">${l.start_time||'-'}~${l.end_time||'-'}</td>
     ${noteTd}
     <td style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent2)">${Number(l.hours).toFixed(1)}h</td>
-    ${ed?`<td style="white-space:nowrap"><button class="btn btn-secondary btn-sm" onclick="openEditLog('${l.id}','${l.category_id}',\`${l.content.replace(/`/g,"'")}\`,${l.hours},'${l.note||''}','${l.start_time||''}','${l.end_time||''}','${l.log_date||''}')">수정</button> <button class="btn btn-danger btn-sm" onclick="deleteLog('${l.id}')">삭제</button></td>`:''}
+    ${ed?`<td style="white-space:nowrap"><button class="btn btn-secondary btn-sm" onclick="openEditLogById('${id}','${l.id}')">수정</button> <button class="btn btn-danger btn-sm" onclick="deleteLog('${l.id}')">삭제</button></td>`:''}
   </tr>`;}).join('')}</tbody></table>`;
+}
+// 캐시에서 로그를 찾아 수정 모달 열기 (내용에 따옴표·특수문자가 있어도 안전)
+function openEditLogById(cacheId, logId){
+  const c = _logCache[cacheId];
+  const l = c && c.logs.find(function(x){ return String(x.id) === String(logId); });
+  if(!l){ showToast('일지를 찾을 수 없습니다','error'); return; }
+  openEditLog(l.id, l.category_id, l.content||'', l.hours, l.note||'', l.start_time||'', l.end_time||'', l.log_date||'');
 }
 function openEditLog(id,catId,content,hours,note,startTime,endTime,logDate){
   document.getElementById('edit-log-id').value=id;
@@ -1953,6 +1955,7 @@ async function toggleTodo(id,wasDone){
   }catch(e){showToast('변경 실패','error');}
 }
 async function deleteTodo(id){
+  if(!confirm('이 할일을 삭제할까요?\n공유 중인 할일이면 담당자 모두의 목록에서도 함께 삭제됩니다.')) return;
   try{
     // 공유본(담당자 복사본)도 함께 삭제
     await fetch(`${API}/todos?parent_todo_id=eq.${id}`,{method:'DELETE',headers:H});
@@ -2423,14 +2426,14 @@ function showNoticePopup(n){
   // 팝업 표시 (popup / both)
   const modeLabel = mode === 'popup' ? '🔔 팝업 알림' : '📢 팝업 + 투두';
   const assigneeInfo = n.assignee_names
-    ? `<div style="font-size:10px;color:var(--accent2);margin-top:6px">👤 ${n.assignee_names}</div>` : '';
+    ? `<div style="font-size:10px;color:var(--accent2);margin-top:6px">👤 ${esc(n.assignee_names)}</div>` : '';
   const dueDateInfo = n.due_date
-    ? `<div style="font-size:10px;color:var(--warn);margin-top:4px">📅 기한: ${n.due_date}</div>` : '';
+    ? `<div style="font-size:10px;color:var(--warn);margin-top:4px">📅 기한: ${esc(n.due_date)}</div>` : '';
 
   document.getElementById('notice-popup-content').innerHTML=
     '<div style="background:var(--surface2);border-radius:10px;padding:16px;margin-bottom:4px">'
-    +'<div style="font-size:15px;font-weight:700;margin-bottom:10px">'+n.title+'</div>'
-    +'<div style="font-size:13px;color:var(--text2);line-height:1.7;white-space:pre-wrap">'+n.body+'</div>'
+    +'<div style="font-size:15px;font-weight:700;margin-bottom:10px">'+esc(n.title)+'</div>'
+    +'<div style="font-size:13px;color:var(--text2);line-height:1.7;white-space:pre-wrap">'+esc(n.body)+'</div>'
     + assigneeInfo + dueDateInfo
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">'
     +'<span style="font-size:10px;color:var(--text3)">'+new Date(n.created_at).toLocaleDateString('ko-KR')+'</span>'
