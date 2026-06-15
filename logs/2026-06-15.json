@@ -1,0 +1,17 @@
+[
+  {
+    "time": "09:10",
+    "changes": [
+      {
+        "action": "added",
+        "title": "BPR 검토",
+        "employee": "김형성",
+        "details": [
+          "TP01 검토",
+          "LA 검토",
+          "EDM 검토"
+        ]
+      }
+    ]
+  }
+]
