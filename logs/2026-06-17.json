@@ -227,5 +227,175 @@
         ]
       }
     ]
+  },
+  {
+    "time": "21:00",
+    "changes": [
+      {
+        "action": "added",
+        "title": "라벨프린트 진행",
+        "employee": "임승완",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "MX125H010 추가 소분 포장 지시 필요(10월 출하)",
+        "employee": "임승완",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "정기검토",
+        "employee": "임승완",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "위험평가보고서 검토",
+        "employee": "임승완",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "면담질문 준비",
+        "employee": "임승완",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "팀 면담(6/18-1차)",
+        "employee": "임승완",
+        "details": [
+          "➕ 3월",
+          "➕ 6월 18일(1차)",
+          "🗑 3월",
+          "🗑 6월 18일(1차)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "IP (Imidapril Hydrochloride) 품목 삭제(CC2605-023)(CC2605-023)",
+        "employee": "임승완",
+        "details": [
+          "✅ 전개용매 운영절차 엑셀 IP 삭제"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "위험관리 보고서 승인",
+        "employee": "김형성",
+        "details": [
+          "제목: 위험관리 보고서 수정 → 위험관리 보고서 승인",
+          "✅ 제조관리 팀장 검토안 반영",
+          "✅ 추가 개정사항 확인"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "회계",
+        "employee": "임승완",
+        "details": [
+          "➕ 5월",
+          "🗑 5월"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "MX 수량 공유 필요",
+        "employee": "임승완",
+        "details": [
+          "상태: waiting → active",
+          "기한: 없음 → 2026-06-22",
+          "➕ MX125F010 소분 진행",
+          "➕ 영업팀 수량 공유"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "<<보고 필요 사항>>",
+        "employee": "이상우",
+        "details": [
+          "🗑 출하 2차 포장 업무 인수인계 계획 수립"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "로그북 발행 제조팀 교육안 설립",
+        "employee": "김경원",
+        "details": [
+          "기한: 2026-06-16 → 2026-06-30",
+          "✅ QA 문의: 사용부서의 담당자인지? 부서의 로그북발행담당자인지?",
+          "✅ QA 답변내용 팀장 보고: GMP절차와 실절차 일원화"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "저울 검교정 메일 알림",
+        "employee": "김형성",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "월말/월초 업무",
+        "employee": "이상우",
+        "details": [
+          "➕ 07/01"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "제품 표시라벨 간소화",
+        "employee": "이주영",
+        "details": [
+          "✅ 프로그램 상단 버전 및 수정 내용 삭제",
+          "✅ 부착용 라벨 생성 탭에서 라벨 갯수 증가 감소 버튼 필요 없음",
+          "✅ 수동 라벨 생성 시에도 검토용라벨 생성 과 동일한 UI",
+          "✅ 모든 탭에서 제조일 > 제조일자, 유툥기한 > 유효기한",
+          "✅ 기본 대시보드에서는 드래그 순서 변경 필요없음",
+          "✅ 검토용 라벨 생성, 검토용 라벨 수정 탭에서 순서 드래그 변경 기능 필요"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "부서업무회의 후속작업",
+        "employee": "임승완",
+        "details": [
+          "기한: 없음 → 2026-06-19",
+          "✅ 중간체 입출고 기록서 작성 방향 확인 및 공유"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "OKR 실생산계획",
+        "employee": "유태규",
+        "details": [
+          "✅ QA에 MPI 요청(6/15)",
+          "✅ AP-002 (6/16)",
+          "✅ PR-001 (6/17)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "생산 2동 PFW Feeding 기준 확인",
+        "employee": "김경원",
+        "details": [
+          "완료처리",
+          "✅ 박형우 선임 문의: IOQ 테스트를 통한 근거 있는지",
+          "✅ 제조관리팀장 보고"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "실사 준비",
+        "employee": "김형성",
+        "details": [
+          "완료처리",
+          "✅ 로그북 준비 221호 > RE-143, RE-142 필요",
+          "✅ 현장 투어"
+        ]
+      }
+    ]
   }
 ]
