@@ -1,0 +1,140 @@
+[
+  {
+    "time": "10:58",
+    "changes": [
+      {
+        "action": "added",
+        "title": "BPR 검토",
+        "employee": "김형성",
+        "details": [
+          "TP02"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "CG 관련 질의 사항",
+        "employee": "임승완",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "EPG 관련 문의+MM015-015 개정 필요",
+        "employee": "임승완",
+        "details": [
+          "완료처리",
+          "상태: waiting → active",
+          "➕ 샘플 수량 vial 가능 여부 확인 후 개정 진행"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "LM / 중국등록용 3배치 시험 수행을 위한 재고 확인",
+        "employee": "임승완",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "실사 준비",
+        "employee": "김형성",
+        "details": [
+          "➕ 로그북 준비 173호 > 저울로그북 필요",
+          "➕ 로그북 준비 221호 > RE-143, RE-142 필요",
+          "➕ 로그북 준비 223호 > 완료"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "제품표시라벨 간소화",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-06-15 → 2026-06-18"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "<<보고 필요 사항>>",
+        "employee": "이상우",
+        "details": [
+          "🗑 사업 계획 상세 내용 수정",
+          "🗑 실시간 모니터링 온도 데이터로거 평가기준 변경"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "제조본부 회의 일정 변경",
+        "employee": "임승완",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "CC2512-010 [PC004 제조 작업자 자격 인증 SOP 및 관련 서식 개정 건] 검토",
+        "employee": "임승완",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "LTW 수정(QA요청)",
+        "employee": "김경원",
+        "details": [
+          "완료처리",
+          "✅ p.1 재발행 완료",
+          "✅ p.1 보관관리팀 재작성",
+          "✅ p.1 제조팀 재작성"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "정제수 feeding 건",
+        "employee": "임승완",
+        "details": [
+          "상태: waiting → active",
+          "➕ 구문서 확인"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "QMS 개발 0, - 확인",
+        "employee": "김형성",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "원료 수급 및 제조일정 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "➕ -LAI010은 불안함",
+          "➕ -이후 3배치 송부용 검체도 필요함 이후 공유 예정(프레시한 배치)",
+          "✏️ LM GMP 3BATCH(부서장님 메일 참고-6/11)-태규 선임에게는 1배치 지시? → -LM GMP 3BATCH(부서장님 메일 참고-6/11)-태규 선임에게는 1배치 지시?",
+          "➕ EPG 신규 고객사 있어서 DP site 우선 보류 (사장님꼐서 안한다고도함)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "AP 실사 준비 ACTION",
+        "employee": "김경원",
+        "details": [
+          "✅ 실사호실 제조실 작성 확인"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "포장지시(6/26 출하건 부터)",
+        "employee": "임승완",
+        "details": [
+          "제목: 포장지시(6/22 출하건 부터) → 포장지시(6/26 출하건 부터)",
+          "기한: 2026-06-18 → 2026-06-19"
+        ]
+      }
+    ]
+  }
+]
