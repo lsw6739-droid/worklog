@@ -576,10 +576,12 @@ html[data-theme="dark"] .badge-warn{background:rgba(255,159,10,.18);color:#ff9f0
           <button class="btn btn-primary btn-sm" onclick="mpSave()">💾 저장</button>
           <button class="btn btn-secondary btn-sm" onclick="mpExportExcel()" style="border-color:var(--accent);color:var(--accent)">📊 엑셀 저장</button>
           <span id="mp-status" style="font-size:11px;color:var(--text3)"></span>
-          <span id="mp-breakinfo" style="margin-left:auto;font-size:11px;color:var(--text2)"></span>
+          <span id="mp-target" style="margin-left:auto;font-weight:700;color:var(--danger);font-size:14px;white-space:nowrap"></span>
         </div>
+        <div id="mp-breakinfo" style="font-size:11px;color:var(--text2);margin-bottom:8px"></div>
         <div style="font-size:11px;color:var(--text3);margin-bottom:8px">날짜 헤더 클릭 → 근무일(●)/비근무일(○) 전환 · 셀에 근무시간 직접 입력 · 기본값 8.0h</div>
         <div class="table-wrap" style="overflow-x:auto"><table id="mp-table"></table></div>
+        <div id="mp-notes-view" style="margin-top:12px"></div>
         <div style="font-size:11px;color:var(--text2);margin-top:10px;padding:8px 12px;border:1px solid var(--accent2);border-radius:8px;background:rgba(52,199,89,.06);line-height:1.6">
           여기 입력한 근무시간이 <b>내 일별 기본근무 기준</b>이 됩니다. 실제 업무일지(공수)에서 기준 이내 → <b style="color:#1d9e75">기본근무</b>, 기준 초과 → <b style="color:var(--warn)">초과근무</b>로 집계됩니다.
         </div>
@@ -628,6 +630,7 @@ html[data-theme="dark"] .badge-warn{background:rgba(255,159,10,.18);color:#ff9f0
           <button class="btn btn-primary btn-sm" onclick="wpSave()">💾 저장</button>
           <button class="btn btn-secondary btn-sm" onclick="wpExportExcel()" style="border-color:var(--accent);color:var(--accent)">📊 엑셀 저장</button>
           <span id="wp-status" style="font-size:11px;color:var(--text3)"></span>
+          <span id="wp-target" style="margin-left:auto;font-weight:700;color:var(--danger);font-size:14px;white-space:nowrap"></span>
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:12px">
           <span class="attend-quarter" style="white-space:nowrap">점심 제외</span>
@@ -642,6 +645,14 @@ html[data-theme="dark"] .badge-warn{background:rgba(255,159,10,.18);color:#ff9f0
         </div>
         <div style="font-size:11px;color:var(--text3);margin-bottom:8px">날짜 헤더 클릭 → 근무일(●)/비근무일(○) 전환 · 셀에 기본 근무시간 직접 입력 · 기본값 8.0h</div>
         <div class="table-wrap" style="overflow-x:auto"><table id="wp-table"></table></div>
+        <div style="margin-top:14px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <span style="font-size:13px;font-weight:700">📝 비고</span>
+            <span style="font-size:11px;color:var(--text3)">감사 · 연차 · 단축근무 등 (날짜/기간 + 내용)</span>
+            <button class="btn btn-secondary btn-sm" onclick="wpAddNote()" style="margin-left:auto">+ 비고 추가</button>
+          </div>
+          <div id="wp-notes"></div>
+        </div>
         <div style="font-size:11px;color:var(--text2);margin-top:10px;padding:8px 12px;border:1px solid var(--accent2);border-radius:8px;background:rgba(52,199,89,.06);line-height:1.6">
           이 표의 근무시간이 <b>일별 기본근무 기준</b>입니다. 실제 업무일지(공수)에서 기준 이내 → <b style="color:#1d9e75">기본근무</b>, 기준 초과 → <b style="color:var(--warn)">초과근무</b>로 팀현황·대시보드에 반영됩니다.
         </div>
@@ -869,6 +880,14 @@ create table if not exists work_settings (
 insert into work_settings (id) values (1) on conflict (id) do nothing;
 alter table work_settings enable row level security;
 create policy "allow_all" on work_settings for all using (true);
+-- 근무계획 월별 비고 (감사/연차/단축근무 등 메모)
+create table if not exists work_plan_notes (
+  ym text primary key,                      -- 'YYYY-MM'
+  items jsonb not null default '[]',         -- [{"label":"6/10~11","text":"Maruho MX Audit"}, ...]
+  updated_at timestamptz default now()
+);
+alter table work_plan_notes enable row level security;
+create policy "allow_all" on work_plan_notes for all using (true);
 -- RLS
 alter table todos enable row level security;
 alter table notices enable row level security;
@@ -3187,7 +3206,7 @@ async function loadWorkSettings(){
 }
 
 // ─── 근무계획 플래너 ───
-let _wpYear, _wpMonth, _wpWorkdays=new Set(), _wpPlan=[], _wpEmps=[];
+let _wpYear, _wpMonth, _wpWorkdays=new Set(), _wpPlan=[], _wpEmps=[], _wpNotes=[];
 const WP_DOW=['일','월','화','수','목','금','토'];
 function _wpToMin(t){ if(!t||!t.includes(':'))return 0; const[h,m]=t.split(':').map(Number); return h*60+m; }
 function _wpToStr(m){ return `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`; }
@@ -3253,8 +3272,29 @@ async function wpLoadMonth(){
     _wpEmps.forEach((_,ei)=>{ for(let d=1;d<=n;d++){ _wpPlan[ei][d-1]=_wpWorkdays.has(d)?WP_STD:0; } });
   }
   document.getElementById('wp-status').textContent=loaded?'저장된 계획 불러옴':'기본값(평일 8h) 적용 — 저장 필요';
+  // 비고 로드
+  _wpNotes=[];
+  try{
+    const nres=await fetch(`${API}/work_plan_notes?ym=eq.${ym}&select=*`,{headers:H});
+    const nrows=await nres.json();
+    if(Array.isArray(nrows)&&nrows[0]&&Array.isArray(nrows[0].items)) _wpNotes=nrows[0].items;
+  }catch(e){}
   wpRender();
+  wpRenderNotes();
 }
+function wpRenderNotes(){
+  const el=document.getElementById('wp-notes');
+  if(!_wpNotes.length){ el.innerHTML='<div style="font-size:11px;color:var(--text3);padding:6px 2px">등록된 비고가 없습니다. "+ 비고 추가"로 입력하세요.</div>'; return; }
+  el.innerHTML=_wpNotes.map((nt,i)=>`
+    <div style="display:flex;gap:8px;margin-bottom:6px;align-items:center">
+      <input type="text" value="${esc(nt.label||'')}" placeholder="날짜/기간 (예: 6/10~11)" onchange="wpOnNote(${i},'label',this.value)" style="width:160px;margin-bottom:0;font-size:12px">
+      <input type="text" value="${esc(nt.text||'')}" placeholder="내용 (예: Maruho MX Audit)" onchange="wpOnNote(${i},'text',this.value)" style="flex:1;margin-bottom:0;font-size:12px">
+      <button class="btn btn-secondary btn-sm" onclick="wpRemoveNote(${i})" style="border-color:var(--danger);color:var(--danger);flex-shrink:0">✕</button>
+    </div>`).join('');
+}
+function wpAddNote(){ _wpNotes.push({label:'',text:''}); wpRenderNotes(); }
+function wpRemoveNote(i){ _wpNotes.splice(i,1); wpRenderNotes(); }
+function wpOnNote(i,k,v){ if(_wpNotes[i]) _wpNotes[i][k]=v; }
 function wpToggleDay(d){
   if(_wpWorkdays.has(d)){ _wpWorkdays.delete(d); _wpEmps.forEach((_,i)=>_wpPlan[i][d-1]=0); }
   else { _wpWorkdays.add(d); _wpEmps.forEach((_,i)=>_wpPlan[i][d-1]=WP_STD); }
@@ -3267,29 +3307,28 @@ function wpRender(){
   let h='<thead><tr><th style="text-align:left;padding-left:8px;position:sticky;left:0;background:var(--surface);z-index:2">이름</th><th style="font-size:9px">구분</th>';
   for(let d=1;d<=n;d++){
     const dw=_wpDow(_wpYear,_wpMonth,d), wd=_wpWorkdays.has(d);
-    const dc=dw===0?'color:var(--danger,#ff453a)':dw===6?'color:var(--accent)':'';
-    h+=`<th onclick="wpToggleDay(${d})" style="cursor:pointer;user-select:none;min-width:30px;padding:2px 1px;${wd?'':'background:rgba(128,128,128,.06)'}">
+    const dc=dw===0?'color:var(--danger)':dw===6?'color:var(--accent)':'';
+    h+=`<th onclick="wpToggleDay(${d})" style="cursor:pointer;user-select:none;min-width:44px;padding:2px 1px;${wd?'':'background:rgba(128,128,128,.06)'}">
       <span style="font-size:11px;font-weight:700;${dc}">${d}</span><br><span style="font-size:9px;${dc}">${WP_DOW[dw]}</span><br><span style="font-size:8px;color:var(--text3)">${wd?'●':'○'}</span></th>`;
   }
-  h+='<th style="font-size:9px">합계</th><th style="font-size:9px;color:#1d9e75">기본</th><th style="font-size:9px;color:var(--warn)">초과</th></tr></thead><tbody>';
+  h+='<th style="font-size:9px;min-width:60px">계획시간</th></tr></thead><tbody>';
   _wpEmps.forEach((emp,ei)=>{
     const r=_wpCalcP(_wpPlan[ei]); const ok=Math.abs(r.total-target)<0.05;
     h+=`<tr><td rowspan="2" style="text-align:left;padding-left:8px;font-weight:600;white-space:nowrap;position:sticky;left:0;background:var(--surface);z-index:1">${esc(emp.name)}</td><td style="font-size:9px;color:var(--text3)">퇴근</td>`;
     for(let d=1;d<=n;d++){ const wd=_wpWorkdays.has(d),hv=_wpPlan[ei][d-1];
       const cc=hv>WP_STD?'color:var(--warn)':hv<WP_STD&&hv>0?'color:var(--accent)':'color:#1d9e75';
-      h+=wd?`<td style="font-size:9px;font-family:'JetBrains Mono',monospace;${cc}">${_wpCheckout(hv)}</td>`:`<td style="background:rgba(128,128,128,.06);color:var(--text3);font-size:9px">-</td>`; }
-    h+=`<td rowspan="2" style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;${ok?'color:#3b6d11':'color:var(--danger,#ff453a)'}">${r.total.toFixed(1)}h</td>
-        <td rowspan="2" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#1d9e75">${r.base.toFixed(1)}</td>
-        <td rowspan="2" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--warn)">${r.ot.toFixed(1)}</td></tr>`;
+      h+=wd?`<td style="font-size:10px;font-family:'JetBrains Mono',monospace;${cc}">${_wpCheckout(hv)}</td>`:`<td style="background:rgba(128,128,128,.06);color:var(--text3);font-size:9px">-</td>`; }
+    h+=`<td rowspan="2" style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;${ok?'color:#3b6d11':'color:var(--danger)'}">${r.total.toFixed(1)}h</td></tr>`;
     h+=`<tr style="background:var(--surface2)"><td style="font-size:9px;color:var(--text3)">근무h</td>`;
     for(let d=1;d<=n;d++){ const wd=_wpWorkdays.has(d),hv=_wpPlan[ei][d-1];
       const bc=hv>WP_STD?'border-color:var(--warn)':hv<WP_STD&&hv>0?'border-color:var(--accent)':'';
-      h+=wd?`<td><input type="number" step="0.5" min="0" max="14" value="${hv}" onchange="wpOnHr(${ei},${d-1},this.value)" style="width:30px;padding:2px 1px;font-size:10px;text-align:center;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:inherit;${bc}"></td>`:`<td style="background:rgba(128,128,128,.06);color:var(--text3);font-size:9px">-</td>`; }
+      h+=wd?`<td><input type="number" step="0.5" min="0" max="14" value="${hv}" onchange="wpOnHr(${ei},${d-1},this.value)" style="width:42px;padding:2px 3px;font-size:11px;text-align:center;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:inherit;${bc}"></td>`:`<td style="background:rgba(128,128,128,.06);color:var(--text3);font-size:9px">-</td>`; }
     h+='</tr>';
   });
   h+='</tbody>';
   document.getElementById('wp-table').innerHTML=h;
-  document.getElementById('wp-formula').innerHTML=`8h → 퇴근 <b style="color:#1d9e75">${_wpCheckout(8)}</b> · 근무일 ${wdN}일 · 월목표 ${target}h`;
+  document.getElementById('wp-formula').innerHTML=`8h → 퇴근 <b style="color:#1d9e75">${_wpCheckout(8)}</b> · 근무일 ${wdN}일`;
+  document.getElementById('wp-target').textContent=`월목표 ${target}h`;
 }
 async function wpSave(){
   const ym=`${_wpYear}-${String(_wpMonth).padStart(2,'0')}`;
@@ -3302,6 +3341,9 @@ async function wpSave(){
     const res=await fetch(`${API}/work_plans?on_conflict=ym,employee_id`,{
       method:'POST', headers:{...H,'Prefer':'resolution=merge-duplicates,return=minimal'}, body:JSON.stringify(payload) });
     if(!res.ok) throw new Error('save failed');
+    // 비고 저장 (빈 행 제외)
+    const items=_wpNotes.filter(nt=>(nt.label||'').trim()||(nt.text||'').trim());
+    await fetch(`${API}/work_plan_notes?on_conflict=ym`,{method:'POST',headers:{...H,'Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify([{ym,items,updated_at:new Date().toISOString()}])}).catch(()=>{});
     document.getElementById('wp-status').textContent=`저장됨 ${new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}`;
     showToast(`${ym} 근무계획 저장됨`,'success');
   }catch(e){ showToast('저장 실패 - DB 테이블(work_plans) 확인','error'); }
@@ -3326,20 +3368,20 @@ function wpExportExcel(){
   aoa.push([]);
   const hdr=['이름','구분'];
   for(let d=1;d<=n;d++){ hdr.push(`${d}(${WP_DOW[_wpDow(_wpYear,_wpMonth,d)]})`); }
-  hdr.push('합계(h)','기본(h)','초과(h)'); aoa.push(hdr);
+  hdr.push('계획시간(h)'); aoa.push(hdr);
   const merges=[]; const lastCol=2+n;
   _wpEmps.forEach((emp,ei)=>{
     const r=_wpCalcP(_wpPlan[ei]); const rb=aoa.length;
     const co=[emp.name,'퇴근시간']; for(let d=1;d<=n;d++){ co.push(_wpWorkdays.has(d)?_wpCheckout(_wpPlan[ei][d-1]):'-'); }
-    co.push(r.total.toFixed(1), r.base.toFixed(1), r.ot.toFixed(1)); aoa.push(co);
-    const wh=['','근무h']; for(let d=1;d<=n;d++){ wh.push(_wpWorkdays.has(d)?_wpPlan[ei][d-1]:'-'); } wh.push('','',''); aoa.push(wh);
+    co.push(r.total.toFixed(1)); aoa.push(co);
+    const wh=['','근무h']; for(let d=1;d<=n;d++){ wh.push(_wpWorkdays.has(d)?_wpPlan[ei][d-1]:'-'); } wh.push(''); aoa.push(wh);
     merges.push({s:{r:rb,c:0},e:{r:rb+1,c:0}});
     merges.push({s:{r:rb,c:lastCol},e:{r:rb+1,c:lastCol}});
-    merges.push({s:{r:rb,c:lastCol+1},e:{r:rb+1,c:lastCol+1}});
-    merges.push({s:{r:rb,c:lastCol+2},e:{r:rb+1,c:lastCol+2}});
   });
+  const notes=_wpNotes.filter(nt=>(nt.label||'').trim()||(nt.text||'').trim());
+  if(notes.length){ aoa.push([]); aoa.push(['[비고]']); notes.forEach(nt=>aoa.push([nt.label||'', nt.text||''])); }
   const ws=XLSX.utils.aoa_to_sheet(aoa); ws['!merges']=merges;
-  const colW=[{wch:10},{wch:9}]; for(let d=0;d<n;d++)colW.push({wch:7}); colW.push({wch:9},{wch:8},{wch:8}); ws['!cols']=colW;
+  const colW=[{wch:10},{wch:9}]; for(let d=0;d<n;d++)colW.push({wch:7}); colW.push({wch:11}); ws['!cols']=colW;
   const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,`${_wpYear}년${_wpMonth}월`);
   XLSX.writeFile(wb,`근무계획_${_wpYear}년${String(_wpMonth).padStart(2,'0')}월.xlsx`);
   showToast('엑셀 저장 완료','success');
@@ -3378,6 +3420,16 @@ async function mpLoadMonth(){
     for(let d=1;d<=n;d++){ if(!_wpIsWe(_mpYear,_mpMonth,d)){ _mpWorkdays.add(d); _mpPlan[d-1]=WP_STD; } }
   }
   document.getElementById('mp-status').textContent=loaded?'저장된 계획 불러옴':'기본값(평일 8h) 적용 — 저장 필요';
+  // 비고(관리자 작성) 읽기 전용 표시
+  let notes=[];
+  try{
+    const nres=await fetch(`${API}/work_plan_notes?ym=eq.${ym}&select=*`,{headers:H});
+    const nrows=await nres.json();
+    if(Array.isArray(nrows)&&nrows[0]&&Array.isArray(nrows[0].items)) notes=nrows[0].items;
+  }catch(e){}
+  const nv=document.getElementById('mp-notes-view');
+  const valid=notes.filter(nt=>(nt.label||'').trim()||(nt.text||'').trim());
+  nv.innerHTML=valid.length?`<div style="font-size:12px;font-weight:700;margin-bottom:6px">📝 이달 비고</div>`+valid.map(nt=>`<div style="font-size:12px;color:var(--text2);padding:3px 0"><b style="color:var(--accent)">${esc(nt.label||'')}</b> ${esc(nt.text||'')}</div>`).join(''):'';
   mpRender();
 }
 function mpToggleDay(d){
@@ -3397,21 +3449,20 @@ function mpRender(){
     h+=`<th onclick="mpToggleDay(${d})" style="cursor:pointer;user-select:none;min-width:30px;padding:2px 1px;${wd?'':'background:rgba(128,128,128,.06)'}">
       <span style="font-size:11px;font-weight:700;${dc}">${d}</span><br><span style="font-size:9px;${dc}">${WP_DOW[dw]}</span><br><span style="font-size:8px;color:var(--text3)">${wd?'●':'○'}</span></th>`;
   }
-  h+='<th style="font-size:9px">합계</th><th style="font-size:9px;color:#1d9e75">기본</th><th style="font-size:9px;color:var(--warn)">초과</th></tr></thead><tbody>';
+  h+='<th style="font-size:9px;min-width:60px">계획시간</th></tr></thead><tbody>';
   h+='<tr><td style="font-size:9px;color:var(--text3)">퇴근</td>';
   for(let d=1;d<=n;d++){ const wd=_mpWorkdays.has(d),hv=_mpPlan[d-1];
     const cc=hv>WP_STD?'color:var(--warn)':hv<WP_STD&&hv>0?'color:var(--accent)':'color:#1d9e75';
-    h+=wd?`<td style="font-size:9px;font-family:'JetBrains Mono',monospace;${cc}">${_wpCheckout(hv)}</td>`:`<td style="background:rgba(128,128,128,.06);color:var(--text3);font-size:9px">-</td>`; }
-  h+=`<td rowspan="2" style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;${ok?'color:#3b6d11':'color:var(--danger)'}">${r.total.toFixed(1)}h</td>
-      <td rowspan="2" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#1d9e75">${r.base.toFixed(1)}</td>
-      <td rowspan="2" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--warn)">${r.ot.toFixed(1)}</td></tr>`;
+    h+=wd?`<td style="font-size:10px;font-family:'JetBrains Mono',monospace;${cc}">${_wpCheckout(hv)}</td>`:`<td style="background:rgba(128,128,128,.06);color:var(--text3);font-size:9px">-</td>`; }
+  h+=`<td rowspan="2" style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;${ok?'color:#3b6d11':'color:var(--danger)'}">${r.total.toFixed(1)}h</td></tr>`;
   h+='<tr style="background:var(--surface2)"><td style="font-size:9px;color:var(--text3)">근무h</td>';
   for(let d=1;d<=n;d++){ const wd=_mpWorkdays.has(d),hv=_mpPlan[d-1];
     const bc=hv>WP_STD?'border-color:var(--warn)':hv<WP_STD&&hv>0?'border-color:var(--accent)':'';
-    h+=wd?`<td><input type="number" step="0.5" min="0" max="14" value="${hv}" onchange="mpOnHr(${d-1},this.value)" style="width:30px;padding:2px 1px;font-size:10px;text-align:center;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:inherit;${bc}"></td>`:`<td style="background:rgba(128,128,128,.06);color:var(--text3);font-size:9px">-</td>`; }
+    h+=wd?`<td><input type="number" step="0.5" min="0" max="14" value="${hv}" onchange="mpOnHr(${d-1},this.value)" style="width:42px;padding:2px 3px;font-size:11px;text-align:center;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:inherit;${bc}"></td>`:`<td style="background:rgba(128,128,128,.06);color:var(--text3);font-size:9px">-</td>`; }
   h+='</tr></tbody>';
   document.getElementById('mp-table').innerHTML=h;
-  document.getElementById('mp-status').textContent=`근무일 ${wdN}일 · 월목표 ${target}h · 계획합계 ${r.total.toFixed(1)}h`;
+  document.getElementById('mp-status').textContent=`근무일 ${wdN}일 · 계획합계 ${r.total.toFixed(1)}h`;
+  document.getElementById('mp-target').textContent=`월목표 ${target}h`;
 }
 async function mpSave(){
   const ym=`${_mpYear}-${String(_mpMonth).padStart(2,'0')}`;
@@ -3430,11 +3481,11 @@ function mpExportExcel(){
   const aoa=[];
   aoa.push([`${currentUser.name} ${_mpYear}년 ${_mpMonth}월 근무계획`,'',`근무일: ${wdN}일`,`월목표: ${target}h`]);
   aoa.push([]);
-  const hdr=['구분']; for(let d=1;d<=n;d++){ hdr.push(`${d}(${WP_DOW[_wpDow(_mpYear,_mpMonth,d)]})`); } hdr.push('합계(h)','기본(h)','초과(h)'); aoa.push(hdr);
-  const co=['퇴근시간']; for(let d=1;d<=n;d++){ co.push(_mpWorkdays.has(d)?_wpCheckout(_mpPlan[d-1]):'-'); } co.push(r.total.toFixed(1),r.base.toFixed(1),r.ot.toFixed(1)); aoa.push(co);
-  const wh=['근무h']; for(let d=1;d<=n;d++){ wh.push(_mpWorkdays.has(d)?_mpPlan[d-1]:'-'); } wh.push('','',''); aoa.push(wh);
+  const hdr=['구분']; for(let d=1;d<=n;d++){ hdr.push(`${d}(${WP_DOW[_wpDow(_mpYear,_mpMonth,d)]})`); } hdr.push('계획시간(h)'); aoa.push(hdr);
+  const co=['퇴근시간']; for(let d=1;d<=n;d++){ co.push(_mpWorkdays.has(d)?_wpCheckout(_mpPlan[d-1]):'-'); } co.push(r.total.toFixed(1)); aoa.push(co);
+  const wh=['근무h']; for(let d=1;d<=n;d++){ wh.push(_mpWorkdays.has(d)?_mpPlan[d-1]:'-'); } wh.push(''); aoa.push(wh);
   const ws=XLSX.utils.aoa_to_sheet(aoa);
-  const colW=[{wch:9}]; for(let d=0;d<n;d++)colW.push({wch:7}); colW.push({wch:9},{wch:8},{wch:8}); ws['!cols']=colW;
+  const colW=[{wch:9}]; for(let d=0;d<n;d++)colW.push({wch:7}); colW.push({wch:11}); ws['!cols']=colW;
   const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,`${_mpYear}년${_mpMonth}월`);
   XLSX.writeFile(wb,`내근무계획_${currentUser.name}_${_mpYear}년${String(_mpMonth).padStart(2,'0')}월.xlsx`);
   showToast('엑셀 저장 완료','success');
