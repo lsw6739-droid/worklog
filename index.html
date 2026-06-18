@@ -406,6 +406,7 @@ html[data-theme="dark"] .badge-warn{background:rgba(255,159,10,.18);color:#ff9f0
       <div class="sb-divider admin-only" style="display:none"></div>
       <div class="sb-section-label admin-only" style="display:none">관리자</div>
       <div class="tab admin-only" data-page="team" style="display:none">📊 팀현황</div>
+      <div class="tab admin-only" data-page="workplan" style="display:none">📅 근무계획</div>
       <div class="tab admin-only" data-page="teamtodo" style="display:none">✅ 팀 할일</div>
       <div class="tab admin-only" data-page="report" style="display:none">📄 리포트</div>
       <div class="tab admin-only" data-page="admin" style="display:none">⚙️ 관리</div>
@@ -590,6 +591,38 @@ html[data-theme="dark"] .badge-warn{background:rgba(255,159,10,.18);color:#ff9f0
       <div class="card"><div class="card-title">🏷️ <span>분류별 공수</span></div><div id="team-category-stats"><div class="empty"><div class="empty-icon">🏷️</div><p>조회 버튼을 눌러주세요</p></div></div></div>
       <div class="card"><div class="card-title">🏖️ <span>팀 근태 현황</span></div><div id="team-attend-stats"><div class="empty"><div class="empty-icon">🏖️</div><p>조회 버튼을 눌러주세요</p></div></div></div>
       <div class="card"><div class="card-title">📋 <span>전체 일지</span></div><div class="table-wrap"><div id="team-log-table"><div class="empty"><div class="empty-icon">📋</div><p>조회 버튼을 눌러주세요</p></div></div></div></div>
+    </div>
+    <!-- 근무계획 (관리자) -->
+    <div class="page" id="page-workplan">
+      <div class="card">
+        <div class="card-title">📅 월간 <span>근무계획</span></div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:4px">
+            <button class="btn btn-secondary btn-sm" onclick="wpChangeMonth(-1)">‹</button>
+            <span id="wp-month-title" style="font-size:15px;font-weight:700;min-width:96px;text-align:center"></span>
+            <button class="btn btn-secondary btn-sm" onclick="wpChangeMonth(1)">›</button>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="wpSave()">💾 저장</button>
+          <button class="btn btn-secondary btn-sm" onclick="wpExportExcel()" style="border-color:var(--accent);color:var(--accent)">📊 엑셀 저장</button>
+          <span id="wp-status" style="font-size:11px;color:var(--text3)"></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:12px">
+          <span class="attend-quarter" style="white-space:nowrap">점심 제외</span>
+          <input type="time" id="wp-lunch-start" onchange="wpRender()" style="width:auto;margin-bottom:0;padding:4px 6px">~
+          <input type="time" id="wp-lunch-end" onchange="wpRender()" style="width:auto;margin-bottom:0;padding:4px 6px">
+          <span style="color:var(--text3)">|</span>
+          <span class="attend-half" style="white-space:nowrap">저녁 제외</span>
+          <input type="time" id="wp-dinner-start" onchange="wpRender()" style="width:auto;margin-bottom:0;padding:4px 6px">~
+          <input type="time" id="wp-dinner-end" onchange="wpRender()" style="width:auto;margin-bottom:0;padding:4px 6px">
+          <button class="btn btn-secondary btn-sm" onclick="wpSaveSettings()">제외시간 저장</button>
+          <span id="wp-formula" style="margin-left:auto;font-size:11px;color:var(--text2)"></span>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:8px">날짜 헤더 클릭 → 근무일(●)/비근무일(○) 전환 · 셀에 기본 근무시간 직접 입력 · 기본값 8.0h</div>
+        <div class="table-wrap" style="overflow-x:auto"><table id="wp-table"></table></div>
+        <div style="font-size:11px;color:var(--text2);margin-top:10px;padding:8px 12px;border:1px solid var(--accent2);border-radius:8px;background:rgba(52,199,89,.06);line-height:1.6">
+          이 표의 근무시간이 <b>일별 기본근무 기준</b>입니다. 실제 업무일지(공수)에서 기준 이내 → <b style="color:#1d9e75">기본근무</b>, 기준 초과 → <b style="color:var(--warn)">초과근무</b>로 팀현황·대시보드에 반영됩니다.
+        </div>
+      </div>
     </div>
     <!-- 팀 할일 (관리자) -->
     <div class="page" id="page-teamtodo">
@@ -788,6 +821,31 @@ create table if not exists user_templates (
 );
 alter table user_templates enable row level security;
 create policy "allow_all" on user_templates for all using (true);
+-- 근무계획 (월별 인원별 일일 기본근무 기준시간)
+create table if not exists work_plans (
+  id uuid default gen_random_uuid() primary key,
+  ym text not null,                         -- 'YYYY-MM'
+  employee_id uuid references employees(id),
+  base_hours jsonb not null default '{}',   -- {"1":8,"2":8,...} 일(day)→기본근무 기준시간(0/없음=비근무)
+  updated_at timestamptz default now(),
+  unique(ym, employee_id)
+);
+alter table work_plans enable row level security;
+create policy "allow_all" on work_plans for all using (true);
+-- 표준 근무 설정 (단일 행 id=1)
+create table if not exists work_settings (
+  id int primary key default 1,
+  daily_hours numeric(4,1) default 8,
+  lunch_start text default '11:50',
+  lunch_end   text default '12:50',
+  dinner_start text default '17:30',
+  dinner_end   text default '18:00',
+  updated_at timestamptz default now(),
+  constraint single_row check (id = 1)
+);
+insert into work_settings (id) values (1) on conflict (id) do nothing;
+alter table work_settings enable row level security;
+create policy "allow_all" on work_settings for all using (true);
 -- RLS
 alter table todos enable row level security;
 alter table notices enable row level security;
@@ -1002,6 +1060,7 @@ create policy "allow_all" on attends for all using (true);</pre>
 </div>
 <div id="toast"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 const SUPABASE_URL='https://uulemznemzjlgzqhrchb.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1bGVtem5lbXpqbGd6cWhyY2hiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MTc3MzQsImV4cCI6MjA5Mzk5MzczNH0.cy3jWrFez0pO0vl3nOOUMiv-511IzQiTcNxTK8Jejrg';
@@ -1176,6 +1235,8 @@ function switchPage(p){
   } else if(p==='team'){
     // 팀 현황 → 오늘
     setTeamPeriod('today');
+  } else if(p==='workplan'){
+    initWorkPlan();
   } else if(p==='teamtodo'){
     // 팀 할일 → 자동 조회
     loadTeamTodos();
@@ -3017,10 +3078,13 @@ async function loadTeamStats(){
     let url=`${API}/work_logs?log_date=gte.${start}&log_date=lte.${end}&select=*,categories(name),employees(name,emp_id)`;if(mf)url+=`&employee_id=eq.${mf}`;
     const [logsRes,attendRes]=await Promise.all([fetch(url,{headers:H}),fetch(`${API}/attends?start_date=lte.${end}&end_date=gte.${start}&select=*,employees(name,emp_id)`,{headers:H})]);
     const logs=await logsRes.json(),attends=await attendRes.json();
+    await loadWorkPlans(start,end);
+    const cls=classifyByEmployee(logs);
     const totalH=logs.reduce((s,l)=>s+Number(l.hours),0);const members=new Set(logs.map(l=>l.employee_id)).size;const avgH=members>0?totalH/members:0;
     document.getElementById('team-total-hours').textContent=totalH.toFixed(1);document.getElementById('team-member-cnt').textContent=members;document.getElementById('team-avg-hours').textContent=avgH.toFixed(1);
     const byM={};
-    logs.forEach(l=>{const k=l.employee_id;if(!byM[k])byM[k]={name:l.employees?.name,empId:l.employees?.emp_id,hours:0,cnt:0,excludeH:0};byM[k].hours+=Number(l.hours);byM[k].cnt++;});
+    logs.forEach(l=>{const k=l.employee_id;if(!byM[k])byM[k]={name:l.employees?.name,empId:l.employees?.emp_id,hours:0,cnt:0,excludeH:0,base:0,ot:0};byM[k].hours+=Number(l.hours);byM[k].cnt++;});
+    Object.keys(byM).forEach(k=>{ const c=cls[k]; byM[k].base=c?c.base:0; byM[k].ot=c?c.ot:0; });
     attends.forEach(a=>{if(byM[a.employee_id])byM[a.employee_id].excludeH+=Number(a.exclude_hours||0);});
     const maxH=Math.max(...Object.values(byM).map(v=>v.hours),1);
     document.getElementById('team-member-stats').innerHTML=Object.values(byM).sort((a,b)=>b.hours-a.hours).map(v=>`
@@ -3029,8 +3093,15 @@ async function loadTeamStats(){
           <span style="font-size:13px">${v.name} <span style="color:var(--text3);font-size:11px">${v.empId}</span></span>
           <span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent2)">${v.hours.toFixed(1)}h${v.excludeH>0?`<span style="font-size:10px;color:var(--warn)"> (근태-${v.excludeH}h)</span>`:''}</span>
         </div>
-        <div class="progress-bar"><div class="progress-fill" style="width:${(v.hours/maxH*100).toFixed(0)}%"></div></div>
-        <div style="font-size:10px;color:var(--text3);margin-top:3px">${v.cnt}건</div>
+        <div style="display:flex;height:8px;background:rgba(0,0,0,0.07);border-radius:3px;overflow:hidden">
+          <div style="width:${(v.base/maxH*100).toFixed(1)}%;background:#1d9e75" title="기본근무 ${v.base.toFixed(1)}h"></div>
+          <div style="width:${(v.ot/maxH*100).toFixed(1)}%;background:var(--warn)" title="초과근무 ${v.ot.toFixed(1)}h"></div>
+        </div>
+        <div style="font-size:10px;margin-top:3px;display:flex;gap:10px">
+          <span style="color:#1d9e75">기본근무 ${v.base.toFixed(1)}h</span>
+          <span style="color:var(--warn)">연장근무 ${v.ot.toFixed(1)}h</span>
+          <span style="color:var(--text3);margin-left:auto">${v.cnt}건</span>
+        </div>
       </div>`).join('')||'<div class="empty"><div class="empty-icon">📭</div><p>데이터 없음</p></div>';
     const byCat={};logs.forEach(l=>{const k=l.categories?.name||'미분류';byCat[k]=(byCat[k]||0)+Number(l.hours);});
     document.getElementById('team-category-stats').innerHTML=`<div class="chip-row">${Object.entries(byCat).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="chip">${k}: <strong>${v.toFixed(1)}h</strong></div>`).join('')}</div>${Object.entries(byCat).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:11px;color:var(--text2);width:72px">${k}</span><div style="flex:1"><div class="progress-bar"><div class="progress-fill" style="width:${totalH>0?(v/totalH*100).toFixed(0):0}%"></div></div></div><span style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--accent2);width:40px;text-align:right">${v.toFixed(1)}h</span></div>`).join('')}`;
@@ -3038,6 +3109,208 @@ async function loadTeamStats(){
     else{_teamAttendData=attends;renderTeamAttendTable();}
     renderLogList(document.getElementById('team-log-table'),logs,false);
   }catch(e){document.getElementById('team-log-table').innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><p>Supabase 연결 필요</p></div>';}
+}
+
+// ─────────────────────────────────────────────
+// 근무계획 / 기본·초과 근무 분류
+// ─────────────────────────────────────────────
+const WP_STD = 8;                 // 표준 일일 근무시간
+let WORK_PLANS = {};              // empId → ym → {day(string): hours}
+let WORK_SETTINGS = { daily_hours:8, lunch_start:'11:50', lunch_end:'12:50', dinner_start:'17:30', dinner_end:'18:00' };
+
+function wpIsWeekend(dateStr){ const dw=new Date(dateStr+'T00:00:00').getDay(); return dw===0||dw===6; }
+function wpMonthsBetween(start,end){
+  const out=[]; const s=new Date(start.slice(0,7)+'-01T00:00:00'); const e=new Date(end.slice(0,7)+'-01T00:00:00');
+  while(s<=e){ out.push(`${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,'0')}`); s.setMonth(s.getMonth()+1); }
+  return out;
+}
+// 특정 인원/날짜의 기본근무 기준시간 (계획 미설정 시 평일 8h / 주말 0)
+function planBaseline(empId, dateStr){
+  const ym=dateStr.slice(0,7), day=String(parseInt(dateStr.slice(8,10),10));
+  const ep=WORK_PLANS[empId];
+  if(ep && ep[ym]){ const v=ep[ym][day]; return v==null?0:Number(v); }
+  return wpIsWeekend(dateStr)?0:WP_STD;
+}
+// logs → { empId: {base, ot, total} }  (일별 기본근무 기준으로 분류)
+function classifyByEmployee(logs){
+  const byDay={};
+  logs.forEach(l=>{ const e=l.employee_id,d=l.log_date; if(!e||!d)return; (byDay[e]=byDay[e]||{}); byDay[e][d]=(byDay[e][d]||0)+Number(l.hours||0); });
+  const out={};
+  for(const e in byDay){
+    let base=0,ot=0;
+    for(const d in byDay[e]){ const tot=byDay[e][d], cap=planBaseline(e,d), b=Math.min(tot,cap); base+=b; ot+=tot-b; }
+    out[e]={base:+base.toFixed(1), ot:+ot.toFixed(1), total:+(base+ot).toFixed(1)};
+  }
+  return out;
+}
+async function loadWorkPlans(start,end){
+  WORK_PLANS={};
+  const yms=wpMonthsBetween(start,end);
+  if(!yms.length) return;
+  try{
+    const res=await fetch(`${API}/work_plans?ym=in.(${yms.map(y=>`"${y}"`).join(',')})&select=*`,{headers:H});
+    const rows=await res.json();
+    if(Array.isArray(rows)) rows.forEach(r=>{ (WORK_PLANS[r.employee_id]=WORK_PLANS[r.employee_id]||{})[r.ym]=r.base_hours||{}; });
+  }catch(e){ WORK_PLANS={}; }
+}
+async function loadWorkSettings(){
+  try{
+    const res=await fetch(`${API}/work_settings?id=eq.1&select=*`,{headers:H});
+    const rows=await res.json();
+    if(Array.isArray(rows)&&rows[0]) WORK_SETTINGS=rows[0];
+  }catch(e){}
+}
+
+// ─── 근무계획 플래너 ───
+let _wpYear, _wpMonth, _wpWorkdays=new Set(), _wpPlan=[], _wpEmps=[];
+const WP_DOW=['일','월','화','수','목','금','토'];
+function _wpToMin(t){ if(!t||!t.includes(':'))return 0; const[h,m]=t.split(':').map(Number); return h*60+m; }
+function _wpToStr(m){ return `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`; }
+function _wpDaysIn(y,m){ return new Date(y,m,0).getDate(); }
+function _wpDow(y,m,d){ return new Date(y,m-1,d).getDay(); }
+function _wpIsWe(y,m,d){ const w=_wpDow(y,m,d); return w===0||w===6; }
+function _wpBreaks(){ return {
+  ls:_wpToMin(document.getElementById('wp-lunch-start').value), le:_wpToMin(document.getElementById('wp-lunch-end').value),
+  ds:_wpToMin(document.getElementById('wp-dinner-start').value), de:_wpToMin(document.getElementById('wp-dinner-end').value) }; }
+function _wpCheckout(h){
+  if(!h||h<=0) return '-';
+  const{ls,le,ds,de}=_wpBreaks(), WS=_wpToMin('08:30'), nm=Math.round(h*60), p1=ls-WS;
+  if(nm<=p1) return _wpToStr(WS+nm);
+  let r=nm-p1; if(r<=ds-le) return _wpToStr(le+r);
+  r-=ds-le; return _wpToStr(de+r);
+}
+function _wpCalcP(row){ let b=0,o=0; row.forEach(h=>{ if(h>0){ b+=Math.min(h,WP_STD); o+=Math.max(0,h-WP_STD); }}); return {base:+b.toFixed(1),ot:+o.toFixed(1),total:+(b+o).toFixed(1)}; }
+
+async function initWorkPlan(){
+  if(!allEmployees.length){ await loadUsers(); }
+  await loadWorkSettings();
+  document.getElementById('wp-lunch-start').value=WORK_SETTINGS.lunch_start||'11:50';
+  document.getElementById('wp-lunch-end').value=WORK_SETTINGS.lunch_end||'12:50';
+  document.getElementById('wp-dinner-start').value=WORK_SETTINGS.dinner_start||'17:30';
+  document.getElementById('wp-dinner-end').value=WORK_SETTINGS.dinner_end||'18:00';
+  const t=new Date();
+  _wpYear=t.getFullYear(); _wpMonth=t.getMonth()+1;
+  await wpLoadMonth();
+}
+function wpChangeMonth(delta){
+  _wpMonth+=delta; if(_wpMonth>12){_wpMonth=1;_wpYear++;} if(_wpMonth<1){_wpMonth=12;_wpYear--;}
+  wpLoadMonth();
+}
+async function wpLoadMonth(){
+  _wpEmps=allEmployees.slice();
+  const ym=`${_wpYear}-${String(_wpMonth).padStart(2,'0')}`;
+  const n=_wpDaysIn(_wpYear,_wpMonth);
+  _wpWorkdays=new Set();
+  _wpPlan=_wpEmps.map(()=>Array(n).fill(0));
+  let loaded=false;
+  try{
+    const res=await fetch(`${API}/work_plans?ym=eq.${ym}&select=*`,{headers:H});
+    const rows=await res.json();
+    if(Array.isArray(rows)&&rows.length){
+      loaded=true;
+      _wpEmps.forEach((emp,ei)=>{
+        const row=rows.find(r=>r.employee_id===emp.id);
+        const bh=row?(row.base_hours||{}):{};
+        for(let d=1;d<=n;d++){ const v=bh[String(d)]; if(v!=null&&Number(v)>0){ _wpPlan[ei][d-1]=Number(v); _wpWorkdays.add(d); } }
+      });
+    }
+  }catch(e){}
+  if(!loaded){
+    // 기본값: 평일 8h 근무, 주말 비근무
+    for(let d=1;d<=n;d++){ if(!_wpIsWe(_wpYear,_wpMonth,d)) _wpWorkdays.add(d); }
+    _wpEmps.forEach((_,ei)=>{ for(let d=1;d<=n;d++){ _wpPlan[ei][d-1]=_wpWorkdays.has(d)?WP_STD:0; } });
+  }
+  document.getElementById('wp-status').textContent=loaded?'저장된 계획 불러옴':'기본값(평일 8h) 적용 — 저장 필요';
+  wpRender();
+}
+function wpToggleDay(d){
+  if(_wpWorkdays.has(d)){ _wpWorkdays.delete(d); _wpEmps.forEach((_,i)=>_wpPlan[i][d-1]=0); }
+  else { _wpWorkdays.add(d); _wpEmps.forEach((_,i)=>_wpPlan[i][d-1]=WP_STD); }
+  wpRender();
+}
+function wpOnHr(ei,di,v){ _wpPlan[ei][di]=parseFloat(v)||0; wpRender(); }
+function wpRender(){
+  document.getElementById('wp-month-title').textContent=`${_wpYear}년 ${_wpMonth}월`;
+  const n=_wpDaysIn(_wpYear,_wpMonth), wdN=_wpWorkdays.size, target=wdN*WP_STD;
+  let h='<thead><tr><th style="text-align:left;padding-left:8px;position:sticky;left:0;background:var(--surface);z-index:2">이름</th><th style="font-size:9px">구분</th>';
+  for(let d=1;d<=n;d++){
+    const dw=_wpDow(_wpYear,_wpMonth,d), wd=_wpWorkdays.has(d);
+    const dc=dw===0?'color:var(--danger,#ff453a)':dw===6?'color:var(--accent)':'';
+    h+=`<th onclick="wpToggleDay(${d})" style="cursor:pointer;user-select:none;min-width:30px;padding:2px 1px;${wd?'':'background:rgba(128,128,128,.06)'}">
+      <span style="font-size:11px;font-weight:700;${dc}">${d}</span><br><span style="font-size:9px;${dc}">${WP_DOW[dw]}</span><br><span style="font-size:8px;color:var(--text3)">${wd?'●':'○'}</span></th>`;
+  }
+  h+='<th style="font-size:9px">합계</th><th style="font-size:9px;color:#1d9e75">기본</th><th style="font-size:9px;color:var(--warn)">초과</th></tr></thead><tbody>';
+  _wpEmps.forEach((emp,ei)=>{
+    const r=_wpCalcP(_wpPlan[ei]); const ok=Math.abs(r.total-target)<0.05;
+    h+=`<tr><td rowspan="2" style="text-align:left;padding-left:8px;font-weight:600;white-space:nowrap;position:sticky;left:0;background:var(--surface);z-index:1">${esc(emp.name)}</td><td style="font-size:9px;color:var(--text3)">퇴근</td>`;
+    for(let d=1;d<=n;d++){ const wd=_wpWorkdays.has(d),hv=_wpPlan[ei][d-1];
+      const cc=hv>WP_STD?'color:var(--warn)':hv<WP_STD&&hv>0?'color:var(--accent)':'color:#1d9e75';
+      h+=wd?`<td style="font-size:9px;font-family:'JetBrains Mono',monospace;${cc}">${_wpCheckout(hv)}</td>`:`<td style="background:rgba(128,128,128,.06);color:var(--text3);font-size:9px">-</td>`; }
+    h+=`<td rowspan="2" style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;${ok?'color:#3b6d11':'color:var(--danger,#ff453a)'}">${r.total.toFixed(1)}h</td>
+        <td rowspan="2" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#1d9e75">${r.base.toFixed(1)}</td>
+        <td rowspan="2" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--warn)">${r.ot.toFixed(1)}</td></tr>`;
+    h+=`<tr style="background:var(--surface2)"><td style="font-size:9px;color:var(--text3)">근무h</td>`;
+    for(let d=1;d<=n;d++){ const wd=_wpWorkdays.has(d),hv=_wpPlan[ei][d-1];
+      const bc=hv>WP_STD?'border-color:var(--warn)':hv<WP_STD&&hv>0?'border-color:var(--accent)':'';
+      h+=wd?`<td><input type="number" step="0.5" min="0" max="14" value="${hv}" onchange="wpOnHr(${ei},${d-1},this.value)" style="width:30px;padding:2px 1px;font-size:10px;text-align:center;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:inherit;${bc}"></td>`:`<td style="background:rgba(128,128,128,.06);color:var(--text3);font-size:9px">-</td>`; }
+    h+='</tr>';
+  });
+  h+='</tbody>';
+  document.getElementById('wp-table').innerHTML=h;
+  document.getElementById('wp-formula').innerHTML=`8h → 퇴근 <b style="color:#1d9e75">${_wpCheckout(8)}</b> · 근무일 ${wdN}일 · 월목표 ${target}h`;
+}
+async function wpSave(){
+  const ym=`${_wpYear}-${String(_wpMonth).padStart(2,'0')}`;
+  const n=_wpDaysIn(_wpYear,_wpMonth);
+  const payload=_wpEmps.map((emp,ei)=>{
+    const bh={}; for(let d=1;d<=n;d++){ const v=_wpPlan[ei][d-1]; if(_wpWorkdays.has(d)&&v>0) bh[String(d)]=v; }
+    return { ym, employee_id:emp.id, base_hours:bh, updated_at:new Date().toISOString() };
+  });
+  try{
+    const res=await fetch(`${API}/work_plans?on_conflict=ym,employee_id`,{
+      method:'POST', headers:{...H,'Prefer':'resolution=merge-duplicates,return=minimal'}, body:JSON.stringify(payload) });
+    if(!res.ok) throw new Error('save failed');
+    document.getElementById('wp-status').textContent=`저장됨 ${new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}`;
+    showToast(`${ym} 근무계획 저장됨`,'success');
+  }catch(e){ showToast('저장 실패 - DB 테이블(work_plans) 확인','error'); }
+}
+async function wpSaveSettings(){
+  const body={ id:1,
+    lunch_start:document.getElementById('wp-lunch-start').value, lunch_end:document.getElementById('wp-lunch-end').value,
+    dinner_start:document.getElementById('wp-dinner-start').value, dinner_end:document.getElementById('wp-dinner-end').value,
+    updated_at:new Date().toISOString() };
+  try{
+    const res=await fetch(`${API}/work_settings?on_conflict=id`,{method:'POST',headers:{...H,'Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(body)});
+    if(!res.ok) throw new Error();
+    WORK_SETTINGS={...WORK_SETTINGS,...body};
+    showToast('제외시간 저장됨','success');
+  }catch(e){ showToast('제외시간 저장 실패','error'); }
+}
+function wpExportExcel(){
+  if(typeof XLSX==='undefined'){ showToast('엑셀 모듈 로딩 실패','error'); return; }
+  const n=_wpDaysIn(_wpYear,_wpMonth), wdN=_wpWorkdays.size, target=wdN*WP_STD;
+  const aoa=[];
+  aoa.push([`${_wpYear}년 ${_wpMonth}월 근무계획`,'','',`근무일: ${wdN}일`,`월목표: ${target}h`]);
+  aoa.push([]);
+  const hdr=['이름','구분'];
+  for(let d=1;d<=n;d++){ hdr.push(`${d}(${WP_DOW[_wpDow(_wpYear,_wpMonth,d)]})`); }
+  hdr.push('합계(h)','기본(h)','초과(h)'); aoa.push(hdr);
+  const merges=[]; const lastCol=2+n;
+  _wpEmps.forEach((emp,ei)=>{
+    const r=_wpCalcP(_wpPlan[ei]); const rb=aoa.length;
+    const co=[emp.name,'퇴근시간']; for(let d=1;d<=n;d++){ co.push(_wpWorkdays.has(d)?_wpCheckout(_wpPlan[ei][d-1]):'-'); }
+    co.push(r.total.toFixed(1), r.base.toFixed(1), r.ot.toFixed(1)); aoa.push(co);
+    const wh=['','근무h']; for(let d=1;d<=n;d++){ wh.push(_wpWorkdays.has(d)?_wpPlan[ei][d-1]:'-'); } wh.push('','',''); aoa.push(wh);
+    merges.push({s:{r:rb,c:0},e:{r:rb+1,c:0}});
+    merges.push({s:{r:rb,c:lastCol},e:{r:rb+1,c:lastCol}});
+    merges.push({s:{r:rb,c:lastCol+1},e:{r:rb+1,c:lastCol+1}});
+    merges.push({s:{r:rb,c:lastCol+2},e:{r:rb+1,c:lastCol+2}});
+  });
+  const ws=XLSX.utils.aoa_to_sheet(aoa); ws['!merges']=merges;
+  const colW=[{wch:10},{wch:9}]; for(let d=0;d<n;d++)colW.push({wch:7}); colW.push({wch:9},{wch:8},{wch:8}); ws['!cols']=colW;
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,`${_wpYear}년${_wpMonth}월`);
+  XLSX.writeFile(wb,`근무계획_${_wpYear}년${String(_wpMonth).padStart(2,'0')}월.xlsx`);
+  showToast('엑셀 저장 완료','success');
 }
 
 // REPORT

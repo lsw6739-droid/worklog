@@ -318,7 +318,12 @@ html[data-theme="mac"] .heatmap-day-hdr{color:rgba(0,0,0,0.5)}
   <!-- ROW 1: 막대 + 파이 -->
   <div class="chart-row" style="grid-template-columns:1.5fr 1fr;margin-bottom:12px">
     <div class="chart-card clickable" id="card-bar">
-      <div class="chart-title">👤 인원별 공수 <span>막대</span> <span class="chart-hint">클릭으로 필터</span></div>
+      <div class="chart-title">👤 인원별 공수 <span>막대</span>
+        <span class="chart-hint" style="display:flex;gap:10px;align-items:center">
+          <span style="display:flex;align-items:center;gap:3px"><span style="width:9px;height:9px;border-radius:2px;background:#1d9e75"></span>기본근무</span>
+          <span style="display:flex;align-items:center;gap:3px"><span style="width:9px;height:9px;border-radius:2px;background:#ffa502"></span>초과근무</span>
+        </span>
+      </div>
       <div class="chart-wrap chart-wrap-tall"><canvas id="chart-bar"></canvas></div>
     </div>
     <div class="chart-card clickable" id="card-pie">
@@ -499,6 +504,39 @@ function getWorkingDays(startStr, endStr) {
   return count;
 }
 
+// ─── 기본/초과 근무 분류 (근무계획 기준) ───
+const WP_STD = 8;
+let WORK_PLANS = {};   // empId → ym → {day: hours}
+function wpIsWeekend(dateStr){ const dw=new Date(dateStr+'T00:00:00').getDay(); return dw===0||dw===6; }
+function wpMonthsBetween(start,end){
+  const out=[]; const s=new Date(start.slice(0,7)+'-01T00:00:00'); const e=new Date(end.slice(0,7)+'-01T00:00:00');
+  while(s<=e){ out.push(`${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,'0')}`); s.setMonth(s.getMonth()+1); }
+  return out;
+}
+function planBaseline(empId, dateStr){
+  const ym=dateStr.slice(0,7), day=String(parseInt(dateStr.slice(8,10),10));
+  const ep=WORK_PLANS[empId];
+  if(ep && ep[ym]){ const v=ep[ym][day]; return v==null?0:Number(v); }
+  return wpIsWeekend(dateStr)?0:WP_STD;
+}
+function classifyByEmployee(logs){
+  const byDay={};
+  logs.forEach(l=>{ const e=l.employee_id,d=l.log_date; if(!e||!d)return; (byDay[e]=byDay[e]||{}); byDay[e][d]=(byDay[e][d]||0)+Number(l.hours||0); });
+  const out={};
+  for(const e in byDay){ let base=0,ot=0; for(const d in byDay[e]){ const tot=byDay[e][d],cap=planBaseline(e,d),b=Math.min(tot,cap); base+=b; ot+=tot-b; } out[e]={base:+base.toFixed(1),ot:+ot.toFixed(1),total:+(base+ot).toFixed(1)}; }
+  return out;
+}
+async function loadWorkPlans(start,end){
+  WORK_PLANS={};
+  const yms=wpMonthsBetween(start,end);
+  if(!yms.length) return;
+  try{
+    const res=await fetch(`${API}/work_plans?ym=in.(${yms.map(y=>`"${y}"`).join(',')})&select=*`,{headers:H});
+    const rows=await res.json();
+    if(Array.isArray(rows)) rows.forEach(r=>{ (WORK_PLANS[r.employee_id]=WORK_PLANS[r.employee_id]||{})[r.ym]=r.base_hours||{}; });
+  }catch(e){ WORK_PLANS={}; }
+}
+
 function setPeriod(preset) {
   const now = new Date();
   let start, end;
@@ -568,6 +606,9 @@ async function loadData() {
 
     // 기간 목표: 근무일 × 8h / 인
     monthGoal = getWorkingDays(start, end) * 8;
+
+    // 근무계획(기본/초과 분류 기준) 로드
+    await loadWorkPlans(start, end);
 
   } catch(e) {
     // DEMO DATA
@@ -774,12 +815,15 @@ function animateNum(id, target, dec) {
 
 // ─── BAR CHART ───
 function renderBarChart(logs) {
+  const cls = classifyByEmployee(logs);
   const byMember = {};
-  allEmployees.forEach(e => byMember[e.id] = {name:e.name, hours:0});
-  logs.forEach(l => { if(byMember[l.employee_id]) { byMember[l.employee_id].hours += Number(l.hours); }});
-  const sorted = Object.values(byMember).sort((a,b)=>b.hours-a.hours);
+  allEmployees.forEach(e => byMember[e.id] = {id:e.id, name:e.name, base:0, ot:0, total:0});
+  Object.keys(cls).forEach(id => { if(byMember[id]){ byMember[id].base=cls[id].base; byMember[id].ot=cls[id].ot; byMember[id].total=cls[id].total; }});
+  const sorted = Object.values(byMember).sort((a,b)=>b.total-a.total);
   const labels = sorted.map(v=>v.name);
-  const data = sorted.map(v=>v.hours);
+  const ids = sorted.map(v=>v.id);
+  const baseData = sorted.map(v=>v.base);
+  const otData = sorted.map(v=>v.ot);
 
   destroyChart('chart-bar');
   charts['chart-bar'] = new Chart(document.getElementById('chart-bar'), {
@@ -787,17 +831,17 @@ function renderBarChart(logs) {
     data:{
       labels,
       datasets:[
-        {label:'실제 공수',data,backgroundColor:sorted.map(v=>{ const e=allEmployees.find(x=>x.name===v.name); return getMemberColor(e?.id)+'cc'; }),borderRadius:6,borderSkipped:false,barPercentage:0.5,categoryPercentage:0.7}
+        {label:'기본근무',data:baseData,backgroundColor:'#1d9e75cc',stack:'s',borderRadius:0,borderSkipped:false,barPercentage:0.5,categoryPercentage:0.7},
+        {label:'초과근무',data:otData,backgroundColor:'#ffa502cc',stack:'s',borderRadius:6,borderSkipped:false,barPercentage:0.5,categoryPercentage:0.7}
       ]
     },
     options:{
       indexAxis:'y', responsive:true, maintainAspectRatio:true,
       plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.x.toFixed(1)}h`}}},
-      scales:{x:{grid:{color:cc().grid},ticks:{color:cc().tick,font:{size:10}}},y:{grid:{display:false},ticks:{color:cc().tickStrong,font:{size:11,weight:'600'}}}},
+      scales:{x:{stacked:true,grid:{color:cc().grid},ticks:{color:cc().tick,font:{size:10}}},y:{stacked:true,grid:{display:false},ticks:{color:cc().tickStrong,font:{size:11,weight:'600'}}}},
       onClick:(e,els)=>{
         if(!els.length) return;
-        const name = labels[els[0].index];
-        const emp = allEmployees.find(x=>x.name===name);
+        const emp = allEmployees.find(x=>x.id===ids[els[0].index]);
         if(emp){ toggleMemberFilter(emp.id, emp.name); syncAllBtn('member'); }
       }
     }
