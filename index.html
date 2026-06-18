@@ -389,7 +389,7 @@ html[data-theme="dark"] .badge-warn{background:rgba(255,159,10,.18);color:#ff9f0
 /* ── 팀 근무계획 히트맵 ── */
 .hm-line{display:flex;align-items:stretch}
 .hm-namesp{width:96px;flex-shrink:0}
-.hm-rtsp{width:150px;flex-shrink:0}
+.hm-rtsp{width:82px;flex-shrink:0}
 .hm-strip{flex:1;display:flex;gap:2px;align-items:stretch;min-width:0}
 .hm-gap{width:6px;flex-shrink:0}
 .hm-hd{flex:1;min-width:5px;text-align:center;cursor:pointer;border-radius:4px;padding:2px 0;user-select:none}
@@ -407,7 +407,7 @@ html[data-theme="dark"] .badge-warn{background:rgba(255,159,10,.18);color:#ff9f0
 .hm-tick{flex:1;height:24px;border-radius:3px;cursor:pointer;min-width:5px}
 .hm-std{background:#1d9e75}.hm-ot{background:var(--warn)}.hm-un{background:var(--accent)}
 .hm-tickoff{background:var(--surface3,#e9e9ed);border:1px solid var(--border)}
-.hm-rt{width:150px;flex-shrink:0;display:flex;align-items:center;justify-content:flex-end;gap:8px}
+.hm-rt{width:82px;flex-shrink:0;display:flex;align-items:center;justify-content:flex-end;gap:8px}
 .hm-totv{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700}
 .hm-totv.ok{color:#3b6d11}.hm-totv.no{color:var(--danger)}
 .hm-badge{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600}
@@ -3386,12 +3386,11 @@ function wpRender(){
       else { sum+=hv; if(hv>WP_STD)hasOt=true; const st=hv>WP_STD?'hm-ot':hv<WP_STD?'hm-un':'hm-std';
         strip+=`<span class="hm-tick ${st}" onclick="wpToggleOpen(${ei})" title="${_wpMonth}/${d} ${hv}h · 퇴근 ${_wpCheckout(hv)}"></span>`; }
     }
-    sum=+sum.toFixed(1); const ok=Math.abs(sum-target)<0.05;
-    const badge=hasOt?`<span class="hm-badge hm-b-over">초과 있음</span>`:!ok?`<span class="hm-badge hm-b-short">부족</span>`:`<span class="hm-badge hm-b-ok">충족</span>`;
+    sum=+sum.toFixed(1); const ok=sum>=target-0.05;
     h+=`<div class="hm-row ${_wpOpenEi===ei?'open':''}">
       <div class="hm-nm" onclick="wpToggleOpen(${ei})"><span class="hm-chev ${_wpOpenEi===ei?'r':''}">›</span><div><div class="nn">${esc(emp.name)}</div><div class="ne">${esc(emp.emp_id||'')}</div></div></div>
       <div class="hm-strip">${strip}</div>
-      <div class="hm-rt"><span class="hm-totv ${ok?'ok':'no'}">${sum.toFixed(1)}h</span>${badge}</div></div>`;
+      <div class="hm-rt"><span class="hm-totv ${ok?'ok':'no'}">${sum.toFixed(1)}h</span></div></div>`;
     if(_wpOpenEi===ei) h+=wpEditHtml(ei);
   });
   document.getElementById('wp-rows').innerHTML=h;
@@ -3416,6 +3415,11 @@ function wpEditHtml(ei){
 async function wpSave(){
   const ym=`${_wpYear}-${String(_wpMonth).padStart(2,'0')}`;
   const n=_wpDaysIn(_wpYear,_wpMonth);
+  // 월목표 미달 검사 — 미달 인원이 있으면 저장 차단
+  const target=_wpWorkdays.size*WP_STD;
+  const under=[];
+  _wpEmps.forEach((emp,ei)=>{ let s=0; for(let d=1;d<=n;d++){ const v=_wpPlan[ei][d-1]; if(v>0)s+=v; } if(s<target-0.05) under.push(`${emp.name}(${(+s.toFixed(1)).toFixed(1)}h)`); });
+  if(under.length){ showToast(`월목표 ${target}h 미달로 저장 불가: ${under.join(', ')}`,'error'); return; }
   const payload=_wpEmps.map((emp,ei)=>{
     const bh={}; for(let d=1;d<=n;d++){ const v=_wpPlan[ei][d-1]; if(v>0) bh[String(d)]=v; }
     return { ym, employee_id:emp.id, base_hours:bh, updated_at:new Date().toISOString() };
@@ -3548,6 +3552,10 @@ function mpRender(){
 async function mpSave(){
   const ym=`${_mpYear}-${String(_mpMonth).padStart(2,'0')}`;
   const n=_wpDaysIn(_mpYear,_mpMonth);
+  // 월목표 미달 시 저장 차단
+  const target=_wpWeekdayCount(_mpYear,_mpMonth)*WP_STD;
+  let s=0; for(let d=1;d<=n;d++){ if(_mpPlan[d-1]>0) s+=_mpPlan[d-1]; }
+  if(s<target-0.05){ showToast(`월목표 ${target}h 미달 (현재 ${(+s.toFixed(1)).toFixed(1)}h) — ${(+(target-s).toFixed(1)).toFixed(1)}h 부족`,'error'); return; }
   const bh={}; for(let d=1;d<=n;d++){ if(_mpPlan[d-1]>0) bh[String(d)]=_mpPlan[d-1]; }
   const body=[{ ym, employee_id:currentUser.id, base_hours:bh, updated_at:new Date().toISOString() }];
   try{
