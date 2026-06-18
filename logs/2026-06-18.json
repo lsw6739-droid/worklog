@@ -61,5 +61,135 @@
         ]
       }
     ]
+  },
+  {
+    "time": "14:11",
+    "changes": [
+      {
+        "action": "added",
+        "title": "모니터링 공지",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "연차 인수인계",
+        "employee": "김형성",
+        "details": [
+          "BPR IPC 공지"
+        ]
+      },
+      {
+        "action": "added",
+        "title": "Rafarm 사 출고 시 사용되는 데이터 로거 교정 성적서 자료 요청",
+        "employee": "이상우",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "2026-06-18 작성상황 일정 수정",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "위험관리 보고서 최종 승인",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "KPI 상세 시트 작성",
+        "employee": "이상우",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "제조소 로그북 회수",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "2026-06-18 TP HLC 시간 공유",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "2026-06-18 공정시간",
+        "employee": "김형성",
+        "details": [
+          "TP"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "AP Audit(타나베파마코리아/한국) 실사 준비(6/17)",
+        "employee": "김경원",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "3개월청소 로그북 작성",
+        "employee": "김경원",
+        "details": [
+          "기한: 2026-06-18 → 2026-06-19"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "피벗테이블 수정방법 교육수령",
+        "employee": "김경원",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "2026-06-18 QMS 유지보수 요청",
+        "employee": "김형성",
+        "details": [
+          "완료처리",
+          "제목: QMS 유지보수 요청 → 2026-06-18 QMS 유지보수 요청"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "KPI 면담 준비",
+        "employee": "김형성",
+        "details": [
+          "완료처리",
+          "✅ KPI 항목 구체화"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "[공지] 공수관리 시스템 개선사항",
+        "employee": "임승완",
+        "details": [
+          "✅ 공수 대시보드 인원별 공수부분에 기본근무인지 연장근무인지 구분 요청-(일지 작성 부분에 계산된 공수 옆 '기본근무'인지, '연장근무'인지 선택할 수 있게하고, 대시보드에서는 총시간만 구분될 수 있게만 설정 or 월 선택근무 엑셀 복붙하여 사용하는 것."
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "위험관리 보고서 승인",
+        "employee": "김형성",
+        "details": [
+          "완료처리",
+          "✅ 제조관리 팀장 결재"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "BPR 검토",
+        "employee": "김형성",
+        "details": [
+          "완료처리"
+        ]
+      }
+    ]
   }
 ]
