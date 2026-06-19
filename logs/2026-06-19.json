@@ -57,5 +57,195 @@
         ]
       }
     ]
+  },
+  {
+    "time": "16:35",
+    "changes": [
+      {
+        "action": "added",
+        "title": "2026 주안점",
+        "employee": "김경원",
+        "details": [
+          "기준 확립 및 기록",
+          "팔로우십에 준하는 리더십"
+        ]
+      },
+      {
+        "action": "added",
+        "title": "제조팀 신입사원 교육용 자료 업데이트",
+        "employee": "김경원",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "QR 코드 관리 시스템 정기검토",
+        "employee": "이상우",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "출하 업무 인수인계 계획 수립",
+        "employee": "이상우",
+        "details": [
+          "➕ - QR-MS-DIS. 계정 요청(FB202)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "FDA 불시점검 대비  자체 D.I. ~2026 1Q",
+        "employee": "김경원",
+        "details": [
+          "제목: 자체 D.I 점검 → FDA 불시점검 대비  자체 D.I. ~2026 1Q",
+          "기한: 2026-06-19 → 2026-06-26",
+          "✅ Check list 후 제관팀장보고",
+          "➕ 제관팀장 검토자 설정",
+          "➕ 실물 반출 요청 목록 수립 및 요청",
+          "➕ 보관관리팀 작성 요청 메일 발송",
+          "➕ 보관관리팀 시험번호 작성 완료 확인",
+          "➕ 실물 문서 수령"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "정기검토",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-06-18 → 2026-06-22"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "DIS2503-028 수정(우성길 선임)",
+        "employee": "임승완",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "D.I 담당자 설정",
+        "employee": "임승완",
+        "details": [
+          "상태: waiting → active",
+          "기한: 없음 → 2026-06-22"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "커리어비전 PPT생성",
+        "employee": "김경원",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "제품표시라벨 간소화",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-06-18 → 2026-06-22"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "KPI 설정하기",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-06-17 → 2026-06-21"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "SG CHT 오류 소급",
+        "employee": "김경원",
+        "details": [
+          "상태: waiting → active",
+          "기한: 2026-06-19 → 2026-06-26",
+          "✅ 적격성평가팀 작성"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "팀 면담(6/18-1차)",
+        "employee": "임승완",
+        "details": [
+          "✅ 6월 18일(1차)",
+          "➕ 팀 면담 내용 정리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "2026년 7월 근무계획 수립 공지 / Work Schedule Set-up Notice - July 2026",
+        "employee": "이상우",
+        "details": [
+          "상태: waiting → active"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "3개월청소 로그북 작성확인",
+        "employee": "김경원",
+        "details": [
+          "제목: 3개월청소 로그북 작성 → 3개월청소 로그북 작성확인",
+          "기한: 2026-06-19 → 2026-06-24",
+          "✅ 허웅/박인환 작성요청"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "생산 3동 장비/기구/물품 입고 일정 관리",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-06-16 → 2026-06-19"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "AI 도입을 위한 업무 전산화 및 데이터 확보 Sheet 초안 작성",
+        "employee": "김경원",
+        "details": [
+          "기한: 없음 → 2026-06-26"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "FDA 불시점검 대응을 위한 제조기록 실시간 작성 체계 확립",
+        "employee": "김경원",
+        "details": [
+          "제목: 고유업무 KPI 논의 준비 → FDA 불시점검 대응을 위한 제조기록 실시간 작성 체계 확립",
+          "기한: 2026-06-18 → 2026-06-26",
+          "➕ 구성안 설정 ~6/26",
+          "🗑 제조기록(BPR/BCR/BPAR) AI 검토 툴 적용을 위한 품목별 검토 Flow 상세화",
+          "🗑 AI 검토에 용이하도록 BPR/BCR/BAPR 작성 Tool Renewal",
+          "🗑 접근방식에 대해 Outline 생성(아이디어 단계부터)",
+          "🗑 실행 가능한 일정 재조정"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "KPI 상세 시트 작성",
+        "employee": "이상우",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "공수 산정 분석 결과 공유(6/22-월)",
+        "employee": "임승완",
+        "details": [
+          "제목: 공수 산정 분석 결과 공유(6/15-월) → 공수 산정 분석 결과 공유(6/22-월)",
+          "기한: 2026-06-15 → 2026-06-22"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "RG01126E010 수정",
+        "employee": "김경원",
+        "details": [
+          "기한: 2026-06-19 → 2026-06-26"
+        ]
+      }
+    ]
   }
 ]
