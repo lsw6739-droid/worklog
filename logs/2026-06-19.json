@@ -1,0 +1,61 @@
+[
+  {
+    "time": "11:11",
+    "changes": [
+      {
+        "action": "added",
+        "title": "2026년 7월 근무계획 수립 공지 / Work Schedule Set-up Notice - July 2026",
+        "employee": "이상우",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "D.I 담당자 설정",
+        "employee": "임승완",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "커리어비전 PPT생성",
+        "employee": "김경원",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "AI 도입을 위한 업무 전산화 및 데이터 확보 Sheet 초안 작성",
+        "employee": "김경원",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "제품 표시라벨 간소화",
+        "employee": "이주영",
+        "details": [
+          "✅ 검토용 라벨 생성 시 행의 위치 변경 필요(outside 라벨 제작 중 중간에 내용을 빼먹으면 밑의 내용들을 다 삭제해야함. 끌어올리기 등과 같이 순서를 쉽게 변경할 수 있으면 좋을 것 같다는 의견) > 라벨 수정 자체에서는 가능한거 확인했지만 만들어진 라벨 자체들은 옮겨지지 않음!",
+          "✅ 검토 및 부착용 라벨 생성 후 해당 라벨들의 위치도 끌어옮기기 등으로 쉽게 변경할 수 있으면 좋을 것 같습니다",
+          "✅ >> 출력 할때 위치 수정 가능",
+          "✏️ >> 수정할때 그냥 부착용 라벨부터 새로 작성하는걸로 합시다.. 다 연결되어있는데 수정하는 부분만 수정하면 꼬일 가능성이 있음 → >> 착용 라벨 갯수도 저장 되도록"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "DIS2503-028 데이터로거 요청사항 수정 필요",
+        "employee": "이상우",
+        "details": [
+          "✅ 외부 반출 이력 확인",
+          "➕ >> 외부 반출 이력 없음"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "CG Willowbirch 제품표시라벨 개정 (CC2605-011)",
+        "employee": "이주영",
+        "details": [
+          "✅ 서명",
+          "✅ 교육",
+          "➕ 불참교육"
+        ]
+      }
+    ]
+  }
+]
