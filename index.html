@@ -946,6 +946,14 @@ create table if not exists work_plan_notes (
 );
 alter table work_plan_notes enable row level security;
 create policy "allow_all" on work_plan_notes for all using (true);
+-- 근무계획 월별 근무일 달력 (관리자 지정; 개인 "내 근무계획"과 목표시간 공유)
+create table if not exists work_plan_calendar (
+  ym text primary key,                       -- 'YYYY-MM'
+  workdays jsonb not null default '[]',       -- [1,2,3,...] 근무일로 지정된 '일(day)' 목록
+  updated_at timestamptz default now()
+);
+alter table work_plan_calendar enable row level security;
+create policy "allow_all" on work_plan_calendar for all using (true);
 -- RLS
 alter table todos enable row level security;
 alter table notices enable row level security;
@@ -3330,6 +3338,14 @@ async function wpLoadMonth(){
     for(let d=1;d<=n;d++){ if(!_wpIsWe(_wpYear,_wpMonth,d)) _wpWorkdays.add(d); }
     _wpEmps.forEach((_,ei)=>{ for(let d=1;d<=n;d++){ _wpPlan[ei][d-1]=_wpWorkdays.has(d)?WP_STD:0; } });
   }
+  // 명시적 근무일 달력이 있으면 우선 적용 (개인 "내 근무계획"과 목표·휴일 공유)
+  try{
+    const cres=await fetch(`${API}/work_plan_calendar?ym=eq.${ym}&select=workdays`,{headers:H});
+    const crows=await cres.json();
+    if(Array.isArray(crows)&&crows[0]&&Array.isArray(crows[0].workdays)&&crows[0].workdays.length){
+      _wpWorkdays=new Set(crows[0].workdays.map(Number));
+    }
+  }catch(e){}
   document.getElementById('wp-status').textContent=loaded?'저장된 계획 불러옴':'기본값(평일 8h) 적용 — 저장 필요';
   // 비고 로드
   _wpNotes=[];
@@ -3428,6 +3444,9 @@ async function wpSave(){
     const res=await fetch(`${API}/work_plans?on_conflict=ym,employee_id`,{
       method:'POST', headers:{...H,'Prefer':'resolution=merge-duplicates,return=minimal'}, body:JSON.stringify(payload) });
     if(!res.ok) throw new Error('save failed');
+    // 근무일 달력 저장 (개인 "내 근무계획"과 목표·휴일 공유)
+    const workdays=[..._wpWorkdays].sort((a,b)=>a-b);
+    await fetch(`${API}/work_plan_calendar?on_conflict=ym`,{method:'POST',headers:{...H,'Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify([{ym,workdays,updated_at:new Date().toISOString()}])}).catch(()=>{});
     // 비고 저장 (빈 행 제외)
     const items=_wpNotes.filter(nt=>(nt.label||'').trim()||(nt.text||'').trim());
     await fetch(`${API}/work_plan_notes?on_conflict=ym`,{method:'POST',headers:{...H,'Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify([{ym,items,updated_at:new Date().toISOString()}])}).catch(()=>{});
@@ -3475,7 +3494,29 @@ function wpExportExcel(){
 }
 
 // ─── 내 근무계획 (전 직원, 본인 것만) ───
-let _mpYear, _mpMonth, _mpWorkdays=new Set(), _mpPlan=[];
+let _mpYear, _mpMonth, _mpWorkdays=new Set(), _mpPlan=[], _mpTargetDays=0;
+// 회사 지정 근무일(달력) 로드 — 관리자 근무계획과 목표·휴일 공유
+async function _wpLoadCalendar(y,m){
+  const ym=`${y}-${String(m).padStart(2,'0')}`, n=_wpDaysIn(y,m);
+  // 1) 명시적 달력(관리자 저장)
+  try{
+    const res=await fetch(`${API}/work_plan_calendar?ym=eq.${ym}&select=workdays`,{headers:H});
+    const rows=await res.json();
+    if(Array.isArray(rows)&&rows[0]&&Array.isArray(rows[0].workdays)&&rows[0].workdays.length) return new Set(rows[0].workdays.map(Number));
+  }catch(e){}
+  // 2) 저장된 전체 계획에서 근무일 합집합 도출 (달력 미저장 구버전 호환)
+  try{
+    const res=await fetch(`${API}/work_plans?ym=eq.${ym}&select=base_hours`,{headers:H});
+    const rows=await res.json();
+    if(Array.isArray(rows)&&rows.length){
+      const s=new Set();
+      rows.forEach(r=>{ const bh=r.base_hours||{}; for(const k in bh){ if(Number(bh[k])>0) s.add(Number(k)); } });
+      if(s.size) return s;
+    }
+  }catch(e){}
+  // 3) 기본: 평일
+  const s=new Set(); for(let d=1;d<=n;d++){ if(!_wpIsWe(y,m,d)) s.add(d); } return s;
+}
 async function initMyPlan(){
   if(!currentUser){ return; }
   await loadWorkSettings();
@@ -3493,6 +3534,9 @@ async function mpLoadMonth(){
   const ym=`${_mpYear}-${String(_mpMonth).padStart(2,'0')}`;
   const n=_wpDaysIn(_mpYear,_mpMonth);
   _mpWorkdays=new Set(); _mpPlan=Array(n).fill(0);
+  // 회사 지정 근무일 달력 (목표시간·휴일의 단일 기준)
+  const comp=await _wpLoadCalendar(_mpYear,_mpMonth);
+  _mpTargetDays=comp.size;
   let loaded=false;
   try{
     const res=await fetch(`${API}/work_plans?ym=eq.${ym}&employee_id=eq.${currentUser.id}&select=*`,{headers:H});
@@ -3504,9 +3548,10 @@ async function mpLoadMonth(){
     }
   }catch(e){}
   if(!loaded){
-    for(let d=1;d<=n;d++){ if(!_wpIsWe(_mpYear,_mpMonth,d)){ _mpWorkdays.add(d); _mpPlan[d-1]=WP_STD; } }
+    // 회사 지정 근무일을 기본 템플릿으로 (휴일 자동 반영)
+    comp.forEach(d=>{ _mpWorkdays.add(d); _mpPlan[d-1]=WP_STD; });
   }
-  document.getElementById('mp-status').textContent=loaded?'저장된 계획 불러옴':'기본값(평일 8h) 적용 — 저장 필요';
+  document.getElementById('mp-status').textContent=loaded?'저장된 계획 불러옴':'기본값(회사 근무일 8h) 적용 — 저장 필요';
   // 비고(관리자 작성) 읽기 전용 표시
   let notes=[];
   try{
@@ -3525,11 +3570,10 @@ function mpToggleDay(d){
   mpRender();
 }
 function mpOnHr(di,v){ _mpPlan[di]=parseFloat(v)||0; mpRender(); }
-function _wpWeekdayCount(y,m){ const n=_wpDaysIn(y,m); let c=0; for(let d=1;d<=n;d++){ if(!_wpIsWe(y,m,d)) c++; } return c; }
 function mpRender(){
   document.getElementById('mp-month-title').textContent=`${_mpYear}년 ${_mpMonth}월`;
   const n=_wpDaysIn(_mpYear,_mpMonth), firstDow=_wpDow(_mpYear,_mpMonth,1);
-  const wdN=_mpWorkdays.size, target=_wpWeekdayCount(_mpYear,_mpMonth)*WP_STD;
+  const wdN=_mpWorkdays.size, target=_mpTargetDays*WP_STD;
   const r=_wpCalcP(_mpPlan); const ok=Math.abs(r.total-target)<0.05;
   let h='';
   for(let i=0;i<firstDow;i++) h+='<div class="cal-cell pad"></div>';
@@ -3552,8 +3596,8 @@ function mpRender(){
 async function mpSave(){
   const ym=`${_mpYear}-${String(_mpMonth).padStart(2,'0')}`;
   const n=_wpDaysIn(_mpYear,_mpMonth);
-  // 월목표 미달 시 저장 차단
-  const target=_wpWeekdayCount(_mpYear,_mpMonth)*WP_STD;
+  // 월목표 미달 시 저장 차단 (회사 지정 근무일 기준)
+  const target=_mpTargetDays*WP_STD;
   let s=0; for(let d=1;d<=n;d++){ if(_mpPlan[d-1]>0) s+=_mpPlan[d-1]; }
   if(s<target-0.05){ showToast(`월목표 ${target}h 미달 (현재 ${(+s.toFixed(1)).toFixed(1)}h) — ${(+(target-s).toFixed(1)).toFixed(1)}h 부족`,'error'); return; }
   const bh={}; for(let d=1;d<=n;d++){ if(_mpPlan[d-1]>0) bh[String(d)]=_mpPlan[d-1]; }
