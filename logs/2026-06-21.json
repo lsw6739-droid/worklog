@@ -109,5 +109,19 @@
         ]
       }
     ]
+  },
+  {
+    "time": "15:42",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "D.I 담당자 설정",
+        "employee": "임승완",
+        "details": [
+          "➕ 설정",
+          "➕ 공유"
+        ]
+      }
+    ]
   }
 ]
