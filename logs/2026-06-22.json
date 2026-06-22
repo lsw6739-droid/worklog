@@ -1,0 +1,47 @@
+[
+  {
+    "time": "09:13",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "제조장비 표준시간 동기화 SOP 개정",
+        "employee": "김형성",
+        "details": [
+          "✅ 팀장 검토 (~6/17)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "IP (Imidapril Hydrochloride) 품목 삭제(CC2605-023)(CC2605-023)",
+        "employee": "임승완",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "출하 업무 인수인계 계획 수립",
+        "employee": "이상우",
+        "details": [
+          "➕ 작성상황 모니터링"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "작성성황 제조팀 수식 수정",
+        "employee": "김형성",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "AP Audit(타나베파마코리아/한국) 실사 준비(6/17)",
+        "employee": "김형성",
+        "details": [
+          "완료처리"
+        ]
+      }
+    ]
+  }
+]
