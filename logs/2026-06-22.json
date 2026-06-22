@@ -43,5 +43,109 @@
         ]
       }
     ]
+  },
+  {
+    "time": "14:38",
+    "changes": [
+      {
+        "action": "added",
+        "title": "2026-06-22 BPR 검토",
+        "employee": "김형성",
+        "details": [
+          "BP01126F010"
+        ]
+      },
+      {
+        "action": "added",
+        "title": "2026-06-22 공정시간 수립",
+        "employee": "김형성",
+        "details": [
+          "BP02",
+          "TN01"
+        ]
+      },
+      {
+        "action": "added",
+        "title": "PP 밀링 1건 진행",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "FDA 불시점검 대비  자체 D.I. ~2026 1Q",
+        "employee": "김경원",
+        "details": [
+          "✅ 제관팀장 검토자 설정"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "독립형 기기로그북관리기준",
+        "employee": "김경원",
+        "details": [
+          "기한: 2026-06-19 → 2026-06-26",
+          "➕ 운영할 페이지 수량 결정"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "CG Willowbirch 제품표시라벨 개정 (CC2605-011)",
+        "employee": "이주영",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "<<보고 필요 사항>>",
+        "employee": "이상우",
+        "details": [
+          "기한: 2026-06-15 → 2026-06-29"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "휴대용 시계 점검",
+        "employee": "김형성",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "회계",
+        "employee": "임승완",
+        "details": [
+          "✅ 5월",
+          "➕ 6월"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "D.I 담당자 설정",
+        "employee": "임승완",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "3개월청소 로그북 작성확인",
+        "employee": "김경원",
+        "details": [
+          "기한: 2026-06-24 → 2026-06-26",
+          "🗑 띠지 추가",
+          "🗑 허웅/박인환 작성요청"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "QMS 개발 리스트 취합",
+        "employee": "김형성",
+        "details": [
+          "✅ QMS 유지보수로 개발 가능한 건 취합"
+        ]
+      }
+    ]
   }
 ]
