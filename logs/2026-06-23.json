@@ -180,5 +180,24 @@
         ]
       }
     ]
+  },
+  {
+    "time": "20:58",
+    "changes": [
+      {
+        "action": "added",
+        "title": "NT, AT 제출 예정일 확인",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "2026-06-23 공정시간 수립",
+        "employee": "김형성",
+        "details": [
+          "✅ TN01 IPC 이후시간 (MPLC 이후 시간 원료 적합 후 사용)"
+        ]
+      }
+    ]
   }
 ]
