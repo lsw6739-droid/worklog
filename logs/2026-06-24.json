@@ -26,5 +26,94 @@
         ]
       }
     ]
+  },
+  {
+    "time": "15:27",
+    "changes": [
+      {
+        "action": "added",
+        "title": "2026-06-24 BPR 검토",
+        "employee": "김형성",
+        "details": [
+          "AT",
+          "EDM"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "팀장 논의/보고 사항",
+        "employee": "김형성",
+        "details": [
+          "✅ QMS 개발 리스트 팀장 보고 (6/24 09시)",
+          "✅ 위험관리 보고서 SW120, SW121 특이사항에 따라 기준란에 동기화 후 문구 기재 강원재 팀장 컨펌 완료",
+          "✅ 표준시간 동기화 기록서 개정 QC에서 별도 진행한다는 연락 받음 > 확정은 아니고 임창민 선임 개인 생각인지 확인 중"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "부서 업무 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "➕ 저울관리(중간체 보관소)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "NT 영향성 확인",
+        "employee": "김형성",
+        "details": [
+          "제목: NT, AT 제출 예정일 확인 → NT 영향성 확인",
+          "➕ 메일 확인",
+          "➕ NT 자료 취합",
+          "➕ 팀장 보고",
+          "➕ 수정 여부 확인",
+          "➕ 팀장 보고",
+          "➕ 부서장 보고",
+          "➕ 완료"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "QMS 개발 리스트 취합",
+        "employee": "김형성",
+        "details": [
+          "✅ QA 및 GMP IT 문의"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "<<보고 필요 사항>>",
+        "employee": "이상우",
+        "details": [
+          "🗑 라벨 프로그램 29일에 팀 공유"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "원료 수급 및 제조일정 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "➕ GC, PR 황성현 선임 일정으로 인한 PR 앞당김",
+          "➕ 실재고 bpr 0 삭제? 이력확인하려면 어려움"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "2026-06-23 공정시간 수립",
+        "employee": "김형성",
+        "details": [
+          "완료처리",
+          "✅ BP02"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "생산 3동 장비/기구/물품 입고 일정 관리",
+        "employee": "임승완",
+        "details": [
+          "➕ 3동 3층 pal 신발장 히이그로시 캐비넷 안쪽으로 넣어두고 신발장올리기, 발판"
+        ]
+      }
+    ]
   }
 ]
