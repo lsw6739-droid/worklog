@@ -94,5 +94,56 @@
         ]
       }
     ]
+  },
+  {
+    "time": "15:46",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "경원 청소기 씻기",
+        "employee": "김형성",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "팀장 논의/보고 사항",
+        "employee": "김형성",
+        "details": [
+          "➕ 이번주 PP 밀링 완료",
+          "➕ NT 관련 자료 정리 후 팀장 보고",
+          "➕ AT 공정시간 툴 팀장 검토"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "2026-06-25 공정시간 수립",
+        "employee": "김형성",
+        "details": [
+          "✅ MH"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "2026-06-25 BPR 검토",
+        "employee": "김형성",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "RG01126E010 수정",
+        "employee": "김경원",
+        "details": [
+          "✅ EA 잔량(X): 잔량 아닌 외부칭량표 오류",
+          "✅ Aduit Trail 코멘트 오기수정",
+          "✅ TLC 첨부사진 내 SCP, 전개선 표기 필요",
+          "✅ C-25 PFW 결과값 초과",
+          "✅ D-2 실투입량오류"
+        ]
+      }
+    ]
   }
 ]
