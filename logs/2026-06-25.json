@@ -145,5 +145,58 @@
         ]
       }
     ]
+  },
+  {
+    "time": "19:11",
+    "changes": [
+      {
+        "action": "added",
+        "title": "AI 세미나",
+        "employee": "임승완",
+        "details": [
+          "6/29-11시",
+          "-점심(한마음정육식당 화성팔탄점)"
+        ]
+      },
+      {
+        "action": "added",
+        "title": "QMS 유지보수 요청",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "2026-06-26 BPR 검토",
+        "employee": "김형성",
+        "details": [
+          "BP02"
+        ]
+      },
+      {
+        "action": "added",
+        "title": "RG01 pH 관련 메일 공유",
+        "employee": "임승완",
+        "details": [
+          "밸리데이션/qa/제조",
+          "오류사항 공유-제조"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "[출하 파트] 출하 특이사항 기재란",
+        "employee": "임승완",
+        "details": [
+          "➕ DIS2606-025: 6/25 접수 > 6/29 사전승인 > 7/1 출하(정창영)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "2026-06-25 공정시간 수립",
+        "employee": "김형성",
+        "details": [
+          "완료처리"
+        ]
+      }
+    ]
   }
 ]
