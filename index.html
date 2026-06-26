@@ -1175,6 +1175,20 @@ const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 const API=`${SUPABASE_URL}/rest/v1`;
 const H={'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Prefer':'return=representation'};
 
+// PostgREST 기본 응답 제한(1000행)에 걸리지 않도록 전체 페이지를 끝까지 가져옴
+async function fetchAllRows(url, headers){
+  const PAGE=1000; let offset=0, out=[];
+  while(true){
+    const res=await fetch(url,{headers:{...headers,'Range-Unit':'items','Range':`${offset}-${offset+PAGE-1}`}});
+    const rows=await res.json();
+    if(!Array.isArray(rows)||!rows.length) break;
+    out=out.concat(rows);
+    if(rows.length<PAGE) break;
+    offset+=PAGE;
+  }
+  return out;
+}
+
 // ─── Supabase Realtime 클라이언트 ───
 const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let _realtimeChannel = null;
@@ -3186,8 +3200,8 @@ async function loadTeamStats(){
   if(!start||!end)return;
   try{
     let url=`${API}/work_logs?log_date=gte.${start}&log_date=lte.${end}&select=*,categories(name),employees(name,emp_id)`;if(mf)url+=`&employee_id=eq.${mf}`;
-    const [logsRes,attendRes]=await Promise.all([fetch(url,{headers:H}),fetch(`${API}/attends?start_date=lte.${end}&end_date=gte.${start}&select=*,employees(name,emp_id)`,{headers:H})]);
-    const logs=await logsRes.json(),attends=await attendRes.json();
+    const [logs,attendRes]=await Promise.all([fetchAllRows(url,H),fetch(`${API}/attends?start_date=lte.${end}&end_date=gte.${start}&select=*,employees(name,emp_id)`,{headers:H})]);
+    const attends=await attendRes.json();
     await loadWorkPlans(start,end);
     const cls=classifyByEmployee(logs);
     const totalH=logs.reduce((s,l)=>s+Number(l.hours),0);const members=new Set(logs.map(l=>l.employee_id)).size;const avgH=members>0?totalH/members:0;
@@ -3630,8 +3644,8 @@ async function generateReport(){
   const [y,m]=month.split('-');const start=`${y}-${m}-01`,end=`${y}-${m}-${new Date(y,m,0).getDate()}`;
   document.getElementById('report-output').innerHTML='<div class="loading"><div class="spinner"></div>생성 중...</div>';
   try{
-    const [logsRes,attendRes]=await Promise.all([fetch(`${API}/work_logs?log_date=gte.${start}&log_date=lte.${end}&select=*,categories(name),employees(name,emp_id)`,{headers:H}),fetch(`${API}/attends?start_date=lte.${end}&end_date=gte.${start}&select=*,employees(name)`,{headers:H})]);
-    const logs=await logsRes.json(),attends=await attendRes.json();
+    const [logs,attendRes]=await Promise.all([fetchAllRows(`${API}/work_logs?log_date=gte.${start}&log_date=lte.${end}&select=*,categories(name),employees(name,emp_id)`,H),fetch(`${API}/attends?start_date=lte.${end}&end_date=gte.${start}&select=*,employees(name)`,{headers:H})]);
+    const attends=await attendRes.json();
     const totalH=logs.reduce((s,l)=>s+Number(l.hours),0);const members=new Set(logs.map(l=>l.employee_id)).size;const avgH=members>0?totalH/members:0;
     const byM={};logs.forEach(l=>{const k=l.employee_id;if(!byM[k])byM[k]={name:l.employees?.name,empId:l.employees?.emp_id,hours:0,cnt:0,excludeH:0};byM[k].hours+=Number(l.hours);byM[k].cnt++;});
     attends.forEach(a=>{if(byM[a.employee_id])byM[a.employee_id].excludeH+=Number(a.exclude_hours||0);});
@@ -3658,9 +3672,9 @@ async function generateReport(){
 // CSV
 function toCSV(rows,headers){return[headers,...rows].map(r=>r.map(c=>`"${String(c??'').replace(/"/g,'""')}"`).join(',')).join('\n');}
 function downloadCSV(content,filename){const blob=new Blob(['\uFEFF'+content],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();}
-async function exportMyCSV(){const start=document.getElementById('my-start').value,end=document.getElementById('my-end').value;if(!start||!end)return;try{const res=await fetch(`${API}/work_logs?employee_id=eq.${currentUser.id}&log_date=gte.${start}&log_date=lte.${end}&order=log_date.desc&select=*,categories(name)`,{headers:H});const logs=await res.json();downloadCSV(toCSV(logs.map(l=>[l.log_date,l.categories?.name||'',l.content,l.start_time||'',l.end_time||'',Number(l.hours).toFixed(1),l.note||'']),['날짜','분류','업무내용','시작시간','종료시간','공수(h)','비고']),`내공수_${start}~${end}.csv`);showToast('CSV 완료','success');}catch(e){showToast('다운로드 실패','error');}}
-async function exportTeamCSV(){const start=document.getElementById('team-start').value,end=document.getElementById('team-end').value;if(!start||!end)return;try{const res=await fetch(`${API}/work_logs?log_date=gte.${start}&log_date=lte.${end}&order=log_date.desc&select=*,categories(name),employees(name,emp_id)`,{headers:H});const logs=await res.json();downloadCSV(toCSV(logs.map(l=>[l.employees?.name||'',l.employees?.emp_id||'',l.log_date,l.categories?.name||'',l.content,l.start_time||'',l.end_time||'',Number(l.hours).toFixed(1),l.note||'']),['이름','사번','날짜','분류','업무내용','시작시간','종료시간','공수(h)','비고']),`팀공수_${start}~${end}.csv`);showToast('팀 CSV 완료','success');}catch(e){showToast('다운로드 실패','error');}}
-async function exportReportCSV(){const month=document.getElementById('report-month').value;if(!month){showToast('월을 선택하세요','error');return;}const [y,m]=month.split('-');const start=`${y}-${m}-01`,end=`${y}-${m}-${new Date(y,m,0).getDate()}`;try{const res=await fetch(`${API}/work_logs?log_date=gte.${start}&log_date=lte.${end}&order=log_date&select=*,categories(name),employees(name,emp_id)`,{headers:H});const logs=await res.json();downloadCSV(toCSV(logs.map(l=>[l.employees?.name||'',l.employees?.emp_id||'',l.log_date,l.categories?.name||'',l.content,l.start_time||'',l.end_time||'',Number(l.hours).toFixed(1),l.note||'']),['이름','사번','날짜','분류','업무내용','시작시간','종료시간','공수(h)','비고']),`월간리포트_${month}.csv`);showToast('리포트 CSV 완료','success');}catch(e){showToast('다운로드 실패','error');}}
+async function exportMyCSV(){const start=document.getElementById('my-start').value,end=document.getElementById('my-end').value;if(!start||!end)return;try{const logs=await fetchAllRows(`${API}/work_logs?employee_id=eq.${currentUser.id}&log_date=gte.${start}&log_date=lte.${end}&order=log_date.desc&select=*,categories(name)`,H);downloadCSV(toCSV(logs.map(l=>[l.log_date,l.categories?.name||'',l.content,l.start_time||'',l.end_time||'',Number(l.hours).toFixed(1),l.note||'']),['날짜','분류','업무내용','시작시간','종료시간','공수(h)','비고']),`내공수_${start}~${end}.csv`);showToast('CSV 완료','success');}catch(e){showToast('다운로드 실패','error');}}
+async function exportTeamCSV(){const start=document.getElementById('team-start').value,end=document.getElementById('team-end').value;if(!start||!end)return;try{const logs=await fetchAllRows(`${API}/work_logs?log_date=gte.${start}&log_date=lte.${end}&order=log_date.desc&select=*,categories(name),employees(name,emp_id)`,H);downloadCSV(toCSV(logs.map(l=>[l.employees?.name||'',l.employees?.emp_id||'',l.log_date,l.categories?.name||'',l.content,l.start_time||'',l.end_time||'',Number(l.hours).toFixed(1),l.note||'']),['이름','사번','날짜','분류','업무내용','시작시간','종료시간','공수(h)','비고']),`팀공수_${start}~${end}.csv`);showToast('팀 CSV 완료','success');}catch(e){showToast('다운로드 실패','error');}}
+async function exportReportCSV(){const month=document.getElementById('report-month').value;if(!month){showToast('월을 선택하세요','error');return;}const [y,m]=month.split('-');const start=`${y}-${m}-01`,end=`${y}-${m}-${new Date(y,m,0).getDate()}`;try{const logs=await fetchAllRows(`${API}/work_logs?log_date=gte.${start}&log_date=lte.${end}&order=log_date&select=*,categories(name),employees(name,emp_id)`,H);downloadCSV(toCSV(logs.map(l=>[l.employees?.name||'',l.employees?.emp_id||'',l.log_date,l.categories?.name||'',l.content,l.start_time||'',l.end_time||'',Number(l.hours).toFixed(1),l.note||'']),['이름','사번','날짜','분류','업무내용','시작시간','종료시간','공수(h)','비고']),`월간리포트_${month}.csv`);showToast('리포트 CSV 완료','success');}catch(e){showToast('다운로드 실패','error');}}
 
 // GOAL
 async function saveMonthGoal(){const month=document.getElementById('goal-month').value,hours=parseFloat(document.getElementById('goal-hours').value);if(!month||!hours){showToast('월과 목표시간을 입력하세요','error');return;}try{await fetch(`${API}/month_goals`,{method:'POST',headers:H,body:JSON.stringify({month,target_hours:hours})});showToast(`${month} 목표 저장됨`,'success');loadGoals();}catch(e){try{await fetch(`${API}/month_goals?month=eq.${month}`,{method:'PATCH',headers:H,body:JSON.stringify({target_hours:hours})});showToast(`${month} 목표 수정됨`,'success');loadGoals();}catch(e2){showToast('저장 실패','error');}}}

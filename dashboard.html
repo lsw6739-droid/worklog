@@ -424,6 +424,21 @@ const ATTEND_LABELS_DB   = {annual:'연차', half:'반차', quarter:'반반차',
 // 로컬 날짜 → YYYY-MM-DD (toISOString은 UTC 기준이라 한국에서 날짜 오류 발생)
 function dateToStr(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 
+// PostgREST 기본 응답 제한(1000행)에 걸리지 않도록 전체 페이지를 끝까지 가져옴
+async function fetchAllRows(url, headers){
+  const PAGE = 1000;
+  let offset = 0, out = [];
+  while(true){
+    const res = await fetch(url, {headers:{...headers, 'Range-Unit':'items', 'Range':`${offset}-${offset+PAGE-1}`}});
+    const rows = await res.json();
+    if(!Array.isArray(rows) || !rows.length) break;
+    out = out.concat(rows);
+    if(rows.length < PAGE) break;
+    offset += PAGE;
+  }
+  return out;
+}
+
 // 근태 레코드 → 가상 work_log 배열로 변환
 function attendToLogs(attends, employees, periodStart, periodEnd){
   const empMap = {};
@@ -582,13 +597,13 @@ async function loadData() {
   document.querySelector('.db-main').style.opacity = '0.5';
 
   try {
-    const [logsRes, empRes, catRes, attendRes] = await Promise.all([
-      fetch(`${API}/work_logs?log_date=gte.${start}&log_date=lte.${end}&select=*,categories(name),employees(name,emp_id)&order=log_date`, {headers:H}),
+    const [logsRows, empRes, catRes, attendRes] = await Promise.all([
+      fetchAllRows(`${API}/work_logs?log_date=gte.${start}&log_date=lte.${end}&select=*,categories(name),employees(name,emp_id)&order=log_date`, H),
       fetch(`${API}/employees?order=name`, {headers:H}),
       fetch(`${API}/categories?is_active=eq.true&order=name`, {headers:H}),
       fetch(`${API}/attends?start_date=lte.${end}&end_date=gte.${start}&select=*`, {headers:H})
     ]);
-    allLogs = await logsRes.json();
+    allLogs = logsRows;
     allEmployees = await empRes.json();
     // 인원별 고정 색상 맵 빌드
     allEmployees.forEach((e, i) => { memberColorMap[e.id] = COLORS[i % COLORS.length]; });
