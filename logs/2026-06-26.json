@@ -101,5 +101,40 @@
         ]
       }
     ]
+  },
+  {
+    "time": "19:13",
+    "changes": [
+      {
+        "action": "added",
+        "title": "NT BPR 수정",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "2026-06-26 BPR 검토",
+        "employee": "김형성",
+        "details": [
+          "✏️ BP02 → TN01"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "QMS 유지보수 요청",
+        "employee": "김형성",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "NT 영향성 확인",
+        "employee": "김형성",
+        "details": [
+          "완료처리"
+        ]
+      }
+    ]
   }
 ]
