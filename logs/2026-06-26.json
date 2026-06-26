@@ -1,0 +1,61 @@
+[
+  {
+    "time": "11:13",
+    "changes": [
+      {
+        "action": "added",
+        "title": "Sugammadex 수출 관련 패킹 사진 요청",
+        "employee": "이상우",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "AI TF팀 중간 점검 설문 조사",
+        "employee": "이상우",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "근태 관련",
+        "employee": "임승완",
+        "details": [
+          "주영 사원 6/26(연차 6시간으로 사용 요청)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "포장지시(7/6 출하건 부터)-PR/MX 포장지시 필요",
+        "employee": "임승완",
+        "details": [
+          "제목: 포장지시(6/26 출하건 부터) → 포장지시(7/6 출하건 부터)-PR/MX 포장지시 필요",
+          "➕ MX125H010 추가 소분 포장 지시 필요(10월 출하)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "SG CHT 오류 소급",
+        "employee": "김경원",
+        "details": [
+          "완료처리",
+          "✅ 반납"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "MX125H010 추가 소분 포장 지시 필요(10월 출하)",
+        "employee": "임승완",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "부서 업무 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "➕ 생산3동 출입구역 설정"
+        ]
+      }
+    ]
+  }
+]
