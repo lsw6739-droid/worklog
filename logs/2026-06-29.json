@@ -13,5 +13,69 @@
         ]
       }
     ]
+  },
+  {
+    "time": "13:06",
+    "changes": [
+      {
+        "action": "added",
+        "title": "2026-06-29 BPR 검토",
+        "employee": "김형성",
+        "details": [
+          "EDM"
+        ]
+      },
+      {
+        "action": "added",
+        "title": "2026-06-29 공정시간 설정",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "PP 밀링 툴 작성",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "7월 작성상황 업데이트",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "deleted",
+        "title": "PP 밀링 1건 진행",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "2026-06-26 BPR 검토",
+        "employee": "김형성",
+        "details": [
+          "완료처리",
+          "✅ TN01"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "FDA 불시점검 대비  자체 D.I. ~2026 1Q",
+        "employee": "김경원",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "팀장 논의/보고 사항",
+        "employee": "김형성",
+        "details": [
+          "✅ NT 관련 자료 정리 후 팀장 보고",
+          "➕ BPR 담당자 설정 관련 논의",
+          "🗑 이번주 PP 밀링 완료"
+        ]
+      }
+    ]
   }
 ]
