@@ -77,5 +77,35 @@
         ]
       }
     ]
+  },
+  {
+    "time": "18:13",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "7월 작성상황 업데이트",
+        "employee": "김형성",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "팀장 논의/보고 사항",
+        "employee": "김형성",
+        "details": [
+          "➕ 낱장서식 기록 방법 팀장 보고"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "DI 검토",
+        "employee": "김형성",
+        "details": [
+          "✅ TN125L010",
+          "✅ TN126B010"
+        ]
+      }
+    ]
   }
 ]
