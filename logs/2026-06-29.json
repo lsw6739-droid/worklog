@@ -107,5 +107,37 @@
         ]
       }
     ]
+  },
+  {
+    "time": "22:49",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "원료 수급 및 제조일정 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "➕ LT PV 일정은 연기되갈수도 있으니 재고 확인하면서 제조 하는 것 필요",
+          "➕ UP PV HDPE 사이즈 및 재질 확인(냉동고 사이즈 고려해서)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "포장지시(7/6 출하건 부터)-PR/MX 포장지시 필요(MX 96.96g Maruho(YSLS-C260211) 패킹디테일 문의의 건 )",
+        "employee": "임승완",
+        "details": [
+          "제목: 포장지시(7/6 출하건 부터)-PR/MX 포장지시 필요 → 포장지시(7/6 출하건 부터)-PR/MX 포장지시 필요(MX 96.96g Maruho(YSLS-C260211) 패킹디테일 문의의 건 )",
+          "➕ MX 96.96g Maruho(YSLS-C260211) 패킹디테일 문의의 건"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "영수증 처리",
+        "employee": "임승완",
+        "details": [
+          "➕ 6/29-점심/ 커피-회식비",
+          "➕ 6/29-저녁식대"
+        ]
+      }
+    ]
   }
 ]
