@@ -19,5 +19,98 @@
         ]
       }
     ]
+  },
+  {
+    "time": "11:14",
+    "changes": [
+      {
+        "action": "added",
+        "title": "8월 GMP Trend 교육-컴퓨터 시스템 밸리데이션",
+        "employee": "김경원",
+        "details": [
+          "일정 설정",
+          "PPT 작성",
+          "질의서 작성",
+          "교육계획 등록"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "월말/월초 업무",
+        "employee": "이상우",
+        "details": [
+          "✅ 5월 - 유태규 (06/26)",
+          "✅ 6월 - 김현덕 (06/24)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "IP (Imidapril Hydrochloride) 품목 삭제(CC2605-023)(CC2605-023)",
+        "employee": "임승완",
+        "details": [
+          "✅ 2. 로그북 위치 현황 - 종합_(2025~) - IP 관련 기록 삭제 (삭제시, 취소선 및 메모 남겨두기)",
+          "➕ VO-179는 2023년에 로그북 사용 중단하여 로그북 실물 없음"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "Sugammadex 수출 관련 패킹 사진 요청",
+        "employee": "이상우",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "팀장 논의/보고 사항",
+        "employee": "김형성",
+        "details": [
+          "✅ BPR 담당자 설정 관련 논의"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "제품 표시라벨 간소화",
+        "employee": "이주영",
+        "details": [
+          "✏️ >> 라벨 서식을 머릿말이 아닌 이미지를 붙여넣도록 수정 → >> 라벨 서식을 머릿말이 아닌 이미지를 붙여넣도록 수정 필요"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "AI 도입을 위한 업무 전산화 및 데이터 확보 Sheet 초안 작성",
+        "employee": "김경원",
+        "details": [
+          "기한: 없음 → 2026-07-03"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "독립형 기기로그북관리기준",
+        "employee": "김경원",
+        "details": [
+          "기한: 2026-06-26 → 2026-07-03"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "로그북 발행 제조팀 교육안 설립",
+        "employee": "김경원",
+        "details": [
+          "➕ 결론: 제조관리팀에서 진행",
+          "🗑 필요 시 교육 자료 생성",
+          "🗑 필요 시 웍스 생성"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "Adobe pro 구매 요청",
+        "employee": "이상우",
+        "details": [
+          "완료처리",
+          "기한: 없음 → 2026-06-29"
+        ]
+      }
+    ]
   }
 ]
