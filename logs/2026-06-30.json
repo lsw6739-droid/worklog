@@ -112,5 +112,42 @@
         ]
       }
     ]
+  },
+  {
+    "time": "15:36",
+    "changes": [
+      {
+        "action": "added",
+        "title": "AT 건조 방향성 확인",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "팀장 논의/보고 사항",
+        "employee": "김형성",
+        "details": [
+          "➕ QMS 업체 답변 팀장 보고",
+          "🗑 낱장서식 기록 방법 팀장 보고"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "NT BPR 수정",
+        "employee": "김형성",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "QMS 개발 리스트 취합",
+        "employee": "김형성",
+        "details": [
+          "✅ 답변에 따른 사업과제 설정",
+          "➕ 업체 답변에 대한 팀장 보고"
+        ]
+      }
+    ]
   }
 ]
