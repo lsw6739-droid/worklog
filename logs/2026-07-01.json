@@ -98,5 +98,91 @@
         ]
       }
     ]
+  },
+  {
+    "time": "17:02",
+    "changes": [
+      {
+        "action": "added",
+        "title": "제품표시라벨 간소화를 위한 요청 양식 만들기",
+        "employee": "이상우",
+        "details": []
+      },
+      {
+        "action": "deleted",
+        "title": "AI TF팀 중간 점검 설문 조사",
+        "employee": "이상우",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "AT 건조 방향성 확인",
+        "employee": "김형성",
+        "details": [
+          "➕ 공정시간 이력 작성",
+          "➕ AT 커뮤니티 작성"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "원료 수급 및 제조일정 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "➕ MH 제조일정 변경(바이패스 배관 변경 건)",
+          "➕ 재고 없는 품목 조사",
+          "➕ PR01, LTB01 검체 확인",
+          "➕ 생산3동 내용 확인(도면)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "PP 밀링 툴 작성",
+        "employee": "김형성",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "제조본부 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "➕ -제조장비에 대한 빠삭한 이해?(도면을 이해할 수 있을까?)-공정 설계/개선?"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "TP-001 분기단위 공정시간 수정",
+        "employee": "김경원",
+        "details": [
+          "기한: 2026-07-01 → 2026-10-01",
+          "✅ 26년 3분기"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "AI TF",
+        "employee": "이상우",
+        "details": [
+          "제목: AI 서비스 사용자 교육 → AI TF"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "로그북 발행 제조팀 교육안 설립",
+        "employee": "김경원",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "팀장 논의/보고 사항",
+        "employee": "김형성",
+        "details": [
+          "➕ AT 방향성 팀장 보고"
+        ]
+      }
+    ]
   }
 ]
