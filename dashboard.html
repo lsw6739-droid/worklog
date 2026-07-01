@@ -1185,7 +1185,7 @@ async function renderWeekWidget() {
   try {
     const [logsRes, attendsRes] = await Promise.all([
       fetch(`${API}/work_logs?log_date=gte.${start}&log_date=lte.${end}&select=employee_id,hours`,{headers:H}),
-      fetch(`${API}/attends?start_date=lte.${end}&end_date=gte.${start}&select=employee_id,exclude_hours`,{headers:H})
+      fetch(`${API}/attends?start_date=lte.${end}&end_date=gte.${start}&select=*`,{headers:H})
     ]);
     weekLogs = await logsRes.json();
     weekAttends = await attendsRes.json();
@@ -1196,8 +1196,9 @@ async function renderWeekWidget() {
   const byMember = {};
   allEmployees.forEach(e=>byMember[e.id]={name:e.name,hours:0});
   weekLogs.forEach(l=>{if(byMember[l.employee_id])byMember[l.employee_id].hours+=Number(l.hours);});
-  // 근태 시간 합산 (연차 등 제외 시간을 공수로 포함)
-  weekAttends.forEach(function(a){if(byMember[a.employee_id])byMember[a.employee_id].hours+=Number(a.exclude_hours||0);});
+  // 근태 시간 합산 — attendToLogs 로 해당 주(week) 범위만 정확히 계산
+  attendToLogs(weekAttends, allEmployees, start, end)
+    .forEach(function(l){if(byMember[l.employee_id])byMember[l.employee_id].hours+=Number(l.hours);});
 
   const weekGoal = monthGoal/4;
   const sorted = Object.values(byMember).sort((a,b)=>b.hours-a.hours);
