@@ -1,0 +1,26 @@
+[
+  {
+    "time": "08:49",
+    "changes": [
+      {
+        "action": "added",
+        "title": "월 - 작성상황 일정 확인",
+        "employee": "김형성",
+        "details": [
+          "7/6",
+          "7/13",
+          "7/20",
+          "7/27"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "제조장비 표준시간 동기화 SOP 개정",
+        "employee": "김형성",
+        "details": [
+          "✅ SOP 개정 (~7/3)"
+        ]
+      }
+    ]
+  }
+]
