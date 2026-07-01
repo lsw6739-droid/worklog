@@ -184,5 +184,27 @@
         ]
       }
     ]
+  },
+  {
+    "time": "20:36",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "DI 검토",
+        "employee": "김형성",
+        "details": [
+          "✅ 제조실 사용기록서",
+          "✅ 저울 장비 사용일지"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "원료 수급 및 제조일정 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "✏️ PR01, LTB01 검체 확인 → PR01, LTB01 검체 확인(PR01 검체도 확인 필요)-확인필요"
+        ]
+      }
+    ]
   }
 ]
