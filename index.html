@@ -3492,9 +3492,9 @@ function wpExportExcel(){
   const merges=[]; const lastCol=2+n;
   _wpEmps.forEach((emp,ei)=>{
     const r=_wpCalcP(_wpPlan[ei]); const rb=aoa.length;
-    const co=[emp.name,'퇴근시간']; for(let d=1;d<=n;d++){ const v=_wpPlan[ei][d-1]; co.push(v>0?_wpCheckout(v):'-'); }
+    const co=[emp.name,'퇴근시간']; for(let d=1;d<=n;d++){ const v=_wpPlan[ei][d-1]; co.push(v>0?_wpCheckout(v):''); }
     co.push(r.total.toFixed(1)); aoa.push(co);
-    const wh=['','근무h']; for(let d=1;d<=n;d++){ const v=_wpPlan[ei][d-1]; wh.push(v>0?v:'-'); } wh.push(''); aoa.push(wh);
+    const wh=['','근무h']; for(let d=1;d<=n;d++){ const v=_wpPlan[ei][d-1]; wh.push(v>0?v:''); } wh.push(''); aoa.push(wh);
     merges.push({s:{r:rb,c:0},e:{r:rb+1,c:0}});
     merges.push({s:{r:rb,c:lastCol},e:{r:rb+1,c:lastCol}});
   });
