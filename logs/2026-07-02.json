@@ -156,5 +156,34 @@
         ]
       }
     ]
+  },
+  {
+    "time": "18:40",
+    "changes": [
+      {
+        "action": "added",
+        "title": "QMS 유지보수 요청",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "제조장비 표준시간 동기화 SOP 개정",
+        "employee": "김형성",
+        "details": [
+          "기한: 2026-06-30 → 2026-07-14"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "BPW TLC 이슈 보고 PPT 생성",
+        "employee": "김경원",
+        "details": [
+          "완료처리",
+          "✅ PPT 생성",
+          "✅ 팀장보고"
+        ]
+      }
+    ]
   }
 ]
