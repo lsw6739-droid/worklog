@@ -33,5 +33,16 @@
         ]
       }
     ]
+  },
+  {
+    "time": "17:47",
+    "changes": [
+      {
+        "action": "added",
+        "title": "작성상황 일정 수립 관련 AI 생성",
+        "employee": "김형성",
+        "details": []
+      }
+    ]
   }
 ]
