@@ -20,5 +20,18 @@
         ]
       }
     ]
+  },
+  {
+    "time": "10:54",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "팀장 논의/보고 사항",
+        "employee": "김형성",
+        "details": [
+          "➕ Weight information list 관련 논의"
+        ]
+      }
+    ]
   }
 ]
