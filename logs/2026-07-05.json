@@ -1,0 +1,66 @@
+[
+  {
+    "time": "10:13",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "개인메신저 확인",
+        "employee": "임승완",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "AI 세미나",
+        "employee": "임승완",
+        "details": [
+          "기한: 없음 → 2026-09-14",
+          "✅ 6/29-11시",
+          "✅ -점심(한마음정육식당 화성팔탄점)",
+          "✅ x-ble shoulder(현대자동차 로보틱스랩-렌탈도)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "AI TF",
+        "employee": "임승완",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "제조본부 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-07-01 → 2026-07-09"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "제조일정 관련 업무 개선",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-07-03 → 2026-07-10"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "영수증 처리",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-07-03 → 2026-07-10"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "원료 수급 및 제조일정 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-07-02 → 2026-07-16"
+        ]
+      }
+    ]
+  }
+]
