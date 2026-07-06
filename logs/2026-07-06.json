@@ -45,5 +45,92 @@
         ]
       }
     ]
+  },
+  {
+    "time": "16:01",
+    "changes": [
+      {
+        "action": "added",
+        "title": "RG02126F010 수정",
+        "employee": "김경원",
+        "details": [
+          "RG01 칭량표 분할서명 누락",
+          "D-4~E-1 Trend Chart 내 덧쓰기",
+          "F-3 Audit Trail Step No 덧쓰기",
+          "F-5, F-9 Audit Trail Step No 상이",
+          "H-3 건조시간 결과값 분 작성 누락",
+          "BCR 시간에 맞춰 로그북 시간 재설정",
+          "제품무게 및 수율이 PVRG-260610-01 보고서와 상이. BPR 28.422kg 86.1%/보고서 28.438kg 86.2%",
+          "C-2 교반 정치 > 정지",
+          "F-2 Jacket 설정 결과 단위 오류",
+          "반응 TLC plate 가로길이 1.8cm > 샘플 없음 재현 불가능. 이번 건은 넘어가야할듯",
+          "BPR 완료일(6/10)과 검토기록서(7/6)간의 갭"
+        ]
+      },
+      {
+        "action": "added",
+        "title": "생산2동 PFW Feeding 문서 확인",
+        "employee": "김경원",
+        "details": [
+          "박형우선임 연락",
+          "IOQ 문서 확인 요청",
+          "스캔",
+          "팀장보고"
+        ]
+      },
+      {
+        "action": "added",
+        "title": "CC2606-017 / 제법 추가를 위한 Unoprostone Isopropyl(UP) 기술이전",
+        "employee": "이상우",
+        "details": [
+          "Label 제정"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "제조실 소독 기록 수립",
+        "employee": "김경원",
+        "details": [
+          "기한: 2026-07-06 → 2026-07-10",
+          "✅ 연간일정 참고, 초안 수립",
+          "➕ 근거 [PC010] 제조소의 청소 및 점검 V01(2025-08-29) 4.1.2 정기적으로 1년에 1회는 소독을 실시해야 한다. V02(2025-12-30) 해당 내용 삭제됐으나 이상우상무님 지시로 1년에 1회 소독 실시",
+          "➕ 이슈사항 PPT 작성, 보고"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "AP Audit(타나베파마코리아/한국) 실사 준비(6/17)",
+        "employee": "이주영",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "부서 업무 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "➕ 제조소 소독(분기별 1회로 변경됨(2025.12월 말)-경원 정리 내용 확인"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "원료칭량순서에 따른 칭량표 검토 Excel 업데이트",
+        "employee": "김경원",
+        "details": [
+          "기한: 2026-06-30 → 2026-07-24",
+          "✅ 보관관리팀 리뉴얼 완료 확인"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "원료 수급 및 제조일정 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "➕ BR-25-03 부형제 처리(BR125I010)",
+          "➕ MI 일정 변경"
+        ]
+      }
+    ]
   }
 ]
