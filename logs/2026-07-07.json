@@ -1,0 +1,239 @@
+[
+  {
+    "time": "11:46",
+    "changes": [
+      {
+        "action": "added",
+        "title": "PP 밀링 1건 진행",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "제조팀 신입사원 교육용 자료 업데이트",
+        "employee": "김경원",
+        "details": [
+          "완료처리",
+          "➕ 1. GMP 흐름에 따른 제조 절차",
+          "➕ 2. 제조 지시 및 기록서 작성 방법",
+          "➕ 3. 세척 지시 및 기록서 작성 방법",
+          "➕ 4. 문서 작성 시 주의 사항"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "실사관련 보관관리팀 요청",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-06-30 → 2026-07-10"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "제품표시라벨 간소화",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-06-30 → 2026-07-30",
+          "✅ QA 팀장님 논의(부서장님 같이 가기)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "제조장비 표준시간 동기화 SOP 개정",
+        "employee": "김형성",
+        "details": [
+          "✅ 팀장 검토"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "API 수율 엑셀 리뉴얼(수율 모두 올리기)",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-06-30 → 2026-07-10"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "작성상황 대시보드 웹으로 만들어보기",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-06-30 → 2026-07-10"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "팀 면담(6/18-1차)",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-06-30 → 2026-07-10"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "팀장 논의/보고 사항",
+        "employee": "김형성",
+        "details": [
+          "➕ SOP 결재"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "생산관리 교육 정리-생산기획팀 제안",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-06-30 → 2026-07-24"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "포장지시(7/10 출하건 부터)-PR/MX 포장지시 필요(MX 96.96g Maruho(YSLS-C260211) 패킹디테일 문의의 건 )",
+        "employee": "임승완",
+        "details": [
+          "제목: 포장지시(7/6 출하건 부터)-PR/MX 포장지시 필요(MX 96.96g Maruho(YSLS-C260211) 패킹디테일 문의의 건 ) → 포장지시(7/10 출하건 부터)-PR/MX 포장지시 필요(MX 96.96g Maruho(YSLS-C260211) 패킹디테일 문의의 건 )",
+          "기한: 2026-06-29 → 2026-07-07",
+          "➕ AF 수율 확인 후 DP 공유 필요",
+          "🗑 ED 미리보기 오류",
+          "🗑 6/2 EDM 포장지시 진행",
+          "🗑 PRWS-001001",
+          "🗑 EDM 포장지시 상우 선임 인계(교육 진행)-6월초",
+          "🗑 MX 96.96g Maruho(YSLS-C260211) 패킹디테일 문의의 건"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "업무 인수인계 준비",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-06-30 → 2026-07-24"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "제목: 계획 수립(개인) → TO DO LIST",
+          "기한: 없음 → 2026-07-07",
+          "➕ 포장지시",
+          "➕ SUS 팜 방문 준비+생산3동 주의문구 추가 작성준비(거울 위치 확인 건)",
+          "➕ 공수관리 월간 결산",
+          "➕ 써스팜 답장+기안 할수있도록 자료 정리",
+          "➕ >물품구매 확인(슬리퍼/이름표(신발장)/월프레임/고리/노란테이프/로그북 등)",
+          "➕ 제조일정/부서업무 후속작업 확인",
+          "➕ > 부서 업무: SOP 확인 후 참석/ 구매물품 리스트 정리(이름표/슬리퍼/ 월프레임/ 로그북 등)/ 관리사본 배포 공간도 확인(관련 장비 명도 같이 기재)",
+          "➕ 가계부"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "회계",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-06-29 → 2026-07-24"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "온도 안정성 확인( 윌로그)",
+        "employee": "임승완",
+        "details": [
+          "상태: waiting → active",
+          "기한: 없음 → 2026-08-10"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "제조관리 신입사원 관련",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-06-30 → 2026-07-10",
+          "✅ 메일 공유",
+          "➕ 답변 대기"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "FDA 불시점검 대비  자체 D.I. ~2026 1Q",
+        "employee": "김경원",
+        "details": [
+          "기한: 2026-06-30 → 2026-07-10"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "26년/27년 업무 순환 고민",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-07-02 → 2026-07-10"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "KPI 설정하기",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-06-30 → 2026-07-10"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "생산2동 PFW Feeding 문서 확인",
+        "employee": "김경원",
+        "details": [
+          "상태: waiting → active",
+          "✅ 박형우선임 연락",
+          "✅ IOQ 문서 확인 요청"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "MCI 컨셉 만들기",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-06-30 → 2026-07-10"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "공수 산정 분석 결과 공유(7/1-수)",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-07-01 → 2026-07-07"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "DI 검토",
+        "employee": "김형성",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "제조본부 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-07-09 → 2026-07-15"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "영수증 처리",
+        "employee": "임승완",
+        "details": [
+          "➕ 7/5-특근 식대"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "업무분장 엑셀 리뉴얼",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-06-30 → 2026-07-10"
+        ]
+      }
+    ]
+  }
+]
