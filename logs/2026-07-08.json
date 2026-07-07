@@ -1,0 +1,70 @@
+[
+  {
+    "time": "08:45",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "생산 3동 장비/기구/물품 입고 일정 관리",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-06-30 → 2026-07-08"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "작성상황 업데이트",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-06-30 → 2026-07-10"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "부서 업무 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "➕ 의약품 제조품질 교육과정 중 채용 설명회",
+          "➕ 기술이전 취합"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-07-07 → 2026-07-08",
+          "✏️ 포장지시 → 포장지시(EDM/ 7/20까지)",
+          "➕ EtOH JP 규격 투입 오류건 확인",
+          "➕ 기술이전 취합",
+          "➕ 제조관리 회의 준비",
+          "➕ KPI 준비",
+          "🗑 SUS 팜 방문 준비+생산3동 주의문구 추가 작성준비(거울 위치 확인 건)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "포장지시(7/14 출하건 부터)-PR/MX 포장지시 필요",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-07-07 → 2026-07-08"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "공수 산정 분석 결과 공유(7/1-수)",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-07-07 → 2026-07-08"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "RG01 pH 관련 메일 공유",
+        "employee": "임승완",
+        "details": [
+          "완료처리"
+        ]
+      }
+    ]
+  }
+]
