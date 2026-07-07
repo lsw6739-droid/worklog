@@ -235,5 +235,30 @@
         ]
       }
     ]
+  },
+  {
+    "time": "15:36",
+    "changes": [
+      {
+        "action": "deleted",
+        "title": "GMP Trend 교육",
+        "employee": "유태규",
+        "details": []
+      },
+      {
+        "action": "deleted",
+        "title": "LTB 3배치, LT 출하일정에 따른 LT/LTB 일정 설정",
+        "employee": "유태규",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "➕ PR, AF 일정 변경 공유(AF 이슈)"
+        ]
+      }
+    ]
   }
 ]
