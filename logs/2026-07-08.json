@@ -66,5 +66,62 @@
         ]
       }
     ]
+  },
+  {
+    "time": "10:43",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "근태 관련",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-06-29 → 2026-07-24",
+          "✅ 주영 사원 6/26(연차 6시간으로 사용 요청)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "출하 업무 인수인계 계획 수립",
+        "employee": "이상우",
+        "details": [
+          "➕ - Sensitech TTMD 프로그램"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "생산2동 PFW Feeding 문서 확인",
+        "employee": "김경원",
+        "details": [
+          "✅ 팀장보고",
+          "➕ 제조사 스펙 확인 요청",
+          "➕ 자체 Test 자료 요청",
+          "🗑 스캔"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "부서 업무 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "➕ 생산2동 로드셀 미니멈 데이터는 적격성 평가를 하지 않고 있음.(30kg 자체적으로 한것은 자료는 있을 것이나, GMP적인 내용은 아님. 필요하다면 적격성평가를 요청할순있으나 현실적으로 어려움(EX. 반응기마다 반복성을 진행 1000L를 반복해야하는 등 일반 저울이 아니기 때문에 신규 스터디를 해야함)+제조사 스펙 요청 후 확인"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "제조실 소독 기록 수립",
+        "employee": "김경원",
+        "details": [
+          "✅ 팀장 보고"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "RG02126F010 수정",
+        "employee": "김경원",
+        "details": [
+          "기한: 2026-07-08 → 2026-07-10"
+        ]
+      }
+    ]
   }
 ]
