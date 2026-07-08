@@ -235,5 +235,88 @@
         ]
       }
     ]
+  },
+  {
+    "time": "18:54",
+    "changes": [
+      {
+        "action": "added",
+        "title": "CG, TP Audit(World Medicine/터키) 실사 준비(10/28)_김동효",
+        "employee": "임승완",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "제품 표시라벨 간소화",
+        "employee": "이주영",
+        "details": [
+          "✅ PDF 저장 시 YS 로고 위치 조정 필요> 수정필요!"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "[공지] BP, TP Audit(Opella Healthcare/Brazil)실사 준비(11/25~26)_이주영",
+        "employee": "김동효",
+        "details": [
+          "제목: [공지] BP, TP Audit(Opella Healthcare/Brazil)실사 준비(11/25~26)_김동효 → [공지] BP, TP Audit(Opella Healthcare/Brazil)실사 준비(11/25~26)_이주영"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "부서 업무 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "➕ RG03 수율이슈로인한 BPR 및 로그북 작성 중단"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "[공지] BP, TP Audit(Opella Healthcare/Brazil)실사 준비(11/25~26)_이주영",
+        "employee": "김경원",
+        "details": [
+          "제목: [공지] BP, TP Audit(Opella Healthcare/Brazil)실사 준비(11/25~26)_김동효 → [공지] BP, TP Audit(Opella Healthcare/Brazil)실사 준비(11/25~26)_이주영"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "[공지] BP, TP Audit(Opella Healthcare/Brazil)실사 준비(11/25~26)_이주영",
+        "employee": "유태규",
+        "details": [
+          "제목: [공지] BP, TP Audit(Opella Healthcare/Brazil)실사 준비(11/25~26)_김동효 → [공지] BP, TP Audit(Opella Healthcare/Brazil)실사 준비(11/25~26)_이주영"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "[공지] BP, TP Audit(Opella Healthcare/Brazil)실사 준비(11/25~26)_이주영",
+        "employee": "이주영",
+        "details": [
+          "제목: [공지] BP, TP Audit(Opella Healthcare/Brazil)실사 준비(11/25~26)_김동효 → [공지] BP, TP Audit(Opella Healthcare/Brazil)실사 준비(11/25~26)_이주영"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "[공지] BP, TP Audit(Opella Healthcare/Brazil)실사 준비(11/25~26)_이주영",
+        "employee": "김형성",
+        "details": [
+          "제목: [공지] BP, TP Audit(Opella Healthcare/Brazil)실사 준비(11/25~26)_김동효 → [공지] BP, TP Audit(Opella Healthcare/Brazil)실사 준비(11/25~26)_이주영"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "[공지] BP, TP Audit(Opella Healthcare/Brazil)실사 준비(11/25~26)_이주영",
+        "employee": "이상우",
+        "details": [
+          "제목: [공지] BP, TP Audit(Opella Healthcare/Brazil)실사 준비(11/25~26)_김동효 → [공지] BP, TP Audit(Opella Healthcare/Brazil)실사 준비(11/25~26)_이주영"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "[공지] BP, TP Audit(Opella Healthcare/Brazil)실사 준비(11/25~26)_이주영",
+        "employee": "임승완",
+        "details": [
+          "제목: [공지] BP, TP Audit(Opella Healthcare/Brazil)실사 준비(11/25~26)_김동효 → [공지] BP, TP Audit(Opella Healthcare/Brazil)실사 준비(11/25~26)_이주영"
+        ]
+      }
+    ]
   }
 ]
