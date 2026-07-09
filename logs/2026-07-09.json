@@ -157,5 +157,31 @@
         ]
       }
     ]
+  },
+  {
+    "time": "19:30",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "✅ -EtOH JP 규격 투입 오류건 확인",
+          "➕ T 1차포장 사진 전달요청 (삼성서울병원)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "생산2동 PFW Feeding 문서 확인",
+        "employee": "김경원",
+        "details": [
+          "기한: 2026-07-08 → 2026-07-17",
+          "✅ 제조사 스펙 확인 요청",
+          "✅ 자체 Test 자료 요청",
+          "➕ 7/17  Remind",
+          "➕ 7/22 까지 완료 요청"
+        ]
+      }
+    ]
   }
 ]
