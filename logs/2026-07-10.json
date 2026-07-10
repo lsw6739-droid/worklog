@@ -1,0 +1,115 @@
+[
+  {
+    "time": "10:53",
+    "changes": [
+      {
+        "action": "added",
+        "title": "방문자 출입 일지 (모든 제조소) 확인",
+        "employee": "김동효",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "제조본부 소독제 교체 및 소독 진행 알림",
+        "employee": "김경원",
+        "details": [
+          "2026-07-24",
+          "2026-10-23",
+          "2027-02-22",
+          "2027-04-23",
+          "2027-07-23",
+          "2027-10-22"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "제조장비 표준시간 동기화 SOP 개정",
+        "employee": "김형성",
+        "details": [
+          "✅ 부서장 검토",
+          "✅ 결재"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "QMS 유지보수 요청",
+        "employee": "김형성",
+        "details": [
+          "완료처리",
+          "➕ Weight information List 발송"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "3개월청소 로그북 작성확인",
+        "employee": "김경원",
+        "details": [
+          "기한: 2026-07-10 → 2026-07-15"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "공수 산정 분석 결과 공유(7/1-수)",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-07-09 → 2026-07-13"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "제조작업자 인증, BPR 작성교육",
+        "employee": "김경원",
+        "details": [
+          "기한: 2026-07-10 → 2026-07-13",
+          "✅ BCR 발행요청 ~7/10",
+          "✅ 개인위생점검기록서 발행요청 ~7/10"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-07-09 → 2026-07-10"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "제조관리 회의",
+        "employee": "임승완",
+        "details": [
+          "➕ 공수 관련",
+          "➕ 팀장 개인 관련"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "팀장 논의/보고 사항",
+        "employee": "김형성",
+        "details": [
+          "✅ Weight information list 관련 논의",
+          "✅ 중간체 사용 승인서 오류 시 건수 어떻게 잡는지 > 전 배치에서 잡음 > 금방 진행되는 건이라서 수정 소요시간은 잡지 않음"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "포장지시(7/14 출하건 부터)-PR/MX 포장지시 필요",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-07-09 → 2026-07-10"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "제조관리 신입사원 관련",
+        "employee": "임승완",
+        "details": [
+          "✅ 답변 대기",
+          "➕ 7/10(금) 혁래 팀장님 구성안 작성",
+          "➕ 7/23(목) 소개자료 공유",
+          "➕ 7/27(월) 10~12시 채용 설명회"
+        ]
+      }
+    ]
+  }
+]
