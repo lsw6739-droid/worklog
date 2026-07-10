@@ -111,5 +111,52 @@
         ]
       }
     ]
+  },
+  {
+    "time": "14:54",
+    "changes": [
+      {
+        "action": "added",
+        "title": "매주 금 퇴근전 - QMS 유지보수 매일 송부",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "9월 검교정 일정 수립",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "MM015-15, PC017-01 비교 및 개정",
+        "employee": "이주영",
+        "details": [
+          "문서 비교 및 팀장 검토",
+          "부서장님 보고",
+          "변경제안",
+          "개정진행",
+          "서명",
+          "교육"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "작성상황 모니터링 개선",
+        "employee": "김형성",
+        "details": [
+          "✏️ 제조팀 오류 건수에 품목별(실시간 VS 제관 설정 품목), 연차별 확인될 수 있도록 개선 → 제조팀 오류 건수에 품목별(실시간 VS 제관 설정 품목)",
+          "➕ 연차별 확인될 수 있도록 개선"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "SOP 제/개정(QMS, 주소변경 건 등)",
+        "employee": "이주영",
+        "details": [
+          "➕ MM020 함께 개정"
+        ]
+      }
+    ]
   }
 ]
