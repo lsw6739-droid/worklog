@@ -572,5 +572,18 @@
         ]
       }
     ]
+  },
+  {
+    "time": "22:11",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "✅ -기술이전 취합"
+        ]
+      }
+    ]
   }
 ]
