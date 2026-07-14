@@ -536,7 +536,7 @@ html[data-theme="dark"] .badge-warn{background:rgba(255,159,10,.18);color:#ff9f0
               <span id="todo-count" style="font-size:10px;color:var(--text3)"></span>
             </div>
             <div style="display:flex;gap:8px;margin-bottom:12px">
-              <input type="text" id="todo-input" placeholder="할일 입력 후 Enter" style="flex:1;margin-bottom:0" onkeydown="if(event.key==='Enter'){event.preventDefault();addTodo()}">
+              <input type="text" id="todo-input" placeholder="할일 입력 후 Enter" style="flex:1;margin-bottom:0" onkeydown="if(event.key==='Enter'&&!event.isComposing&&event.keyCode!==229){event.preventDefault();addTodo()}">
               <button class="btn btn-primary btn-sm" onclick="addTodo()">추가</button>
             </div>
             <div id="todo-list"><div class="loading"><div class="spinner"></div>불러오는 중...</div></div>
@@ -805,7 +805,7 @@ html[data-theme="dark"] .badge-warn{background:rgba(255,159,10,.18);color:#ff9f0
           <label>체크리스트 <span style="color:var(--text3);font-size:10px">(선택)</span></label>
           <div id="notice-checklist" style="margin-bottom:8px;min-height:4px"></div>
           <div style="display:flex;gap:8px">
-            <input type="text" id="notice-cl-input" placeholder="항목 입력 후 Enter" style="flex:1;margin-bottom:0" onkeydown="if(event.key==='Enter'){event.preventDefault();addNoticeClItem()}">
+            <input type="text" id="notice-cl-input" placeholder="항목 입력 후 Enter" style="flex:1;margin-bottom:0" onkeydown="if(event.key==='Enter'&&!event.isComposing&&event.keyCode!==229){event.preventDefault();addNoticeClItem()}">
             <button class="btn btn-secondary btn-sm" onclick="addNoticeClItem()">추가</button>
           </div>
         </div>
@@ -1063,7 +1063,7 @@ create policy "allow_all" on attends for all using (true);</pre>
       <label>체크리스트</label>
       <div id="detail-checklist" style="margin-bottom:8px;min-height:10px"></div>
       <div style="display:flex;gap:8px">
-        <input type="text" id="checklist-input" placeholder="항목 입력 후 Enter" style="flex:1;margin-bottom:0" onkeydown="if(event.key==='Enter'){event.preventDefault();addChecklistItem()}">
+        <input type="text" id="checklist-input" placeholder="항목 입력 후 Enter" style="flex:1;margin-bottom:0" onkeydown="if(event.key==='Enter'&&!event.isComposing&&event.keyCode!==229){event.preventDefault();addChecklistItem()}">
         <button class="btn btn-secondary btn-sm" onclick="addChecklistHeader()" title="구분 제목 추가" style="white-space:nowrap">▣ 제목</button>
         <button class="btn btn-secondary btn-sm" onclick="addChecklistItem()">추가</button>
       </div>
@@ -1152,7 +1152,7 @@ create policy "allow_all" on attends for all using (true);</pre>
       <label>체크리스트 <span style="color:var(--text3);font-size:10px">(선택)</span></label>
       <div id="en-checklist" style="margin-bottom:8px;min-height:4px"></div>
       <div style="display:flex;gap:8px">
-        <input type="text" id="en-cl-input" placeholder="항목 입력 후 Enter" style="flex:1;margin-bottom:0" onkeydown="if(event.key==='Enter'){event.preventDefault();addEnClItem()}">
+        <input type="text" id="en-cl-input" placeholder="항목 입력 후 Enter" style="flex:1;margin-bottom:0" onkeydown="if(event.key==='Enter'&&!event.isComposing&&event.keyCode!==229){event.preventDefault();addEnClItem()}">
         <button class="btn btn-secondary btn-sm" onclick="addEnClItem()">추가</button>
       </div>
     </div>
@@ -2354,7 +2354,7 @@ function startClEdit(e, i){
 
   input.addEventListener('blur', commit);
   input.addEventListener('keydown', function(ev){
-    if(ev.key === 'Enter'){ ev.preventDefault(); input.blur(); }
+    if(ev.key === 'Enter' && !ev.isComposing && ev.keyCode !== 229){ ev.preventDefault(); input.blur(); }
     if(ev.key === 'Escape'){ input.value = item.text; input.blur(); }
   });
   // 드래그 시작 막기 (input 안에서 텍스트 선택 가능하도록)
@@ -2995,7 +2995,7 @@ function startEnClEdit(e, i){
   function commit(){ const t=input.value.trim(); if(t) enChecklist[i].text=t; clItem.draggable=true; renderEnChecklist(); }
   input.addEventListener('blur', commit);
   input.addEventListener('keydown', function(ev){
-    if(ev.key==='Enter'){ ev.preventDefault(); input.blur(); }
+    if(ev.key==='Enter' && !ev.isComposing && ev.keyCode !== 229){ ev.preventDefault(); input.blur(); }
     if(ev.key==='Escape'){ input.value=item.text; input.blur(); }
   });
   input.addEventListener('dragstart', function(ev){ ev.preventDefault(); ev.stopPropagation(); });
