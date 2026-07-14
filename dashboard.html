@@ -535,10 +535,23 @@ function planBaseline(empId, dateStr){
   return wpIsWeekend(dateStr)?0:WP_STD;
 }
 function classifyByEmployee(logs){
-  const byDay={};
-  logs.forEach(l=>{ const e=l.employee_id,d=l.log_date; if(!e||!d)return; (byDay[e]=byDay[e]||{}); byDay[e][d]=(byDay[e][d]||0)+Number(l.hours||0); });
+  const byDayWork={}, byDayAttend={};
+  logs.forEach(l=>{
+    const e=l.employee_id,d=l.log_date; if(!e||!d)return;
+    const bucket = l.category_id==='attend-virtual' ? byDayAttend : byDayWork;
+    (bucket[e]=bucket[e]||{}); bucket[e][d]=(bucket[e][d]||0)+Number(l.hours||0);
+  });
   const out={};
-  for(const e in byDay){ let base=0,ot=0; for(const d in byDay[e]){ const tot=byDay[e][d],cap=planBaseline(e,d),b=Math.min(tot,cap); base+=b; ot+=tot-b; } out[e]={base:+base.toFixed(1),ot:+ot.toFixed(1),total:+(base+ot).toFixed(1)}; }
+  const emps=new Set([...Object.keys(byDayWork),...Object.keys(byDayAttend)]);
+  emps.forEach(e=>{
+    let base=0,ot=0;
+    const work=byDayWork[e]||{};
+    for(const d in work){ const tot=work[d],cap=planBaseline(e,d),b=Math.min(tot,cap); base+=b; ot+=tot-b; }
+    // 근태(연차·반차 등)는 실제 초과근무가 아니므로 휴일 여부와 무관하게 항상 기본근무로 집계
+    const att=byDayAttend[e]||{};
+    for(const d in att){ base+=att[d]; }
+    out[e]={base:+base.toFixed(1),ot:+ot.toFixed(1),total:+(base+ot).toFixed(1)};
+  });
   return out;
 }
 async function loadWorkPlans(start,end){
