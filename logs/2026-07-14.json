@@ -152,5 +152,27 @@
         ]
       }
     ]
+  },
+  {
+    "time": "17:58",
+    "changes": [
+      {
+        "action": "added",
+        "title": "MM029  공정 보조제 관리 SOP 관련, BCC 카트리지 운영방법",
+        "employee": "김동효",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "제조작업자 인증, BPR 작성교육",
+        "employee": "김경원",
+        "details": [
+          "기한: 2026-07-14 → 2026-07-15",
+          "✅ BCR 문서수령 ~7/14",
+          "✅ 제조팀장 사선처리 ~7/15",
+          "✅ Remind 메일 발송 ~7/14"
+        ]
+      }
+    ]
   }
 ]
