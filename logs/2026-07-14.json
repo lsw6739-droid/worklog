@@ -47,5 +47,97 @@
         ]
       }
     ]
+  },
+  {
+    "time": "13:21",
+    "changes": [
+      {
+        "action": "added",
+        "title": "---------------실사---------------",
+        "employee": "이상우",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "AT 1차 용기별 1차 포장 사용자재 (FRM MM015-16 개정",
+        "employee": "이상우",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "MP 1차 용기별 1차 포장 사용자재 (FRM MM015-16 개정",
+        "employee": "이상우",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "RG 1차 용기별 1차 포장 사용자재 (FRM MM015-16 개정",
+        "employee": "이상우",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "BR04 MCI EtOH 오류",
+        "employee": "김경원",
+        "details": [
+          "외부반출이력 확인",
+          "문서 반출",
+          "재발행요청",
+          "재발행수령",
+          "보관관리팀 전달",
+          "제조팀 전달",
+          "확인 후 반납"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "➕ 써스팜 스케줄 재공유",
+          "🗑 수율 설정(pp-최성필, BP 이시연)",
+          "🗑 cp 확인",
+          "🗑 AT 교육 관련하여 서명 주체 확인필요(이상우 선임? 김혁래 팀장)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "AT 출하 접수",
+        "employee": "이상우",
+        "details": [
+          "완료처리",
+          "기한: 없음 → 2026-07-14"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "월말/월초 업무",
+        "employee": "이상우",
+        "details": [
+          "➕ 07/30 AT",
+          "➕ 07/30 MP",
+          "➕ 08/30 RG",
+          "➕ 09/30 GC",
+          "➕ 11/30 EV",
+          "➕ 11/30 UP"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "PP 밀링 데이터 정리",
+        "employee": "김형성",
+        "details": [
+          "✅ PP Ohara 500g"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "제품표시라벨 제정 건(기술이전)",
+        "employee": "이주영",
+        "details": [
+          "➕ UP 기술이전 제품/표준품 표시라벨 제정 필요(CC2606-017)-11/30"
+        ]
+      }
+    ]
   }
 ]
