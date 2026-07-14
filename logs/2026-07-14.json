@@ -139,5 +139,18 @@
         ]
       }
     ]
+  },
+  {
+    "time": "15:32",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "팀장 논의/보고 사항",
+        "employee": "김형성",
+        "details": [
+          "➕ PP 제출일 관련 논의"
+        ]
+      }
+    ]
   }
 ]
