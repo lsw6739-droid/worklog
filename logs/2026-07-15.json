@@ -119,5 +119,55 @@
         ]
       }
     ]
+  },
+  {
+    "time": "19:41",
+    "changes": [
+      {
+        "action": "added",
+        "title": "기술이전 절차 회의 준비(제조/제조관리부)",
+        "employee": "임승완",
+        "details": [
+          "회의록 공유",
+          "공유 필요(제조/제조관리부)",
+          "1차 내부회의(부서업무 회의때 진행(7/24)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "AI 도입을 위한 업무 전산화 및 데이터 확보 Sheet 초안 작성",
+        "employee": "김경원",
+        "details": [
+          "완료처리",
+          "상태: active → waiting"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "생산2동 PFW Feeding 문서 확인",
+        "employee": "김경원",
+        "details": [
+          "기한: 2026-07-17 → 2026-07-16",
+          "✏️ 7/17  Remind → 7/16  Remind"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "RG02126F010 수정",
+        "employee": "김경원",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "➕ 기술이전 회의 준비(7/29-수 제조본부 회의 종료 후)-부사장님 일정 문의",
+          "➕ 생산 3동 저울 IOQ 이후 일정 확인(문서 승인본시행 가능한지?)"
+        ]
+      }
+    ]
   }
 ]
