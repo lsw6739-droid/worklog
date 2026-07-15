@@ -1,0 +1,27 @@
+[
+  {
+    "time": "09:11",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "➕ 기술이전 이슈 관련 논의사항 정리",
+          "✅ 영향평가",
+          "✅ -LM API 변경 시 영향평가(MM015-14, 15, 제품표시라벨 제정)",
+          "✏️ 포장지시(EDM/ 7/20까지) → 포장지시(EDM/ 7/22까지)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "원료 수급 및 제조일정 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "➕ LAD 추가",
+          "➕ Alfadex 제품 기준 <25kg/연> / Alprostadil 기준 <750g/연>"
+        ]
+      }
+    ]
+  }
+]
