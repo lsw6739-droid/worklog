@@ -23,5 +23,18 @@
         ]
       }
     ]
+  },
+  {
+    "time": "12:42",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "작성상황 모니터링",
+        "employee": "김형성",
+        "details": [
+          "✅ 모니터링"
+        ]
+      }
+    ]
   }
 ]
