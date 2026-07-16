@@ -11,5 +11,59 @@
         ]
       }
     ]
+  },
+  {
+    "time": "12:54",
+    "changes": [
+      {
+        "action": "deleted",
+        "title": "감도 시험 기록서 로그북 발행",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "BR04 MCI EtOH 오류",
+        "employee": "김경원",
+        "details": [
+          "✅ 문서 반출"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "✅ 라벨 신규 제정시에는 신규 주소가 맞음(이력관리잘해야함)",
+          "➕ BPS-314D 관련 메일 공유"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "생산2동 PFW Feeding 문서 확인",
+        "employee": "김경원",
+        "details": [
+          "기한: 2026-07-16 → 2026-07-22",
+          "✅ 7/16  Remind"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "팀장 논의/보고 사항",
+        "employee": "김형성",
+        "details": [
+          "✅ 152호 관련 논의 - LA 의 정제수 필터여액 칭량에 대한 제조실 사용 로그가 없음 (24년 5 월 부터)",
+          "➕ 휴대용 시계 로그북 처리 방향성 논의"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "매주 월 - 작성상황 일정 확인",
+        "employee": "김형성",
+        "details": [
+          "✅ 7/20"
+        ]
+      }
+    ]
   }
 ]
