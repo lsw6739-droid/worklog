@@ -154,5 +154,18 @@
         ]
       }
     ]
+  },
+  {
+    "time": "19:48",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "➕ 이번달 휴대용 시계 정기점검 완"
+        ]
+      }
+    ]
   }
 ]
