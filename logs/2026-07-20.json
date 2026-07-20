@@ -1,0 +1,23 @@
+[
+  {
+    "time": "09:59",
+    "changes": [
+      {
+        "action": "added",
+        "title": "불참자 교육",
+        "employee": "이주영",
+        "details": [
+          "AT 제품표시라벨 제정 건 불참자 교육"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "✏️ 안내사항(내 메신저확인) → 안내사항(내 메신저확인)-태규만 진행"
+        ]
+      }
+    ]
+  }
+]
