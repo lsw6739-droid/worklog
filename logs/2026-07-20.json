@@ -39,5 +39,68 @@
         ]
       }
     ]
+  },
+  {
+    "time": "16:51",
+    "changes": [
+      {
+        "action": "added",
+        "title": "USP CG-07 제품표시라벨 제정",
+        "employee": "이상우",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "표준 업무 절차서 개정 - 점검 기록서",
+        "employee": "김동효",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "매주 금 퇴근전 - QMS 유지보수 매일 송부",
+        "employee": "김형성",
+        "details": [
+          "기한: 2026-07-16 → 2026-07-24",
+          "🗑 QMS 유지보수 엑셀화"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "FRM PE043-01-03 제조용 저울 연간 점검 및 교정 계획 개정",
+        "employee": "김동효",
+        "details": [
+          "✅ 진행상황 확인",
+          "✅ 각 저울 담당 부서 확인"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "➕ 내일 아침 3동 관련 회의 진행하게끔 준비"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "작성상황 모니터링",
+        "employee": "김형성",
+        "details": [
+          "완료처리",
+          "✅ 팀장 검토",
+          "✅ 공지"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "FDA 불시점검 대비  자체 D.I. ~2026 1Q",
+        "employee": "김경원",
+        "details": [
+          "완료처리"
+        ]
+      }
+    ]
   }
 ]
