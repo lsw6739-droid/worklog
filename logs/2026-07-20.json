@@ -102,5 +102,19 @@
         ]
       }
     ]
+  },
+  {
+    "time": "19:39",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "✅ -영업/인사/총무/QA 파일 확인",
+          "➕ CC2607-017"
+        ]
+      }
+    ]
   }
 ]
