@@ -169,5 +169,71 @@
         ]
       }
     ]
+  },
+  {
+    "time": "19:14",
+    "changes": [
+      {
+        "action": "added",
+        "title": "--------------------이하 KPI",
+        "employee": "김경원",
+        "details": []
+      },
+      {
+        "action": "deleted",
+        "title": "USP CG-07 제품표시라벨 제정",
+        "employee": "이상우",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "원료 수급 및 제조일정 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "✅ 하계휴가 논의 건 설비협의체 메일 공유(논의하자고 하기-공조기 영향 있는지?)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "월말/월초 업무",
+        "employee": "이상우",
+        "details": [
+          "➕ 08/30 LM"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "BR04 MCI EtOH 오류",
+        "employee": "김경원",
+        "details": [
+          "✅ 재발행수령",
+          "✅ 보관관리팀 전달"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "🗑 작성상황 확인(모니터링)-형성 얘기",
+          "🗑 출하 QMS 오류 수정 물어보고 신규건 공유(김형성)",
+          "🗑 kpi 보고",
+          "🗑 포장지시(7/24부터 수정 중) EDM은 상우 포장 지시",
+          "🗑 교육 신청하기(AI)-이강섭 메일 확인-상우HR 교육신청됨? 나는 안되서 문의좀",
+          "🗑 -영업/인사/총무/QA 파일 확인",
+          "🗑 안내사항(내 메신저확인)-태규만 진행"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "독립형 기기로그북관리기준",
+        "employee": "김경원",
+        "details": [
+          "완료처리",
+          "✅ 관리기준 추가: 1개 로그북 재고 유지, 1페이지 남을 경우 제조팀으로 부터 알람 수령 요청",
+          "✅ 재고 2개로 결정. 해당 내용 관리기준 Excel 업데이트"
+        ]
+      }
+    ]
   }
 ]
