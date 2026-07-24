@@ -1252,6 +1252,9 @@ function _applyRemoteTodoUpdate(newData) {
   selectedAssignees = newData.assignee_ids ? newData.assignee_ids.split(',').filter(Boolean) : [];
   renderAssigneeChips();
 
+  // 체크리스트 (편집 중이 아닐 때만 서버 최신 상태로 반영 — 저장 안 한 로컬 신규 항목은 보존)
+  _syncChecklistFromRemote(newData);
+
   // 배너 표시
   const banner = document.getElementById('detail-realtime-banner');
   if (banner) {
@@ -1262,6 +1265,27 @@ function _applyRemoteTodoUpdate(newData) {
     clearTimeout(banner._t);
     banner._t = setTimeout(function() { banner.style.display = 'none'; }, 5000);
   }
+}
+
+// 실시간으로 들어온 서버 체크리스트를 반영. 지금 체크리스트를 편집 중이면 건너뛰고
+// (저장 시 _mergeChecklist가 알아서 병합), 아니면 서버 상태로 갱신하되 로컬에만 있는
+// 저장 전 신규 항목(아직 서버에 없는 id)은 보존한다.
+function _syncChecklistFromRemote(newData){
+  const activeEl = document.activeElement;
+  const editingChecklist = activeEl && (activeEl.id === 'checklist-input' || activeEl.classList.contains('cl-edit-input'));
+  if (editingChecklist) return;
+
+  let serverList;
+  try{ serverList = newData.checklist ? JSON.parse(newData.checklist) : []; }catch(e){ serverList = []; }
+  const serverIds = new Set(serverList.map(function(c){ return c.id; }).filter(Boolean));
+  const knownIds = new Set(_openChecklistIds); // 직전 동기화 시점에 서버에 있던 id
+  // 로컬에만 있는 '아직 저장 안 한 신규 항목'만 보존.
+  // (직전 스냅샷엔 있었는데 서버에서 사라진 항목 = 다른 탭이 삭제 → 되살리지 않음)
+  const localExtras = currentChecklist.filter(function(c){ return c.id && !serverIds.has(c.id) && !knownIds.has(c.id); });
+
+  currentChecklist = serverList.concat(localExtras);
+  _openChecklistIds = serverList.map(function(c){ return c.id; }).filter(Boolean);
+  renderChecklist();
 }
 const ATTEND_LABELS={annual:'연차',half:'반차',quarter:'반반차',other:'기타'};
 const ATTEND_HOURS={annual:8,half:4,quarter:2,other:0};
