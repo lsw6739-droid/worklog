@@ -26,5 +26,77 @@
         ]
       }
     ]
+  },
+  {
+    "time": "14:01",
+    "changes": [
+      {
+        "action": "deleted",
+        "title": "고객사 특별요청사항 성적서 관련 내용",
+        "employee": "이상우",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "신입사원 BPR 작성 교육",
+        "employee": "김동효",
+        "details": [
+          "✅ 교보재 준비",
+          "✅ 1일차 - 개념 설명",
+          "✅ 2일차 - 문제 풀이 및 확인"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "AT 1차 용기별 1차 포장 사용자재 (FRM MM015-16 개정",
+        "employee": "이상우",
+        "details": [
+          "기한: 2026-07-30 → 2026-08-31"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "MP 1차 용기별 1차 포장 사용자재 (FRM MM015-16 개정",
+        "employee": "이상우",
+        "details": [
+          "기한: 2026-07-30 → 2026-08-31"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "고객사 특별 요청사항 개정(Excel 내용을 GMP 문서로 모두 이동)",
+        "employee": "이상우",
+        "details": [
+          "➕ 07/30까지 성적서 내용 기재",
+          "➕ 08/03이후 고객사 특별요청사항 excel 성적서 내용 가리기(숨김처리)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "BTO08 소급 수정",
+        "employee": "김동효",
+        "details": [
+          "완료처리",
+          "✅ QA 반납"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "생산3동 휴대용 시계 부서장 문의",
+        "employee": "김형성",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "제품 표시라벨 간소화",
+        "employee": "이주영",
+        "details": [
+          "➕ 실행 기본 창의 너비를 각 사이즈별 대시보드 너비 70%로 변경(S 칸 잘림) 이후 창 넓히는 경우 비율 자동 조정",
+          "➕ 수동 생성한 라벨을 수정하는 기능"
+        ]
+      }
+    ]
   }
 ]
