@@ -98,5 +98,40 @@
         ]
       }
     ]
+  },
+  {
+    "time": "17:51",
+    "changes": [
+      {
+        "action": "added",
+        "title": "Watanabe Data Logger 회신",
+        "employee": "이상우",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "제품 표시라벨 간소화",
+        "employee": "이주영",
+        "details": [
+          "➕ 라벨 수정 탭에서 기존에 입력했던 라벨 갯수 안뜸",
+          "➕ 부착용 라벨 발행 시 몇 부 발행할지 기재란 추가 필요"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "원료 칭량표 엑셀 업데이트",
+        "employee": "김동효",
+        "details": [
+          "✅ LA",
+          "✅ LAD",
+          "✅ LB",
+          "✅ LM",
+          "✅ LTE - 3kg (001)",
+          "✅ RP",
+          "✅ RPA",
+          "✅ ED"
+        ]
+      }
+    ]
   }
 ]
