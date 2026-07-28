@@ -79,5 +79,77 @@
         ]
       }
     ]
+  },
+  {
+    "time": "16:31",
+    "changes": [
+      {
+        "action": "added",
+        "title": "LC002-02 서식 개정에 따른 사용 방법 공지",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "QMS Test 시나리오 작성",
+        "employee": "김형성",
+        "details": [
+          "➕ 수립",
+          "➕ 팀장 보고"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "제조실 소독 기록 수립",
+        "employee": "김경원",
+        "details": [
+          "기한: 2026-07-27 → 2026-08-10"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "제품 표시라벨 간소화",
+        "employee": "이주영",
+        "details": [
+          "기한: 2026-07-27 → 2026-08-28",
+          "✅ 실행 기본 창의 너비를 각 사이즈별 대시보드 너비 70%로 변경(S 칸 잘림) 이후 창 넓히는 경우 비율 자동 조정"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "8월 GMP Trend 교육-컴퓨터 시스템 밸리데이션",
+        "employee": "김경원",
+        "details": [
+          "기한: 2026-07-17 → 2026-08-12",
+          "✏️ 일정 설정 → 일정 설정: 8/24"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "제조본부 소독제 교체 및 소독 진행 알림",
+        "employee": "김경원",
+        "details": [
+          "기한: 2026-07-24 → 2026-10-23",
+          "✅ 2026-07-24"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "원료칭량순서에 따른 칭량표 검토 Excel 업데이트",
+        "employee": "김경원",
+        "details": [
+          "✅ TF",
+          "✅ TN"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "➕ 재직증명서+통자사본"
+        ]
+      }
+    ]
   }
 ]
