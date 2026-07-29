@@ -14,5 +14,27 @@
         ]
       }
     ]
+  },
+  {
+    "time": "10:29",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "팀장 논의/보고 사항",
+        "employee": "김형성",
+        "details": [
+          "➕ 검체 채취 및 기록서 자료 보고"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "➕ 채용 추천서 준비(7/29)",
+          "➕ 영향 평가(7/30)"
+        ]
+      }
+    ]
   }
 ]
