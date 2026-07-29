@@ -86,5 +86,41 @@
         ]
       }
     ]
+  },
+  {
+    "time": "16:36",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "➕ 제조본부 회의 준비(보고서 만들기",
+          "✅ MX 출고 일정 공유 (10/14, 12/9)-8/10, 8/24로 예상(영업팀 메일 공유 필요 및 포장지시 필요)",
+          "➕ 제조일정 회의 준비",
+          "➕ MX126F010 포장 지시 진행",
+          "➕ 이석기 확인요청 건",
+          "➕ MX126B010 포장지시 진행",
+          "➕ MX125H010 Weight list는 8/14(금) 이내, MX126B010 Weight list는 8/28(금) 이내 전달"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "영수증 처리",
+        "employee": "임승완",
+        "details": [
+          "➕ 7/27-저녁식대",
+          "➕ 7/29-헤븐"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "CG, TP Audit(World Medicine/터키) 실사 준비(10/29)_이주영",
+        "employee": "임승완",
+        "details": [
+          "제목: CG, TP Audit(World Medicine/터키) 실사 준비(10/28)_이주영 → CG, TP Audit(World Medicine/터키) 실사 준비(10/29)_이주영"
+        ]
+      }
+    ]
   }
 ]
