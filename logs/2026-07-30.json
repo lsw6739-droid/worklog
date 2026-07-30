@@ -1,0 +1,23 @@
+[
+  {
+    "time": "09:54",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "LC002-02 서식 개정에 따른 사용 방법 공지",
+        "employee": "김형성",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "✏️ 7/31- 간소화 리마인드 메일 공유 → 7/30- 간소화 리마인드 메일 공유"
+        ]
+      }
+    ]
+  }
+]
