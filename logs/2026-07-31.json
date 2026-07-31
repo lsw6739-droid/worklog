@@ -81,5 +81,20 @@
         ]
       }
     ]
+  },
+  {
+    "time": "17:13",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "✅ KPI 등록(7/31)+상우 것도",
+          "➕ 상우 KPI 공유해주기+SOP 관련",
+          "🗑 파일 반출 할 것 정리(KPI)"
+        ]
+      }
+    ]
   }
 ]
