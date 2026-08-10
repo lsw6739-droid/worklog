@@ -109,5 +109,35 @@
         ]
       }
     ]
+  },
+  {
+    "time": "17:20",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "관리사본 배포 인수인계",
+        "employee": "이상우",
+        "details": [
+          "완료처리",
+          "기한: 없음 → 2026-08-10"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "제품 표시라벨 간소화",
+        "employee": "이주영",
+        "details": [
+          "➕ 변경제안"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "생산 3동 Task",
+        "employee": "김경원",
+        "details": [
+          "✅ 장비별 3개월 청소 확인 > 구본처리+TCU 삭제버전으로 신규 생성"
+        ]
+      }
+    ]
   }
 ]
