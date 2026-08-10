@@ -88,5 +88,26 @@
         ]
       }
     ]
+  },
+  {
+    "time": "15:48",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "팀장 논의/보고 사항",
+        "employee": "김형성",
+        "details": [
+          "✅ 검체 채취 및 기록서 자료 보고"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "QMS Test",
+        "employee": "김형성",
+        "details": [
+          "완료처리"
+        ]
+      }
+    ]
   }
 ]
