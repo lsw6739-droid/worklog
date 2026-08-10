@@ -59,5 +59,34 @@
         ]
       }
     ]
+  },
+  {
+    "time": "14:01",
+    "changes": [
+      {
+        "action": "deleted",
+        "title": "KPI 관련 논의 11:30",
+        "employee": "이상우",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "✅ 업무 정리",
+          "✅ 휴가 복귀 팀 회의",
+          "✏️ 8/10 생산3동 부착물 회수+로그북 비치+쓰레기동 비치 → 8/10 생산3동 부착물 회수+로그북 비치+쓰레기동 비치-10시"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "부서 업무 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "➕ AWM-7201(자동세척기) 백업기록서 필요유무-적용 시 FB214 개정 필요한 점 인지하고 있음"
+        ]
+      }
+    ]
   }
 ]
