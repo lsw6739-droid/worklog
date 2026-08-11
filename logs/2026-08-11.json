@@ -406,5 +406,21 @@
         ]
       }
     ]
+  },
+  {
+    "time": "19:23",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "PP 밀링 데이터 정리",
+        "employee": "김형성",
+        "details": [
+          "완료처리",
+          "✅ 수정 (매크로 툴)",
+          "✅ 수정 (Tray 삭제 이력 추가)",
+          "✅ 수정 (MPI > BPR / MCI > BCR)"
+        ]
+      }
+    ]
   }
 ]
