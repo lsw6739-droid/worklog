@@ -386,6 +386,23 @@ html[data-theme="dark"] .badge-warn{background:rgba(255,159,10,.18);color:#ff9f0
 .cal-prog{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin:8px 0 14px}
 .cal-prog>div{height:100%;transition:width .4s}
 
+/* ── 완료 이력 달력 ── */
+.dh-cell{border:1px solid var(--border);border-radius:8px;min-height:52px;padding:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;background:var(--surface);transition:border-color .15s,background .15s}
+.dh-cell:hover{border-color:var(--accent)}
+.dh-cell.pad{border:none;background:transparent;cursor:default;min-height:0}
+.dh-cell.sel{border-color:var(--accent);background:rgba(0,113,227,.09)}
+.dh-cell.none{background:var(--surface2)}
+.dh-d{font-size:12px;font-weight:600;color:var(--text)}
+.dh-d.sun{color:var(--danger)}.dh-d.sat{color:var(--accent)}
+.dh-cell.none .dh-d{color:var(--text3)}
+.dh-cnt{font-size:10px;font-weight:700;color:#fff;background:var(--success);border-radius:10px;padding:0 6px;line-height:15px;min-width:17px;text-align:center}
+.dh-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-bottom:6px}
+.dh-item .t{flex:1;min-width:0;font-size:12px;color:var(--text2);text-decoration:line-through;word-break:break-word}
+.dh-nm{font-size:10px;color:var(--accent);background:rgba(0,113,227,.1);border:1px solid rgba(0,113,227,.22);border-radius:10px;padding:1px 8px;white-space:nowrap;flex-shrink:0}
+.dh-chip{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text2);transition:all .2s;white-space:nowrap}
+.dh-chip:hover{border-color:var(--accent);color:var(--accent)}
+.dh-chip.on{background:rgba(0,113,227,.12);border-color:var(--accent);color:var(--accent)}
+
 /* ── 팀 근무계획 히트맵 ── */
 .hm-line{display:flex;align-items:stretch}
 .hm-namesp{width:96px;flex-shrink:0}
@@ -453,11 +470,13 @@ html[data-theme="dark"] .badge-warn{background:rgba(255,159,10,.18);color:#ff9f0
       <div class="tab" data-page="mylog">📋 내이력</div>
       <div class="tab" data-page="attend">🏖️ 근태</div>
       <div class="tab" data-page="myplan">📅 내 근무계획</div>
+      <div class="tab" data-page="donelog">✅ 완료 이력</div>
       <div class="sb-divider admin-only" style="display:none"></div>
       <div class="sb-section-label admin-only" style="display:none">관리자</div>
       <div class="tab admin-only" data-page="team" style="display:none">📊 팀현황</div>
       <div class="tab admin-only" data-page="workplan" style="display:none">📅 근무계획</div>
       <div class="tab admin-only" data-page="teamtodo" style="display:none">✅ 팀 할일</div>
+      <div class="tab admin-only" data-page="teamdone" style="display:none">✅ 팀 완료이력</div>
       <div class="tab admin-only" data-page="report" style="display:none">📄 리포트</div>
       <div class="tab admin-only" data-page="admin" style="display:none">⚙️ 관리</div>
       <div class="tab admin-only" data-page="changelog" style="display:none">📋 변경이력</div>
@@ -638,6 +657,28 @@ html[data-theme="dark"] .badge-warn{background:rgba(255,159,10,.18);color:#ff9f0
         </div>
       </div>
     </div>
+    <!-- 완료 이력 (개인) -->
+    <div class="page" id="page-donelog">
+      <div class="card">
+        <div class="card-title">✅ 내 <span>완료 이력</span></div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:4px">
+            <button class="btn btn-secondary btn-sm" onclick="dhChangeMonth('my',-1)">‹</button>
+            <span id="dh-my-title" style="font-size:15px;font-weight:700;min-width:96px;text-align:center"></span>
+            <button class="btn btn-secondary btn-sm" onclick="dhChangeMonth('my',1)">›</button>
+          </div>
+          <input type="text" id="dh-my-search" placeholder="제목 검색" oninput="dhRender('my')" style="flex:1;min-width:140px;max-width:220px;margin-bottom:0">
+          <span id="dh-my-sum" style="margin-left:auto;font-size:12px;color:var(--text2);white-space:nowrap"></span>
+        </div>
+        <div class="cal-dow"><span class="cal-n sun">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span class="cal-n sat">토</span></div>
+        <div class="cal-grid" id="dh-my-cal"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin:16px 0 8px">
+          <span id="dh-my-sel" style="font-size:13px;font-weight:700"></span>
+          <span id="dh-my-selcnt" style="font-size:11px;color:var(--text3)"></span>
+        </div>
+        <div id="dh-my-list"></div>
+      </div>
+    </div>
     <!-- 팀현황 -->
     <div class="page" id="page-team">
       <div class="card">
@@ -740,6 +781,31 @@ html[data-theme="dark"] .badge-warn{background:rgba(255,159,10,.18);color:#ff9f0
       </div>
       <!-- 팀원별 할일 -->
       <div id="teamtodo-list"><div class="empty"><div class="empty-icon">✅</div><p>조회 버튼을 눌러주세요</p></div></div>
+    </div>
+
+    <!-- 팀 완료이력 (관리자) -->
+    <div class="page" id="page-teamdone">
+      <div class="card">
+        <div class="card-title">✅ 팀 <span>완료 이력</span></div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:4px">
+            <button class="btn btn-secondary btn-sm" onclick="dhChangeMonth('team',-1)">‹</button>
+            <span id="dh-team-title" style="font-size:15px;font-weight:700;min-width:96px;text-align:center"></span>
+            <button class="btn btn-secondary btn-sm" onclick="dhChangeMonth('team',1)">›</button>
+          </div>
+          <input type="text" id="dh-team-search" placeholder="제목 검색" oninput="dhRender('team')" style="flex:1;min-width:140px;max-width:220px;margin-bottom:0">
+          <span id="dh-team-sum" style="margin-left:auto;font-size:12px;color:var(--text2);white-space:nowrap"></span>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:6px">인원</div>
+        <div id="dh-team-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px"></div>
+        <div class="cal-dow"><span class="cal-n sun">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span class="cal-n sat">토</span></div>
+        <div class="cal-grid" id="dh-team-cal"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin:16px 0 8px">
+          <span id="dh-team-sel" style="font-size:13px;font-weight:700"></span>
+          <span id="dh-team-selcnt" style="font-size:11px;color:var(--text3)"></span>
+        </div>
+        <div id="dh-team-list"></div>
+      </div>
     </div>
 
     <!-- 리포트 -->
@@ -1388,6 +1454,10 @@ function switchPage(p){
   } else if(p==='teamtodo'){
     // 팀 할일 → 자동 조회
     loadTeamTodos();
+  } else if(p==='donelog'){
+    dhInit('my');
+  } else if(p==='teamdone'){
+    dhInit('team');
   } else if(p==='report'){
     // 리포트 → 이번 달
     document.getElementById('report-month').value = ym;
@@ -2519,6 +2589,123 @@ async function saveTodoDetail(){
     showToast('저장됨','success');
     loadTodos();
   }catch(e){ showToast('저장 실패','error'); }
+}
+
+// ─── 완료 이력 (개인 'my' / 팀 'team' 공용) ───
+// 달력에 찍히는 기준은 '완료 처리한 시각(done_at)'이다 (기한일 아님).
+const _dh = {
+  my:   {y:0,m:0,rows:[],sel:0,picked:false,emp:''},
+  team: {y:0,m:0,rows:[],sel:0,picked:false,emp:''}
+};
+
+// timestamptz → 로컬 기준 일(day). toISOString은 UTC라 날짜가 밀리므로 로컬 게터 사용
+function _dhDay(iso){ const d=new Date(iso); return isNaN(d)?0:d.getDate(); }
+function _dhTime(iso){ const d=new Date(iso); return isNaN(d)?'':`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
+
+function dhInit(k){
+  const s=_dh[k];
+  if(!s.y){ const n=new Date(); s.y=n.getFullYear(); s.m=n.getMonth()+1; }
+  dhLoad(k);
+}
+
+function dhChangeMonth(k,delta){
+  const s=_dh[k];
+  s.m+=delta;
+  if(s.m<1){ s.m=12; s.y--; } else if(s.m>12){ s.m=1; s.y++; }
+  s.sel=0; s.picked=false;
+  dhLoad(k);
+}
+
+function dhPick(k,d){ const s=_dh[k]; s.sel=d; s.picked=true; dhRender(k); }
+
+function dhPickEmp(id){
+  const s=_dh.team;
+  s.emp = (s.emp===id) ? '' : id;
+  s.sel=0; s.picked=false;
+  dhRenderChips(); dhRender('team');
+}
+
+function dhRenderChips(){
+  const el=document.getElementById('dh-team-chips');
+  if(!el) return;
+  const s=_dh.team;
+  if(!allEmployees.length){ el.innerHTML='<span style="font-size:11px;color:var(--text3)">직원 목록을 불러오지 못했습니다</span>'; return; }
+  el.innerHTML = `<button class="dh-chip ${!s.emp?'on':''}" onclick="dhPickEmp('')">전체</button>`
+    + allEmployees.map(e=>`<button class="dh-chip ${s.emp===e.id?'on':''}" onclick="dhPickEmp('${e.id}')">${esc(e.name)}</button>`).join('');
+}
+
+async function dhLoad(k){
+  const s=_dh[k];
+  const listEl=document.getElementById(`dh-${k}-list`);
+  const titleEl=document.getElementById(`dh-${k}-title`);
+  if(titleEl) titleEl.textContent=`${s.y}년 ${s.m}월`;
+  if(listEl) listEl.innerHTML='<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
+  // 로컬 기준 월 경계 → toISOString()이 정확한 UTC 시각으로 변환해줌
+  const from=new Date(s.y,s.m-1,1,0,0,0).toISOString();
+  const to  =new Date(s.y,s.m,0,23,59,59,999).toISOString();
+  let url=`${API}/todos?is_done=eq.true&done_at=gte.${from}&done_at=lte.${to}&order=done_at.desc`;
+  url += (k==='team')
+    ? '&select=id,title,content,done_at,source,employee_id,employees(name,emp_id)'
+    : `&employee_id=eq.${currentUser.id}&select=id,title,content,done_at,source`;
+  try{
+    const rows=await fetchAllRows(url,H);
+    s.rows=Array.isArray(rows)?rows:[];
+  }catch(e){ s.rows=[]; }
+  if(k==='team') dhRenderChips(); // 직원 목록이 늦게 로드돼도 여기서 복구
+  dhRender(k);
+}
+
+function dhRender(k){
+  const s=_dh[k];
+  const q=(document.getElementById(`dh-${k}-search`)?.value||'').trim().toLowerCase();
+
+  let list=s.rows||[];
+  if(k==='team'&&s.emp) list=list.filter(r=>r.employee_id===s.emp);
+  if(q) list=list.filter(r=>((r.title||r.content||'').toLowerCase().includes(q)));
+
+  const byDay={};
+  list.forEach(r=>{ const d=_dhDay(r.done_at); if(d) (byDay[d]=byDay[d]||[]).push(r); });
+
+  const n=new Date(s.y,s.m,0).getDate();
+  document.getElementById(`dh-${k}-title`).textContent=`${s.y}년 ${s.m}월`;
+  document.getElementById(`dh-${k}-sum`).textContent=`이 달 ${list.length}건 완료`;
+
+  // 사용자가 직접 고른 날짜는 유지, 아니면 데이터 있는 마지막 날 자동 선택
+  const daysWith=Object.keys(byDay).map(Number).sort((a,b)=>a-b);
+  if(!s.picked||s.sel<1||s.sel>n) s.sel = daysWith.length?daysWith[daysWith.length-1]:0;
+
+  const firstDow=new Date(s.y,s.m-1,1).getDay();
+  let h='';
+  for(let i=0;i<firstDow;i++) h+='<div class="dh-cell pad"></div>';
+  for(let d=1;d<=n;d++){
+    const cnt=(byDay[d]||[]).length;
+    const dow=new Date(s.y,s.m-1,d).getDay();
+    const dc=dow===0?'sun':dow===6?'sat':'';
+    h+=`<div class="dh-cell${cnt?'':' none'}${s.sel===d?' sel':''}" onclick="dhPick('${k}',${d})" title="${s.m}/${d} · ${cnt}건 완료">
+      <span class="dh-d ${dc}">${d}</span>${cnt?`<span class="dh-cnt">${cnt}</span>`:''}
+    </div>`;
+  }
+  document.getElementById(`dh-${k}-cal`).innerHTML=h;
+
+  const sel=s.sel?(byDay[s.sel]||[]):[];
+  document.getElementById(`dh-${k}-sel`).textContent=s.sel?`${s.m}월 ${s.sel}일`:`${s.m}월 완료 항목 없음`;
+  document.getElementById(`dh-${k}-selcnt`).textContent=s.sel?(sel.length?`${sel.length}건 완료`:'완료 항목 없음'):'';
+  document.getElementById(`dh-${k}-list`).innerHTML = sel.length
+    ? sel.map(r=>{
+        const badge = r.source==='notice'
+          ? '<span style="font-size:9px;color:var(--accent);border:1px solid rgba(0,194,255,.3);border-radius:4px;padding:1px 4px;flex-shrink:0">공지</span>'
+          : r.source==='assigned'
+          ? '<span style="font-size:9px;color:var(--accent2);border:1px solid rgba(0,255,157,.3);border-radius:4px;padding:1px 4px;flex-shrink:0">담당</span>' : '';
+        const nm=(k==='team'&&r.employees&&r.employees.name)?`<span class="dh-nm">${esc(r.employees.name)}</span>`:'';
+        return `<div class="dh-item">
+          <span style="color:var(--success);font-size:13px;flex-shrink:0">✓</span>
+          <span class="t">${esc(r.title||r.content||'(제목 없음)')}</span>
+          ${badge}
+          <span style="font-size:10px;color:var(--text3);flex-shrink:0">${_dhTime(r.done_at)}</span>
+          ${nm}
+        </div>`;
+      }).join('')
+    : '<div class="empty" style="padding:20px"><div class="empty-icon">✅</div><p>이 날짜에 완료한 항목이 없습니다</p></div>';
 }
 
 // ─── 팀 전체 TO-DO (관리자) ───
