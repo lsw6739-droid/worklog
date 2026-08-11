@@ -394,7 +394,7 @@ html[data-theme="dark"] .badge-warn{background:rgba(255,159,10,.18);color:#ff9f0
 .dh-group-hd:first-child{margin-top:0}
 .dh-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-bottom:6px;cursor:pointer;transition:border-color .15s,background .15s}
 .dh-item:hover{border-color:var(--accent);background:var(--surface2)}
-.dh-item .t{flex:1;min-width:0;font-size:12px;color:var(--text2);text-decoration:line-through;word-break:break-word}
+.dh-item .t{flex:1;min-width:0;font-size:12px;color:var(--text);word-break:break-word}
 .dh-nm{font-size:10px;color:var(--accent);background:rgba(0,113,227,.1);border:1px solid rgba(0,113,227,.22);border-radius:10px;padding:1px 8px;white-space:nowrap;flex-shrink:0}
 .dh-chip{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text2);transition:all .2s;white-space:nowrap}
 .dh-chip:hover{border-color:var(--accent);color:var(--accent)}
@@ -2218,6 +2218,8 @@ async function toggleTodo(id,wasDone){
       }
     }
     loadTodos();
+    // 완료 이력 전체기간 검색 캐시 무효화 (탭이 안 열려있어도 다음에 열 때 최신으로)
+    dhRefresh('my'); dhRefresh('team');
   }catch(e){showToast('변경 실패','error');}
 }
 async function deleteTodo(id){
@@ -2232,6 +2234,8 @@ async function deleteTodo(id){
     const activePage=document.querySelector('.page.active')?.id;
     if(activePage==='page-teamtodo') loadTeamTodos();
     else loadTodos();
+    // 삭제한 게 완료 항목이었을 수 있으므로 완료 이력 캐시도 무효화
+    dhRefresh('my'); dhRefresh('team');
   }catch(e){showToast('삭제 실패','error');}
 }
 function toggleDoneSection(){doneSectionOpen=!doneSectionOpen;document.getElementById('todo-done-list').style.display=doneSectionOpen?'block':'none';document.getElementById('done-toggle-icon').textContent=doneSectionOpen?'▲':'▼';}
@@ -2575,9 +2579,8 @@ async function saveTodoDetail(){
     closeModal('modal-todo-detail');
     showToast('저장됨','success');
     loadTodos();
-    // 완료 이력 화면에서 열었다면 그 목록도 갱신
-    if(document.getElementById('page-donelog')?.classList.contains('active')) dhRefresh('my');
-    if(document.getElementById('page-teamdone')?.classList.contains('active')) dhRefresh('team');
+    // 완료 이력 전체기간 검색 캐시 무효화 (탭이 안 열려있어도 다음에 열 때 최신으로)
+    dhRefresh('my'); dhRefresh('team');
   }catch(e){ showToast('저장 실패','error'); }
 }
 
@@ -2618,10 +2621,13 @@ function dhChangeMonth(k,delta){
   dhLoad(k);
 }
 
-// 상세 팝업에서 저장 후 호출 — 전체기간 캐시를 무효화하고 현재 모드에 맞게 다시 그림
+// 완료 처리/상세 저장 후 호출 — 전체기간 캐시는 화면이 안 보여도 항상 비움
+// (다음에 그 탭을 열었을 때 새로 불러오게 하기 위함). 지금 그 탭이 보이는 중이면 즉시 다시 그림
 function dhRefresh(k){
   const s=_dh[k];
   s.allRows=null;
+  const pageId = k==='my' ? 'page-donelog' : 'page-teamdone';
+  if(!document.getElementById(pageId)?.classList.contains('active')) return;
   const searching=(document.getElementById(`dh-${k}-search`)?.value||'').trim();
   if(searching) dhRender(k); else dhLoad(k);
 }
