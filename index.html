@@ -396,7 +396,8 @@ html[data-theme="dark"] .badge-warn{background:rgba(255,159,10,.18);color:#ff9f0
 .dh-d.sun{color:var(--danger)}.dh-d.sat{color:var(--accent)}
 .dh-cell.none .dh-d{color:var(--text3)}
 .dh-cnt{font-size:10px;font-weight:700;color:#fff;background:var(--success);border-radius:10px;padding:0 6px;line-height:15px;min-width:17px;text-align:center}
-.dh-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-bottom:6px}
+.dh-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);margin-bottom:6px;cursor:pointer;transition:border-color .15s,background .15s}
+.dh-item:hover{border-color:var(--accent);background:var(--surface2)}
 .dh-item .t{flex:1;min-width:0;font-size:12px;color:var(--text2);text-decoration:line-through;word-break:break-word}
 .dh-nm{font-size:10px;color:var(--accent);background:rgba(0,113,227,.1);border:1px solid rgba(0,113,227,.22);border-radius:10px;padding:1px 8px;white-space:nowrap;flex-shrink:0}
 .dh-chip{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text2);transition:all .2s;white-space:nowrap}
@@ -2588,6 +2589,9 @@ async function saveTodoDetail(){
     closeModal('modal-todo-detail');
     showToast('저장됨','success');
     loadTodos();
+    // 완료 이력 화면에서 열었다면 그 목록도 갱신
+    if(document.getElementById('page-donelog')?.classList.contains('active')) dhLoad('my');
+    if(document.getElementById('page-teamdone')?.classList.contains('active')) dhLoad('team');
   }catch(e){ showToast('저장 실패','error'); }
 }
 
@@ -2697,7 +2701,7 @@ function dhRender(k){
           : r.source==='assigned'
           ? '<span style="font-size:9px;color:var(--accent2);border:1px solid rgba(0,255,157,.3);border-radius:4px;padding:1px 4px;flex-shrink:0">담당</span>' : '';
         const nm=(k==='team'&&r.employees&&r.employees.name)?`<span class="dh-nm">${esc(r.employees.name)}</span>`:'';
-        return `<div class="dh-item">
+        return `<div class="dh-item" onclick="openTodoDetail('${r.id}')" title="클릭하면 상세 내용">
           <span style="color:var(--success);font-size:13px;flex-shrink:0">✓</span>
           <span class="t">${esc(r.title||r.content||'(제목 없음)')}</span>
           ${badge}
