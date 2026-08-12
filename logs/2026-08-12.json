@@ -31,5 +31,18 @@
         ]
       }
     ]
+  },
+  {
+    "time": "12:01",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "RG MPI 검토",
+        "employee": "이상우",
+        "details": [
+          "완료처리"
+        ]
+      }
+    ]
   }
 ]
