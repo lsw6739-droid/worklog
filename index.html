@@ -1321,8 +1321,9 @@ function _applyRemoteTodoUpdate(newData) {
 }
 
 // 실시간으로 들어온 서버 체크리스트를 반영. 지금 체크리스트를 편집 중이면 건너뛰고
-// (저장 시 _mergeChecklist가 알아서 병합), 아니면 서버 상태로 갱신하되 로컬에만 있는
-// 저장 전 신규 항목(아직 서버에 없는 id)은 보존한다.
+// (편집 끝나면 다음 이벤트나 저장 시 다시 맞춰짐). 서버 상태(_clBase)만 갱신하고
+// 내가 한 작업(_clOps)은 그대로 유지한 채 재적용하므로, 이 이벤트가 오래되었거나
+// 순서가 뒤섞여 와도(네트워크 재연결 등) 내가 이미 한 추가·수정·체크·삭제는 절대 사라지지 않는다.
 function _syncChecklistFromRemote(newData){
   const activeEl = document.activeElement;
   const editingChecklist = activeEl && (activeEl.id === 'checklist-input' || activeEl.classList.contains('cl-edit-input'));
@@ -1330,15 +1331,9 @@ function _syncChecklistFromRemote(newData){
 
   let serverList;
   try{ serverList = newData.checklist ? JSON.parse(newData.checklist) : []; }catch(e){ serverList = []; }
-  const serverIds = new Set(serverList.map(function(c){ return c.id; }).filter(Boolean));
-  const knownIds = new Set(_openChecklistIds); // 직전 동기화 시점에 서버에 있던 id
-  // 로컬에만 있는 '아직 저장 안 한 신규 항목'만 보존.
-  // (직전 스냅샷엔 있었는데 서버에서 사라진 항목 = 다른 탭이 삭제 → 되살리지 않음)
-  const localExtras = currentChecklist.filter(function(c){ return c.id && !serverIds.has(c.id) && !knownIds.has(c.id); });
-
-  currentChecklist = serverList.concat(localExtras);
-  _openChecklistIds = serverList.map(function(c){ return c.id; }).filter(Boolean);
-  renderChecklist();
+  serverList.forEach(function(c){ if(!c.id) c.id = _genClId(); });
+  _clBase = serverList;
+  _clRecompute();
 }
 const ATTEND_LABELS={annual:'연차',half:'반차',quarter:'반반차',other:'기타'};
 const ATTEND_HOURS={annual:8,half:4,quarter:2,other:0};
@@ -2253,29 +2248,61 @@ function toggleTodoStatus(){
 }
 
 // ─── TODO 상세 ───
-let currentChecklist = [];
-let _openChecklistIds = []; // 팝업 열릴 때의 항목 ID 스냅샷 (병합 기준)
+// ── 체크리스트: 전체 스냅샷 비교 대신, 실제로 한 행동(추가/수정/체크/삭제/순서변경)을
+// 작업 로그(_clOps)로 남겨뒀다가 저장·동기화 시점마다 "그때의 최신 서버 상태" 위에
+// 그대로 재적용한다. 오래된/뒤섞인 이벤트가 와도 내가 안 건드린 항목은 절대 사라지지 않고,
+// 저장할 때도 항상 그 순간의 최신 서버 체크리스트를 다시 읽어서 내 작업만 얹는다.
+let currentChecklist = []; // 화면에 보여줄 계산된 결과 (= _clApplyOps(_clBase, _clOps))
+let _clBase = [];          // 마지막으로 확인된 서버 체크리스트
+let _clOps = [];           // 아직 저장 확정 안 된 내 작업 목록
 let selectedAssignees = [];
 
 function _genClId(){ return 'cl_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 
-async function _mergeChecklist(todoId, localList, openIds){
+// base(서버 상태) 위에 ops(내가 한 작업들)를 순서대로 재적용해서 최종 목록을 만듦
+function _clApplyOps(base, ops){
+  let list = (base||[]).map(function(c){ return Object.assign({}, c); });
+  (ops||[]).forEach(function(op){
+    if(op.op==='add'){
+      if(!list.some(function(c){ return c.id===op.id; })){
+        const item = {id:op.id, text:op.text};
+        if(op.type) item.type = op.type; else item.done = !!op.done;
+        list.push(item);
+      }
+    } else if(op.op==='edit'){
+      const it = list.find(function(c){ return c.id===op.id; });
+      if(it) it.text = op.text;
+    } else if(op.op==='toggle'){
+      const it = list.find(function(c){ return c.id===op.id; });
+      if(it) it.done = op.done;
+    } else if(op.op==='remove'){
+      list = list.filter(function(c){ return c.id!==op.id; });
+    } else if(op.op==='reorder'){
+      const idsInOrder = new Set(op.order);
+      const inOrder = op.order.map(function(id){ return list.find(function(c){ return c.id===id; }); }).filter(Boolean);
+      const notInOrder = list.filter(function(c){ return !idsInOrder.has(c.id); });
+      list = inOrder.concat(notInOrder);
+    }
+  });
+  return list;
+}
+
+function _clRecompute(){
+  currentChecklist = _clApplyOps(_clBase, _clOps);
+  renderChecklist();
+}
+
+// 저장 시점의 진짜 최신 서버 체크리스트를 다시 읽어옴 (오래된 로컬 캐시에 의존하지 않기 위함)
+async function _clFetchFresh(todoId){
   try{
     const res = await fetch(API+'/todos?id=eq.'+todoId+'&select=checklist',{headers:H});
     const rows = await res.json();
     const raw = rows[0]?.checklist;
-    const serverList = raw ? (()=>{ try{ return JSON.parse(raw); }catch(e){ return []; } })() : [];
-    // ID 없는 서버 항목은 기존 데이터 → 새로 ID를 부여하지 않음
-    // (새로 붙이면 openIds와 달라져서 모두 "새 항목"으로 오인되어 중복 발생)
-
-    const openSet = new Set(openIds);
-    const localIds = new Set(localList.map(function(c){ return c.id; }).filter(Boolean));
-
-    // ID가 있고, 열릴 때 없었고, 로컬에도 없는 항목만 추가 (다른 사람이 이후에 추가한 것)
-    const extras = serverList.filter(function(s){ return s.id && !openSet.has(s.id) && !localIds.has(s.id); });
-    return localList.concat(extras);
+    const list = raw ? JSON.parse(raw) : [];
+    list.forEach(function(c){ if(!c.id) c.id = _genClId(); });
+    return list;
   }catch(e){
-    return localList;
+    return _clBase; // 읽기 실패 시에만 마지막으로 알던 상태로 대체
   }
 }
 let currentTodoData = null;
@@ -2311,12 +2338,13 @@ async function openTodoDetail(id){
   if(status==='active'){ statusBtn.textContent='▶ 진행'; statusBtn.className='status-toggle-btn active'; }
   else                 { statusBtn.textContent='⏸ 대기'; statusBtn.className='status-toggle-btn waiting'; }
 
-  // 체크리스트
-  try{ currentChecklist = t.checklist ? JSON.parse(t.checklist) : []; }catch(e){ currentChecklist=[]; }
-  // 기존 항목에 ID 없으면 부여 후 스냅샷 저장 (병합 기준점)
-  currentChecklist.forEach(function(c){ if(!c.id) c.id = _genClId(); });
-  _openChecklistIds = currentChecklist.map(function(c){ return c.id; });
-  renderChecklist();
+  // 체크리스트: 서버 상태를 기준(_clBase)으로 두고, 이번에 새로 여는 것이므로 작업 로그는 비움
+  let baseCl;
+  try{ baseCl = t.checklist ? JSON.parse(t.checklist) : []; }catch(e){ baseCl=[]; }
+  baseCl.forEach(function(c){ if(!c.id) c.id = _genClId(); });
+  _clBase = baseCl;
+  _clOps = [];
+  _clRecompute();
 
   // 담당자 (누구나 수정 가능)
   selectedAssignees = t.assignee_ids ? t.assignee_ids.split(',').filter(Boolean) : [];
@@ -2356,6 +2384,7 @@ function renderChecklist(){
   el.innerHTML = currentChecklist.map((item,i)=>{
     const isHeader = item.type === 'header';
     const txt = (item.text||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const id = item.id;
     if(isHeader){
       return `<div class="cl-item cl-header-item" draggable="true" data-ci="${i}"
         ondragstart="clDragStart(event,${i})"
@@ -2364,8 +2393,8 @@ function renderChecklist(){
         ondrop="clDragDrop(event,${i})">
         <span class="cl-handle" title="드래그로 순서 변경">⠿</span>
         <span class="cl-header-icon">▣</span>
-        <span class="cl-text" onclick="startClEdit(event,${i})" title="클릭해서 수정">${txt}</span>
-        <button class="cl-del" onclick="removeClItem(${i})">✕</button>
+        <span class="cl-text" onclick="startClEdit(event,'${id}')" title="클릭해서 수정">${txt}</span>
+        <button class="cl-del" onclick="removeClItem('${id}')">✕</button>
       </div>`;
     }
     return `<div class="cl-item" draggable="true" data-ci="${i}"
@@ -2374,9 +2403,9 @@ function renderChecklist(){
       ondragend="clDragEnd(event)"
       ondrop="clDragDrop(event,${i})" style="padding-left:8px">
       <span class="cl-handle" title="드래그로 순서 변경">⠿</span>
-      <input type="checkbox" class="cl-check" ${item.done?'checked':''} onchange="toggleClItem(${i})">
-      <span class="cl-text ${item.done?'done':''}" onclick="startClEdit(event,${i})" title="클릭해서 수정">${txt}</span>
-      <button class="cl-del" onclick="removeClItem(${i})">✕</button>
+      <input type="checkbox" class="cl-check" ${item.done?'checked':''} onchange="toggleClItem('${id}')">
+      <span class="cl-text ${item.done?'done':''}" onclick="startClEdit(event,'${id}')" title="클릭해서 수정">${txt}</span>
+      <button class="cl-del" onclick="removeClItem('${id}')">✕</button>
     </div>`;
   }).join('');
 }
@@ -2385,37 +2414,39 @@ function addChecklistItem(){
   const input = document.getElementById('checklist-input');
   const text = input.value.trim();
   if(!text) return;
-  currentChecklist.push({id:_genClId(), text, done:false});
+  _clOps.push({op:'add', id:_genClId(), text, done:false});
   input.value='';
-  renderChecklist();
+  _clRecompute();
 }
 
 function addChecklistHeader(){
   const input = document.getElementById('checklist-input');
   const text = input.value.trim() || '제목';
-  currentChecklist.push({id:_genClId(), type:'header', text});
+  _clOps.push({op:'add', id:_genClId(), type:'header', text});
   input.value='';
-  renderChecklist();
+  _clRecompute();
 }
 
-function toggleClItem(i){
-  if(currentChecklist[i].type === 'header') return; // 헤더는 체크 불가
-  currentChecklist[i].done = !currentChecklist[i].done;
-  renderChecklist();
+function toggleClItem(id){
+  const item = currentChecklist.find(function(c){ return c.id===id; });
+  if(!item || item.type === 'header') return; // 헤더는 체크 불가
+  _clOps.push({op:'toggle', id:id, done: !item.done});
+  _clRecompute();
 }
 
-function removeClItem(i){
-  currentChecklist.splice(i,1);
-  renderChecklist();
+function removeClItem(id){
+  _clOps.push({op:'remove', id:id});
+  _clRecompute();
 }
 
 // ── 체크리스트 인라인 편집 ──
-function startClEdit(e, i){
+function startClEdit(e, id){
   e.stopPropagation();
   const span = e.currentTarget;
   if(span.querySelector('input')) return; // 이미 편집 중
 
-  const item = currentChecklist[i];
+  const item = currentChecklist.find(function(c){ return c.id===id; });
+  if(!item) return;
   const clItem = span.closest('.cl-item');
 
   // 드래그 비활성화 (편집 중 오작동 방지)
@@ -2432,9 +2463,9 @@ function startClEdit(e, i){
 
   function commit(){
     const newText = input.value.trim();
-    if(newText) currentChecklist[i].text = newText;
+    if(newText) _clOps.push({op:'edit', id:id, text:newText});
     clItem.draggable = true;
-    renderChecklist();
+    _clRecompute();
   }
 
   input.addEventListener('blur', commit);
@@ -2487,16 +2518,18 @@ function clDragDrop(e, targetIdx){
   const item = e.target.closest('.cl-item');
   const dropPos = item ? (item._clDropPos || 'before') : 'before';
 
-  // 배열 재정렬
-  const moved = currentChecklist.splice(clDragSrcIdx, 1)[0];
+  // 현재 화면 순서(id 배열)를 기준으로 재정렬한 뒤, 그 최종 순서를 작업으로 기록
+  const order = currentChecklist.map(function(c){ return c.id; });
+  const moved = order.splice(clDragSrcIdx, 1)[0];
   // splice 후 targetIdx가 앞으로 당겨졌을 수 있으므로 보정
   let insertAt = targetIdx > clDragSrcIdx ? targetIdx - 1 : targetIdx;
   if(dropPos === 'after') insertAt += 1;
-  insertAt = Math.max(0, Math.min(insertAt, currentChecklist.length));
-  currentChecklist.splice(insertAt, 0, moved);
+  insertAt = Math.max(0, Math.min(insertAt, order.length));
+  order.splice(insertAt, 0, moved);
 
   clDragSrcIdx = null;
-  renderChecklist();
+  _clOps.push({op:'reorder', order:order});
+  _clRecompute();
 }
 
 async function saveTodoDetail(){
@@ -2512,7 +2545,9 @@ async function saveTodoDetail(){
   const assigneeNames = selectedAssignees.map(function(aid){
     const e=allEmployees.find(function(x){return x.id===aid;}); return e?e.name:'';
   }).filter(Boolean).join(', ');
-  const mergedChecklist = await _mergeChecklist(rootId, currentChecklist, _openChecklistIds);
+  // 저장 순간의 진짜 최신 서버 체크리스트 위에 내가 한 작업(_clOps)만 재적용 (전체 교체 아님)
+  const freshBaseChecklist = await _clFetchFresh(rootId);
+  const mergedChecklist = _clApplyOps(freshBaseChecklist, _clOps);
   const checklistJson = mergedChecklist.length ? JSON.stringify(mergedChecklist) : null;
 
   // 공지 투두: note 식별자(notice_XXXXX) 항상 보존 (사용자 입력으로 덮어쓰지 않음)
@@ -2574,6 +2609,11 @@ async function saveTodoDetail(){
         return Promise.resolve();
       }));
     }
+
+    // 방금 저장한 체크리스트를 새 기준으로 삼고, 반영된 작업은 로그에서 비움
+    _clBase = mergedChecklist;
+    _clOps = [];
+    currentChecklist = mergedChecklist;
 
     window._myOwnSave = true; // 내가 저장한 Realtime 이벤트는 무시
     closeModal('modal-todo-detail');
