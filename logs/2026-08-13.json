@@ -64,5 +64,35 @@
         ]
       }
     ]
+  },
+  {
+    "time": "12:05",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "➕ 3동 관련 운영절차 정리",
+          "➕ 생산 3동 투어 준비확인(8/14 금 오전?)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "저울 검교정 계획 수립",
+        "employee": "김형성",
+        "details": [
+          "✅ 검교정 일자 확정"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "부서 업무 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "➕ 오늘 다이어리/ 후속업무/ 3동관련 내용 정리"
+        ]
+      }
+    ]
   }
 ]
