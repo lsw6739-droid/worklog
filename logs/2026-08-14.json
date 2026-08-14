@@ -9,5 +9,36 @@
         "details": []
       }
     ]
+  },
+  {
+    "time": "12:04",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "26년/27년 업무 순환 고민",
+        "employee": "임승완",
+        "details": [
+          "➕ 4. 박상신 선임 순환?(2026.08.14 부서장님 논의)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "원료칭량순서에 따른 칭량표 검토 Excel 업데이트",
+        "employee": "김경원",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "생산 3동 Task",
+        "employee": "김경원",
+        "details": [
+          "완료처리",
+          "✅ 예시 사진 촬영",
+          "✅ 부착예정 도면 표시하여 보고"
+        ]
+      }
+    ]
   }
 ]
