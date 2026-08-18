@@ -251,5 +251,98 @@
         ]
       }
     ]
+  },
+  {
+    "time": "14:28",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "MCI 컨셉 만들기",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-08-15 → 2026-08-28"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "온도 안정성 확인( 윌로그)",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-08-14 → 2026-08-21"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "팀 면담(6/18-1차)",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-08-14 → 2026-08-24"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "2차포장 진행 시기 변경 논의",
+        "employee": "이주영",
+        "details": [
+          "기한: 2026-08-11 → 2026-08-28"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "작성상황 대시보드 웹으로 만들어보기",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-08-14 → 2026-08-21"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "작성상황 업데이트",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-08-14 → 2026-08-28"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "실사관련 보관관리팀 요청",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-08-14 → 2026-08-28"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "제조관리 신입사원 관련",
+        "employee": "임승완",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "➕ HPMC를 소량(few grams) 제공"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "업무분장 엑셀 리뉴얼",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-08-14 → 2026-08-28"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "생산 3동 장비/기구/물품 입고 일정 관리",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-08-12 → 2026-08-19"
+        ]
+      }
+    ]
   }
 ]
