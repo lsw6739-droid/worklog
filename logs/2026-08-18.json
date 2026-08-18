@@ -367,5 +367,32 @@
         ]
       }
     ]
+  },
+  {
+    "time": "16:12",
+    "changes": [
+      {
+        "action": "added",
+        "title": "표준시간 동기화 진행",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "매주 금 퇴근전 - QMS 유지보수 매일 송부",
+        "employee": "김형성",
+        "details": [
+          "기한: 2026-08-14 → 2026-08-21"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "원료 수급 및 제조일정 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "➕ LM 결정형이슈 관련하여, 기준에 전달받은 샘플의 제조방법"
+        ]
+      }
+    ]
   }
 ]
