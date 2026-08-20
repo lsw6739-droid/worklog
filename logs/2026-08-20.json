@@ -97,5 +97,18 @@
         ]
       }
     ]
+  },
+  {
+    "time": "14:01",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "➕ 연도별 품목 배치 대시보드 업데이트"
+        ]
+      }
+    ]
   }
 ]
