@@ -74,5 +74,28 @@
         ]
       }
     ]
+  },
+  {
+    "time": "13:04",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "부서 업무 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "➕ 문서 통폐합 시(안내사항 qa 메일 건)",
+          "🗑 VN 기술이전 담당자 지정"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "2026 2nd DI 검토 진행",
+        "employee": "김형성",
+        "details": [
+          "✅ 팀장 검토",
+          "✅ 보관관리팀 체크리스트 작성 요청"
+        ]
+      }
+    ]
   }
 ]
