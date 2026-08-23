@@ -1,0 +1,24 @@
+[
+  {
+    "time": "08:41",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "제품표시라벨 제정 건(기술이전)",
+        "employee": "이주영",
+        "details": [
+          "➕ LM 제품표시라벨 제정 - 8/31"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "불참자 교육",
+        "employee": "이주영",
+        "details": [
+          "완료처리",
+          "상태: waiting → active"
+        ]
+      }
+    ]
+  }
+]
