@@ -472,5 +472,24 @@
         ]
       }
     ]
+  },
+  {
+    "time": "19:59",
+    "changes": [
+      {
+        "action": "added",
+        "title": "포장지시 및 기록서 제책 서명",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "2026년 2nd DI 검토 진행",
+        "employee": "김형성",
+        "details": [
+          "✅ BPR 반출 (08/24)"
+        ]
+      }
+    ]
   }
 ]
