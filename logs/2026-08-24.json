@@ -155,5 +155,26 @@
         ]
       }
     ]
+  },
+  {
+    "time": "14:59",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "9월 제품 출하 접수",
+        "employee": "이상우",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "월말/월초 업무",
+        "employee": "이상우",
+        "details": [
+          "✅ 8월 - 김경원"
+        ]
+      }
+    ]
   }
 ]
