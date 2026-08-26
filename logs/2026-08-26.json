@@ -80,5 +80,20 @@
         ]
       }
     ]
+  },
+  {
+    "time": "17:29",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "DI 검토 리스트",
+        "employee": "김형성",
+        "details": [
+          "✅ MI126F010",
+          "✅ MI126F020",
+          "✅ PH 로그북"
+        ]
+      }
+    ]
   }
 ]
