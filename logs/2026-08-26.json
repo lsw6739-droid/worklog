@@ -11,5 +11,35 @@
         ]
       }
     ]
+  },
+  {
+    "time": "11:18",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "루틴 업무",
+        "employee": "유태규",
+        "details": [
+          "✅ 공무일정 설정 (매 월 초, 중순 2번 설정 후 공유) + 제조관리부 커뮤니티 작성",
+          "✅ 다음달 월간일정/작성자 설정 ( 전 달 15일쯤 진행)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "➕ LT 706 g 건조 후 패킹-설정해두기"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "제품표시라벨 제정 건(기술이전)",
+        "employee": "이주영",
+        "details": [
+          "✏️ LM 제품표시라벨 제정 - 8/31 → LM 제품표시라벨 제정 - 9/30"
+        ]
+      }
+    ]
   }
 ]
