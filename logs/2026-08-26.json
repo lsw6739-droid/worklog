@@ -41,5 +41,16 @@
         ]
       }
     ]
+  },
+  {
+    "time": "13:29",
+    "changes": [
+      {
+        "action": "added",
+        "title": "CC2607-006 LM 코드번호 변경",
+        "employee": "이상우",
+        "details": []
+      }
+    ]
   }
 ]
