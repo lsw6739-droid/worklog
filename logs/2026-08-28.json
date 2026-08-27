@@ -1,0 +1,50 @@
+[
+  {
+    "time": "02:03",
+    "changes": [
+      {
+        "action": "added",
+        "title": "고유업무 - QMS 출하 관련 메뉴얼 제작",
+        "employee": "이주영",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "9월 GMP 트렌드 교육",
+        "employee": "이주영",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "2026년 2nd DI 검토 진행",
+        "employee": "김형성",
+        "details": [
+          "상태: waiting → active"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "영수증 처리",
+        "employee": "임승완",
+        "details": [
+          "➕ 8/27(목)-저녁"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "✅ 회계 처리",
+          "✅ 포장 지시 필요(9/2~)",
+          "✏️ PR BPAR 포장 지시 진행(8/27 진행)-검체 확인 중 → PR BPAR 포장 지시 진행(8/27 진행)-부서장님 내용 문의",
+          "➕ 영수증 처리+가계부",
+          "➕ 포장 지시 필요(9/4~)",
+          "➕ 상우 노트북 <>데스크탑 변경(데스크탑 라벨 출력 설치 필요)",
+          "➕ 제조일정 회의 후속준비(회의 결과 확인-8/27 다이어리)",
+          "➕ 교육 결과보고서 작성 및 유류비"
+        ]
+      }
+    ]
+  }
+]
