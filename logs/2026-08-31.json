@@ -24,5 +24,35 @@
         ]
       }
     ]
+  },
+  {
+    "time": "15:42",
+    "changes": [
+      {
+        "action": "added",
+        "title": "관리사본 배포 Tool 개선",
+        "employee": "이상우",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "원료 수급 및 제조일정 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "➕ 장비사용일지 ENG 세척 용매량 작성 필요(UP03 작성여부?)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "➕ LM 재고 관련 확인",
+          "➕ 낱장서식 현재 BPR 발행 시 어떻게 하고 있나요?(QA 문의)",
+          "➕ 생산 3동 정제수 관리 절차",
+          "➕ 캘린더 수정"
+        ]
+      }
+    ]
   }
 ]
