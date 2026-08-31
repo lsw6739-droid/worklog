@@ -1,0 +1,29 @@
+[
+  {
+    "time": "08:58",
+    "changes": [
+      {
+        "action": "added",
+        "title": "라벨 간소화",
+        "employee": "임승완",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "원료 수급 및 제조일정 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "➕ LT226K020의 경우 출고 가능일이 12/16보다 조금 앞설 수 있을까(정창영 책임)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "🗑 공모전 참여: 생산 기획 관련＋ＡＩ 시스템 ＣＳＶ¿ 재고관리시스템¿（규칙새성이 필요、 하네스）-안함"
+        ]
+      }
+    ]
+  }
+]
