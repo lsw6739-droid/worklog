@@ -488,5 +488,25 @@
         ]
       }
     ]
+  },
+  {
+    "time": "22:57",
+    "changes": [
+      {
+        "action": "added",
+        "title": "2026년 법정의무교육 수강 안내 (~2026.10.31)",
+        "employee": "임승완",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "➕ MH 관련 이슈 발생(MH226E010)보고",
+          "↩️ 낱장서식 현재 BPR 발행 시 어떻게 하고 있나요?(QA 문의)-부서장님 보고"
+        ]
+      }
+    ]
   }
 ]
