@@ -11,5 +11,80 @@
         ]
       }
     ]
+  },
+  {
+    "time": "14:13",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "HLC 연간 충진제 교체 확인",
+        "employee": "김형성",
+        "details": [
+          "완료처리",
+          "✅ 신규 절차 제정 시 절차 정리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "API ED → 원료 ED 사용 승인 및 소분 요청 건",
+        "employee": "이상우",
+        "details": [
+          "✅ 09/02 ED 입출고 기록서 사본 공유(보관 > 제관)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "저울 검교정 계획 수립",
+        "employee": "김형성",
+        "details": [
+          "기한: 2026-08-28 → 2026-10-19"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "원료 수급 및 제조일정 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "➕ 홍팀장님 hr 신청 확인"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "DI 검토 리스트",
+        "employee": "김형성",
+        "details": [
+          "✅ 장비사용일지",
+          "➕ 원료 시험번호"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "--------------------To do list--------------------",
+        "employee": "김동효",
+        "details": [
+          "✅ 감도 시험 기록서 > 저울에 옮기기",
+          "✅ LT02 장갈이",
+          "✅ LT01 공정시간 설정"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "작성상황 모니터링 개선 사항",
+        "employee": "김형성",
+        "details": [
+          "기한: 2026-09-20 → 없음"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "매주 금 퇴근전 - QMS 유지보수 매일 송부",
+        "employee": "김형성",
+        "details": [
+          "➕ 9/11",
+          "➕ 9/18",
+          "➕ 9/23"
+        ]
+      }
+    ]
   }
 ]
