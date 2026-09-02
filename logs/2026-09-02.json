@@ -1,0 +1,15 @@
+[
+  {
+    "time": "09:39",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "API 수율 관련",
+        "employee": "임승완",
+        "details": [
+          "➕ PR Small label 부착하지 않음. 확인 필요 + DP 수량 공유 필요"
+        ]
+      }
+    ]
+  }
+]
