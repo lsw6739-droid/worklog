@@ -98,5 +98,57 @@
         ]
       }
     ]
+  },
+  {
+    "time": "18:57",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "원료 수급 및 제조일정 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "➕ 문서 관리 박명규 팀장님?"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "--------------------To do list--------------------",
+        "employee": "김동효",
+        "details": [
+          "✅ 생산 3동 관련 정제수 포인트 특이사항 PPT 작성",
+          "✅ 166호 로그북 전달 전 작성 필요부분 체크 필요!",
+          "➕ BCC 카트리지 검토 후 현 엑셀파일과 동기화 > 팀장 보고",
+          "➕ 정제수 관련 문의",
+          "➕ 세척 라벨 구매 필요",
+          "➕ LT01 IPC 이후 공정 시간 설정 필요"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "API ED → 원료 ED 사용 승인 및 소분 요청 건",
+        "employee": "이상우",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "✅ 제조일정 회의 진행(13:30)",
+          "➕ CC2608-014 및 사건 서명",
+          "✅ LT226H020, PR126H010 GMP입고량 설정"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "고객사 특별 요청사항 관련 논의",
+        "employee": "이상우",
+        "details": [
+          "완료처리"
+        ]
+      }
+    ]
   }
 ]
