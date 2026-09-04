@@ -37,5 +37,53 @@
         ]
       }
     ]
+  },
+  {
+    "time": "18:46",
+    "changes": [
+      {
+        "action": "added",
+        "title": "중간체 격리라벨 입고된 후 발행 필요",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "2026년 사업과제 QMS  추가 개발",
+        "employee": "김형성",
+        "details": [
+          "✅ 팀장 보고 (~9/4)",
+          "➕ 수정 진행 (상세요구사항 엑셀 참고)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "✅ FDA 점검 준비(9/7, 월. FDA 온다고 생각하고 수립)+형성 것 확인"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "LT TCU 스터디",
+        "employee": "김형성",
+        "details": [
+          "➕ 교육",
+          "➕ 검토"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "2026년 8월 작성상황 모니터링 AI 제작",
+        "employee": "김형성",
+        "details": [
+          "➕ 수 요일까지 팀장공유",
+          "➕ 표 오름차순 내림차순 추가",
+          "➕ 목표 초과율 수식 확인",
+          "➕ PV 초과건 별도 막대그래프 추가"
+        ]
+      }
+    ]
   }
 ]
