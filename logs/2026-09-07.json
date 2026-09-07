@@ -1,0 +1,49 @@
+[
+  {
+    "time": "09:28",
+    "changes": [
+      {
+        "action": "added",
+        "title": "PPWR 관련 프로젝트",
+        "employee": "임승완",
+        "details": [
+          "신입사원 조사해보기"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "중간체 격리라벨 입고된 후 발행 필요",
+        "employee": "김형성",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "제품표시라벨 간소화 Project",
+        "employee": "임승완",
+        "details": [
+          "➕ 영업팀: PO 이제 접수하지 않으니 해당 문구 삭제",
+          "➕ QMS에서 수기로 수정하는 내용 추가",
+          "➕ 무게리스트 사본 관련해서 절차를 바꿀 순 없을까?"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "제조본부 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "➕ PPWR 추가 조사"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "부서 업무 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "➕ PR MPAI 개정 필요(MX 처럼)-출하포장을 위한 내용이 없음"
+        ]
+      }
+    ]
+  }
+]
