@@ -276,5 +276,18 @@
         ]
       }
     ]
+  },
+  {
+    "time": "22:58",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "➕ 기기·기구 구매 전 사전 검증 체크리스트 부터 ppt 정리"
+        ]
+      }
+    ]
   }
 ]
