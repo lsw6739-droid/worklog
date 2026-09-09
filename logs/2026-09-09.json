@@ -38,5 +38,83 @@
         ]
       }
     ]
+  },
+  {
+    "time": "19:20",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "--------------------To do list--------------------",
+        "employee": "김동효",
+        "details": [
+          "✏️ 정제수 관련 문의 → 정제수 관련 메일 작성 후 팀장 보고",
+          "✅ BCC 카트리지 검토 후 현 엑셀파일과 동기화 > 팀장 보고",
+          "✅ MPLC-105 조사 (LT)",
+          "✅ LT02 로그북 준비",
+          "✅ 8월 작성 상황 업데이트"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "검체 채취 및 기록서 개정 확인 (9/30)",
+        "employee": "김형성",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "부서 업무 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "➕ 해당 구역 본사 구역이라 기술지원팀에 수리요청완료(실제 확인)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "AI 세미나",
+        "employee": "임승완",
+        "details": [
+          "✅ AI 바이브 코딩 교육 전파 교육 준비",
+          "✅ -AI 시스템 CSV+재고관리(규칙생성이 필요-하네스)",
+          "➕ 추석 전, 전사 전파 교육 진행(메일 공유-교육자료와)",
+          "➕ > 지금 우리가 하고 있는 것들 정리 필요 하려고하는것들+비개발자가 왜 구조를 알아야하는지?"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "✅ 기기·기구 구매 전 사전 검증 체크리스트 부터 ppt 정리",
+          "✅ 제조본부 회의 준비(보조기구 도입 절차 추가+AI 바이브 코딩 교육자료)",
+          "➕ SOP 검토(이주영)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "2026년 8월 작성상황 모니터링 AI 제작",
+        "employee": "김형성",
+        "details": [
+          "➕ 회사 PC 도입"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "작성상황 모니터링 개선 사항",
+        "employee": "김형성",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "LT TCU 스터디",
+        "employee": "김형성",
+        "details": [
+          "완료처리"
+        ]
+      }
+    ]
   }
 ]
