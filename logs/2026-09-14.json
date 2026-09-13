@@ -1,0 +1,71 @@
+[
+  {
+    "time": "08:45",
+    "changes": [
+      {
+        "action": "added",
+        "title": "2026년 8월 작성상황 모니터링",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "FRM DR023-03 제품별 발행 문서 목록 개정 필요",
+        "employee": "김경원",
+        "details": [
+          "기한: 2026-09-11 → 2026-09-16"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "FDA 불시점검 대응을 위한 제조기록 실시간 작성 체계 확립",
+        "employee": "김경원",
+        "details": [
+          "기한: 2026-08-28 → 2026-09-18",
+          "✅ 수정 및 재검토, 적용 ~8/28"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "3개월청소 로그북 작성확인",
+        "employee": "김경원",
+        "details": [
+          "기한: 2026-09-01 → 2026-09-16"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "BR BPR 작성 Tool에도 MX-119 장비 Tool 추가 필요",
+        "employee": "김경원",
+        "details": [
+          "기한: 2026-09-18 → 2026-09-30"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "2026년 8월 작성상황 모니터링 AI 제작",
+        "employee": "김형성",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "TLC 확인 필요",
+        "employee": "김경원",
+        "details": [
+          "✅ BP-실제와 상이하여 별도 진행 필요",
+          "✅ CP-6/30 기준 곧 제조 예정"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "2026년 2nd DI 검토 진행",
+        "employee": "김형성",
+        "details": [
+          "✅ 보관관리팀 시험번호 작성 (09/11)"
+        ]
+      }
+    ]
+  }
+]
