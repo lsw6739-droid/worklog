@@ -67,5 +67,27 @@
         ]
       }
     ]
+  },
+  {
+    "time": "11:16",
+    "changes": [
+      {
+        "action": "deleted",
+        "title": "신규 데이터로거 도입을 위한 자료 작성",
+        "employee": "이상우",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "일회용 데이터로거 구매",
+        "employee": "이상우",
+        "details": [
+          "완료처리",
+          "✅ 9월 초 입고 예정",
+          "✅ 입고 확인",
+          "✅ 입고 검수서 작성"
+        ]
+      }
+    ]
   }
 ]
