@@ -94,5 +94,59 @@
         ]
       }
     ]
+  },
+  {
+    "time": "17:47",
+    "changes": [
+      {
+        "action": "deleted",
+        "title": "ED01 제조팀 설정 BPR이나 제조 종료 후 설정하므로 작업실/저울 실시간 작성 불가한 상황",
+        "employee": "김경원",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "--------------------To do list--------------------",
+        "employee": "김동효",
+        "details": [
+          "✅ 점검 기록서 작성 방법 ppt 수정 후 팀장 보고",
+          "✅ BTO04, BTO05 공정 시간 설정",
+          "✅ LT IPC 이후 시간 설정",
+          "➕ LTE01 로그북 병창 전달"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "실시간작성 애로사항 정리",
+        "employee": "김경원",
+        "details": [
+          "➕ MH226I010: 제조팀 시간설정 지연으로 전달 지연됨"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "➕ BP 수주접수내역에 아래 출고예정건 내용 update(정창영 책임 문의)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "로그북 호실 작성 예시 출력",
+        "employee": "김형성",
+        "details": [
+          "✏️ PU-181 → PU-181 (특이사항 보고)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "FRM DR023-03 제품별 발행 문서 목록 개정 필요",
+        "employee": "김경원",
+        "details": [
+          "기한: 2026-09-16 → 2026-09-25"
+        ]
+      }
+    ]
   }
 ]
