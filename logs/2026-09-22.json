@@ -1,0 +1,16 @@
+[
+  {
+    "time": "10:40",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "✅ UP 회의(10시)",
+          "➕ 인사팀에 오늘 채용설명회 관련 내용 전달하기(앞으로 더 했으면 좋겠다. 등)"
+        ]
+      }
+    ]
+  }
+]
