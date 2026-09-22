@@ -103,5 +103,32 @@
         ]
       }
     ]
+  },
+  {
+    "time": "21:42",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "로그북 호실 작성",
+        "employee": "김경원",
+        "details": [
+          "✅ VO-2101",
+          "✅ FV-2204",
+          "✅ NF-2202",
+          "✅ RE-2204",
+          "✅ RE-2205",
+          "✅ MX-2201",
+          "✅ RT-2201"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "➕ MM020-03, 04 FRM 공서식으로 변경필요함(뉴트럴 규격 주소 없는것들 잇음)"
+        ]
+      }
+    ]
   }
 ]
