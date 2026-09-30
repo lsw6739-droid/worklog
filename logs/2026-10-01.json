@@ -1,0 +1,48 @@
+[
+  {
+    "time": "01:00",
+    "changes": [
+      {
+        "action": "added",
+        "title": "중간체 입출고 기록서 업데이트",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "부서 업무 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "➕ apx 통합되어 비치하기 불편함"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "실사 BPR 검토",
+        "employee": "김형성",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "➕ lt 패킹 수량 공유",
+          "✏️ [MFDS] 제조관리팀 일정 정리+SOP 리스트 검토 → [MFDS] 제조관리팀 일정 정리",
+          "✏️ -LM 여액해서 가지고 있는것(제조팀) 반반 나눠서 사용(색상때문) → -LM 여액해서 가지고 있는것(제조팀) 반반 나눠서 사용(색상때문)-실제입출고에 적어주기",
+          "➕ [YS생명과학] 리더십 다면진단 실시 안내"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "원료 수급 및 제조일정 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "➕ bp 시험 규격 관련"
+        ]
+      }
+    ]
+  }
+]
