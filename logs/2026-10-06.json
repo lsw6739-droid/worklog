@@ -1,0 +1,66 @@
+[
+  {
+    "time": "15:40",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "팀장 논의/보고 사항",
+        "employee": "김형성",
+        "details": [
+          "✅ 장비, 저울 로그북 호실 작성 건 팀장 보고",
+          "➕ 사업과제 일정 재수립",
+          "➕ QMS 개발 리스트 관련 보고",
+          "➕ BPR 모니터링 진행",
+          "➕ 연차 보고"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "✅ 14:30 보관관리투어/ 15:30 진행 상황 확인",
+          "✅ 생산 3동 펀치 스티커 제거(도면에 표시/사진도 재촬영)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "부서 업무 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "➕ 제조부/보관관리 월간수세 목록 점검표 작성 기준?제조사가 다름"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "원료 수급 및 제조일정 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "➕ MH 중국 및 Serral Forecast(27년 Q1까지)",
+          "🗑 BR 및 IO 26년 하반기 및 27년 2월까지 추가 order 여부 문의",
+          "🗑 MH Serral 1월 150kg(90kg+60kg) 요청 추가 제조 필요 > 전체 고객사 forecast 요청",
+          "🗑 실사 상세일정 확인 요청(일정별 특이사항 공유)+수리중 장비 처리방안",
+          "🗑 bp 시험 규격 관련 정리",
+          "🗑 BMS/EMS 및 CSV 무료 교육 안내(10/30, 금)-금주까지 희망자"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "월말/월초 업무",
+        "employee": "이상우",
+        "details": [
+          "✅ 10/01",
+          "➕ 11/02"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "보관소 원자재 보관구역 공사에 따른 관리사본 배포",
+        "employee": "이상우",
+        "details": [
+          "완료처리"
+        ]
+      }
+    ]
+  }
+]
