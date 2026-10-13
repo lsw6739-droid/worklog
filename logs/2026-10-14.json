@@ -1,0 +1,23 @@
+[
+  {
+    "time": "02:13",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "원료 ED 사용 승인 및 소분",
+        "employee": "이상우",
+        "details": [
+          "✅ 10/12 원료 ED 시험의뢰(보관 > QC)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "TN Audit(Liquidia/USA) 실사 준비(10/14~15)_ 김경원",
+        "employee": "임승완",
+        "details": [
+          "완료처리"
+        ]
+      }
+    ]
+  }
+]
