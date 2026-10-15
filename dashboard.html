@@ -1187,21 +1187,42 @@ function handleHeatmapClick(date) {
 }
 
 // ─── THIS WEEK WIDGET ───
+// 회사가 지정한 근무일(work_plan_calendar) 기준 근무일 수. 해당 월 달력이 없으면 평일 기준
+async function countCompanyWorkdays(startStr, endStr) {
+  const cal = {};
+  try {
+    const yms = wpMonthsBetween(startStr, endStr);
+    const res = await fetch(`${API}/work_plan_calendar?ym=in.(${yms.map(y=>`"${y}"`).join(',')})&select=ym,workdays`,{headers:H});
+    const rows = await res.json();
+    if(Array.isArray(rows)) rows.forEach(r=>{ if(Array.isArray(r.workdays)&&r.workdays.length) cal[r.ym]=new Set(r.workdays.map(Number)); });
+  } catch(e) {}
+  let n = 0;
+  const d = new Date(startStr+'T00:00:00'), end = new Date(endStr+'T00:00:00');
+  while(d <= end){
+    const ym = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    if(cal[ym]){ if(cal[ym].has(d.getDate())) n++; }
+    else if(d.getDay()!==0 && d.getDay()!==6) n++;
+    d.setDate(d.getDate()+1);
+  }
+  return n;
+}
+
 async function renderWeekWidget() {
   const now = new Date();
-  const mon = new Date(now); mon.setDate(now.getDate()-now.getDay()+1);
+  const mon = new Date(now); mon.setDate(now.getDate()-(now.getDay()||7)+1); // 일요일(0)도 그 주 월요일로
   const sun = new Date(mon); sun.setDate(mon.getDate()+6);
   const start = dateToStr(mon);
   const end = dateToStr(sun);
 
   let weekLogs = [], weekAttends = [];
   try {
-    const [logsRes, attendsRes] = await Promise.all([
-      fetch(`${API}/work_logs?log_date=gte.${start}&log_date=lte.${end}&select=employee_id,hours`,{headers:H}),
+    const [logsRows, attendsRes] = await Promise.all([
+      fetchAllRows(`${API}/work_logs?log_date=gte.${start}&log_date=lte.${end}&select=employee_id,hours&order=log_date`, H),
       fetch(`${API}/attends?start_date=lte.${end}&end_date=gte.${start}&select=*`,{headers:H})
     ]);
-    weekLogs = await logsRes.json();
+    weekLogs = logsRows;
     weekAttends = await attendsRes.json();
+    if(!Array.isArray(weekAttends)) weekAttends = [];
   } catch(e) {
     weekLogs = allLogs.filter(l=>l.log_date>=start&&l.log_date<=end);
   }
@@ -1213,11 +1234,12 @@ async function renderWeekWidget() {
   attendToLogs(weekAttends, allEmployees, start, end)
     .forEach(function(l){if(byMember[l.employee_id])byMember[l.employee_id].hours+=Number(l.hours);});
 
-  const weekGoal = monthGoal/4;
+  // 주간 목표 = 이번 주 근무일 수 × 8h (상단 기간 선택과 무관, 회사 지정 휴일 반영)
+  const weekGoal = (await countCompanyWorkdays(start, end)) * 8;
   const sorted = Object.values(byMember).sort((a,b)=>b.hours-a.hours);
 
   document.getElementById('week-widget').innerHTML = sorted.map((v,i)=>{
-    const pct = Math.min(v.hours/weekGoal*100,100);
+    const pct = weekGoal>0 ? Math.min(v.hours/weekGoal*100,100) : 0;
     const color = pct>=80?'#ff4757':pct>=60?'#ffa502':'#00d4ff';
     return `<div class="week-member-row">
       <div class="week-member-name" style="color:${COLORS[i%COLORS.length]}">${v.name}</div>
@@ -1225,7 +1247,7 @@ async function renderWeekWidget() {
         <div class="week-bar-bg">
           <div class="week-bar-fill" style="width:${pct}%;background:${color}20;border:1px solid ${color}40">
           </div>
-          <div class="week-bar-goal" style="left:${Math.min(weekGoal/weekGoal*100,100)}%"></div>
+          <div class="week-bar-goal" style="left:100%"></div>
         </div>
       </div>
       <div class="week-member-val" style="color:${color}">${v.hours.toFixed(1)}h</div>
@@ -1234,6 +1256,8 @@ async function renderWeekWidget() {
 }
 
 // ─── MONTHLY TREND ───
+// 필터 클릭마다 renderAll이 다시 호출하지만 이 데이터는 필터와 무관 → 60초간 재사용
+let _monthlyCache = {key:'', ts:0, data:null};
 async function renderMonthlyTrend() {
   const now = new Date();
   const months = [];
@@ -1243,18 +1267,28 @@ async function renderMonthlyTrend() {
   }
 
   let monthlyData = months.map(()=>0);
-  try {
+  const cacheKey = months.join(',');
+  if(_monthlyCache.data && _monthlyCache.key===cacheKey && Date.now()-_monthlyCache.ts < 60000){
+    monthlyData = _monthlyCache.data.slice();
+  } else try {
     const start = months[0]+'-01';
     const last = months[months.length-1];
     const [y,m] = last.split('-');
     const end = `${y}-${m}-${new Date(y,m,0).getDate()}`;
-    const res = await fetch(`${API}/work_logs?log_date=gte.${start}&log_date=lte.${end}&select=log_date,hours`,{headers:H});
-    const logs = await res.json();
-    logs.forEach(l=>{
+    // 6개월치는 1000건을 넘으므로 전부 가져와야 함 + 다른 차트들과 같은 기준으로 근태 공수도 포함
+    const [logs, attendRes] = await Promise.all([
+      fetchAllRows(`${API}/work_logs?log_date=gte.${start}&log_date=lte.${end}&select=log_date,hours&order=log_date`, H),
+      fetch(`${API}/attends?start_date=lte.${end}&end_date=gte.${start}&select=*`,{headers:H})
+    ]);
+    let attends = await attendRes.json();
+    if(!Array.isArray(attends)) attends = [];
+    const attendLogs = attendToLogs(attends, allEmployees, start, end);
+    logs.concat(attendLogs).forEach(l=>{
       const ym = l.log_date.slice(0,7);
       const idx = months.indexOf(ym);
       if(idx>=0) monthlyData[idx]+=Number(l.hours);
     });
+    _monthlyCache = {key:cacheKey, ts:Date.now(), data:monthlyData.slice()};
   } catch(e) {
     monthlyData = months.map((_,i)=>Math.floor(Math.random()*200+100));
   }
