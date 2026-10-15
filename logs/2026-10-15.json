@@ -324,5 +324,91 @@
         ]
       }
     ]
+  },
+  {
+    "time": "20:48",
+    "changes": [
+      {
+        "action": "added",
+        "title": "내부감사",
+        "employee": "김경원",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "216호 공정검사실 지정에 따른 영향성 조사",
+        "employee": "김형성",
+        "details": []
+      },
+      {
+        "action": "added",
+        "title": "QMS 개발 추가 논의 사항",
+        "employee": "김형성",
+        "details": [
+          "포장지시 프로그램 중간에 필요한 서식 바뀌는 경우 출력방법 변경"
+        ]
+      },
+      {
+        "action": "added",
+        "title": "제조용 저울 연간 점검 계획표 연말 반영 사항",
+        "employee": "김형성",
+        "details": [
+          "감도시험 Weekly(W)로 수정하는 방향 논의"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "영수증 처리",
+        "employee": "임승완",
+        "details": [
+          "➕ 10/14-석식"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "오늘업무",
+        "employee": "김형성",
+        "details": [
+          "✅ 제조관리팀 회의 (13시 30분)",
+          "✅ TP 공정시간",
+          "✅ BPR 공지",
+          "✅ 인수인계 BPR 공지 사전 작성"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "TLC 확인 필요",
+        "employee": "김경원",
+        "details": [
+          "기한: 2026-09-01 → 2026-10-20",
+          "➕ BF01-002 레퍼런스 최신화 필요"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "공용공간 사용품목 BPR 발행 Excel 표기",
+        "employee": "김경원",
+        "details": [
+          "기한: 2026-09-04 → 2026-10-29"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "RG 소급수정",
+        "employee": "김경원",
+        "details": [
+          "기한: 없음 → 2026-10-23",
+          "✏️ 밝기 맞춰 QA 재발행 요청: 최진호 → 밝기 맞춰 QA 재발행 요청: 최진호-진행중"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "실시간 데이터로거 가이드라인 검토 회신 메일 보내기(차주까지 검토 요청)",
+        "employee": "이상우",
+        "details": [
+          "완료처리"
+        ]
+      }
+    ]
   }
 ]
