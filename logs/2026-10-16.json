@@ -21,5 +21,69 @@
         ]
       }
     ]
+  },
+  {
+    "time": "09:53",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "MM015-15, PC017-01 비교 및 개정",
+        "employee": "이주영",
+        "details": [
+          "상태: waiting → active"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-10-15 → 2026-10-16",
+          "✅ 상우 공수관리 시스템 업데이트 요청(오류)-9, 10월 안나옴",
+          "✅ 바이브 코딩 자료 및 URS등 파일 공유",
+          "➕ ongoing 안정성 시험이 필요한데, 26년에는 MX126B010 밖에 제조된 것이 없어서 변경-이승룡 선임 메일 공유 필요"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "RG 소급수정",
+        "employee": "김경원",
+        "details": [
+          "✅ 밝기 맞춰 QA 재발행 요청: 최진호-실패, 전체갈이로 진행 결정"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "작성상황 업데이트",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-10-14 → 2026-10-16"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "포장지시(10/26출하건 부터)-MH 가짜포장 필요",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-10-14 → 2026-10-16"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "KPI 설정하기",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-10-15 → 2026-10-16"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "공수 산정 분석 결과 공유",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-10-14 → 2026-10-16"
+        ]
+      }
+    ]
   }
 ]
