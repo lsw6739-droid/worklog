@@ -68,7 +68,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue'
 
 /* ─ SIDEBAR ─ */
 #sidebar{width:var(--sb);flex-shrink:0;background:#f0f0f5;border-right:1px solid rgba(0,0,0,0.1);display:flex;flex-direction:column;height:100%;overflow:hidden}
-.sb-user-card{margin:14px 12px 6px;background:#fff;border:1px solid rgba(0,0,0,0.08);border-radius:12px;padding:12px;display:flex;align-items:center;gap:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+.sb-user-card{margin:14px 12px 6px;background:#fff;border:1px solid rgba(0,0,0,0.08);border-radius:12px;padding:12px;display:flex;flex-wrap:wrap;align-items:center;gap:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+.sb-workend{flex-basis:100%;display:none;align-items:center;gap:6px;border-top:1px solid rgba(0,0,0,0.07);padding-top:9px;margin-top:-1px;font-size:11px;color:var(--text2)}
+.sb-workend.show{display:flex}
+.sb-workend b{margin-left:auto;font-size:13px;font-weight:700;color:var(--text);font-family:'JetBrains Mono',monospace}
+.sb-workend .off{margin-left:auto;color:var(--text3)}
 .sb-avatar{width:36px;height:36px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;letter-spacing:-.5px}
 .sb-user-info{flex:1;min-width:0}
 .sb-user-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
@@ -278,6 +282,7 @@ pre{background:#f5f5f7;border:1px solid rgba(0,0,0,0.08);border-radius:8px;paddi
   #sidebar{width:100%;height:auto;flex-direction:row;align-items:center;padding:0}
   .sb-user-card{margin:8px;padding:8px;flex:none;width:auto;min-width:0}
   .sb-user-info{display:none}
+  .sb-workend{display:none!important}
   nav{flex-direction:row;overflow-x:auto;padding:0 4px;flex:1}
   .tab{flex-shrink:0;border-radius:6px;padding:7px 10px;font-size:12px}
   .sb-section-label,.sb-divider{display:none!important}
@@ -309,6 +314,7 @@ html[data-theme="dark"] #titlebar{background:rgba(40,40,42,.97);border-color:rgb
 html[data-theme="dark"] .titlebar-title{color:rgba(255,255,255,.88)}
 html[data-theme="dark"] #sidebar{background:rgba(30,30,32,.97);border-color:rgba(255,255,255,.1)}
 html[data-theme="dark"] .sb-user-card{background:#3a3a3c;border-color:rgba(255,255,255,.1);box-shadow:none}
+html[data-theme="dark"] .sb-workend{border-top-color:rgba(255,255,255,.1)}
 html[data-theme="dark"] .sb-divider{background:rgba(255,255,255,.06)}
 html[data-theme="dark"] .sb-footer{border-color:rgba(255,255,255,.06)}
 html[data-theme="dark"] .tab:hover:not(.active){background:rgba(255,255,255,.07)}
@@ -461,6 +467,7 @@ html[data-theme="dark"] .badge-warn{background:rgba(255,159,10,.18);color:#ff9f0
         <span class="sb-user-role" id="header-role">팀원</span>
       </div>
       <span class="sb-admin-tag admin-tag" id="header-admin-tag" style="display:none">ADMIN</span>
+      <div class="sb-workend" id="sb-workend"></div>
     </div>
     <nav>
       <div class="tab active" data-page="write">📝 일지작성</div>
@@ -1392,7 +1399,7 @@ async function initApp(){
   await loadCategories();
   await loadTemplates();
   await loadAllEmployees(); // 모든 사용자가 담당자 목록 필요
-  loadDateLogs();loadTodos();loadMyAttends();loadNoticeBanner();
+  loadDateLogs();loadTodos();loadMyAttends();loadNoticeBanner();loadWorkEnd();
   if(currentUser.is_admin){
     loadUsers(); // 관리자 탭용 (권한 변경 기능 포함)
     loadGoals();loadNoticeHistory();
@@ -3558,6 +3565,37 @@ async function loadWorkSettings(){
   }catch(e){}
 }
 
+// ─── 사이드바: 오늘 기본근무 종료 시각 ───
+// 내 근무계획에 저장된 오늘 시간 → 없으면 회사 근무일 달력 기준(근무일 8h / 휴일 0h).
+// 기본근무는 하루 최대 8h까지이므로 그 시점의 종료 시각을 표시 (초과분은 툴팁에만).
+let _workEndDay='';
+async function loadWorkEnd(){
+  const el=document.getElementById('sb-workend');
+  if(!el||!currentUser) return;
+  const t=today(), y=+t.slice(0,4), m=+t.slice(5,7), d=+t.slice(8,10);
+  let hours=null;
+  try{
+    await loadWorkSettings(); // 점심·저녁 제외시간 반영
+    const res=await fetch(`${API}/work_plans?ym=eq.${t.slice(0,7)}&employee_id=eq.${currentUser.id}&select=base_hours`,{headers:H});
+    const rows=await res.json();
+    if(Array.isArray(rows)&&rows[0]) hours=Number((rows[0].base_hours||{})[String(d)])||0;
+    if(hours===null){ const cal=await _wpLoadCalendar(y,m); hours=cal.has(d)?WP_STD:0; }
+  }catch(e){ return; } // 실패 시에는 틀린 시각을 보여주지 않도록 그대로 둠
+  _workEndDay=t;
+  if(hours<=0){
+    el.innerHTML='<span>🕔 오늘 기본근무</span><span class="off">휴무일</span>';
+  } else {
+    const end=_wpCheckout(Math.min(hours,WP_STD));
+    const tip=hours>WP_STD?`계획 ${hours}h (초과 ${+(hours-WP_STD).toFixed(1)}h 포함) · 전체 종료 ${_wpCheckout(hours)}`:`계획 ${hours}h`;
+    el.innerHTML=`<span>🕔 오늘 기본근무</span><b title="${tip}">~ ${end}</b>`;
+  }
+  el.classList.add('show');
+}
+// 앱을 켜둔 채 날짜가 바뀐 경우 다시 계산
+document.addEventListener('visibilitychange',function(){
+  if(!document.hidden && currentUser && _workEndDay && _workEndDay!==today()) loadWorkEnd();
+});
+
 // ─── 근무계획 플래너 ───
 let _wpYear, _wpMonth, _wpWorkdays=new Set(), _wpPlan=[], _wpEmps=[], _wpNotes=[], _wpOpenEi=-1;
 const WP_DOW=['일','월','화','수','목','금','토'];
@@ -3739,6 +3777,7 @@ async function wpSave(){
     await fetch(`${API}/work_plan_notes?on_conflict=ym`,{method:'POST',headers:{...H,'Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify([{ym,items,updated_at:new Date().toISOString()}])}).catch(()=>{});
     document.getElementById('wp-status').textContent=`저장됨 ${new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}`;
     showToast(`${ym} 근무계획 저장됨`,'success');
+    loadWorkEnd(); // 사이드바 오늘 기본근무 종료 시각 갱신
   }catch(e){ showToast('저장 실패 - DB 테이블(work_plans) 확인','error'); }
 }
 async function wpSaveSettings(){
@@ -3751,6 +3790,7 @@ async function wpSaveSettings(){
     if(!res.ok) throw new Error();
     WORK_SETTINGS={...WORK_SETTINGS,...body};
     showToast('제외시간 저장됨','success');
+    loadWorkEnd();
   }catch(e){ showToast('제외시간 저장 실패','error'); }
 }
 function wpExportExcel(){
@@ -3892,7 +3932,7 @@ async function mpSave(){
   try{
     const res=await fetch(`${API}/work_plans?on_conflict=ym,employee_id`,{method:'POST',headers:{...H,'Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(body)});
     if(!res.ok) throw new Error();
-    showToast(`${ym} 내 근무계획 저장됨`,'success'); mpRender();
+    showToast(`${ym} 내 근무계획 저장됨`,'success'); mpRender(); loadWorkEnd();
   }catch(e){ showToast('저장 실패 - DB 테이블(work_plans) 확인','error'); }
 }
 function mpExportExcel(){
