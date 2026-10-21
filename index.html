@@ -3567,7 +3567,7 @@ async function loadWorkSettings(){
 
 // ─── 사이드바: 오늘 기본근무 종료 시각 ───
 // 내 근무계획에 저장된 오늘 시간 → 없으면 회사 근무일 달력 기준(근무일 8h / 휴일 0h).
-// 기본근무는 하루 최대 8h까지이므로 그 시점의 종료 시각을 표시 (초과분은 툴팁에만).
+// 계획 시간 전체를 기준으로 종료 시각을 표시 (내 근무계획 달력의 퇴근시간과 동일).
 let _workEndDay='';
 async function loadWorkEnd(){
   const el=document.getElementById('sb-workend');
@@ -3585,9 +3585,8 @@ async function loadWorkEnd(){
   if(hours<=0){
     el.innerHTML='<span>🕔 오늘 기본근무</span><span class="off">휴무일</span>';
   } else {
-    const end=_wpCheckout(Math.min(hours,WP_STD));
-    const tip=hours>WP_STD?`계획 ${hours}h (초과 ${+(hours-WP_STD).toFixed(1)}h 포함) · 전체 종료 ${_wpCheckout(hours)}`:`계획 ${hours}h`;
-    el.innerHTML=`<span>🕔 오늘 기본근무</span><b title="${tip}">~ ${end}</b>`;
+    // 내 근무계획에 입력한 시간 전체가 곧 그날의 기본근무 → 달력에 보이는 퇴근시간과 동일
+    el.innerHTML=`<span>🕔 오늘 기본근무</span><b title="계획 ${hours}h">~ ${_wpCheckout(hours)}</b>`;
   }
   el.classList.add('show');
 }
