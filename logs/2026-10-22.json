@@ -1,0 +1,63 @@
+[
+  {
+    "time": "10:04",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-10-21 → 2026-10-22",
+          "✏️ 내부감사 킥오프 미팅 필요 → 내부감사 킥오프 미팅 필요(내부감사 가비아 사용해조기)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "10월 휴대용 시계 점검",
+        "employee": "김형성",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "영수증 처리",
+        "employee": "임승완",
+        "details": [
+          "✏️ 10/19-석식 → 10/19-석식(굽네치킨)",
+          "✏️ 10/20-석식 → 10/20-석식(편의점)",
+          "➕ 10/21-석식(롯데리아)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "오늘업무",
+        "employee": "김형성",
+        "details": [
+          "✅ EV01 MPI 검토",
+          "✅ 휴대용 시계 점검",
+          "➕ BPR 작성 Renewal BTO04",
+          "➕ BPR 작성 Renewal BTO05",
+          "➕ BPR 작성 Renewal BTO06",
+          "➕ 내부감사 SOP 확인",
+          "➕ QMS 추가 개발 견적 메일 재송부",
+          "➕ 관리사본 배포",
+          "➕ BPR 작성 Renewal BTO07",
+          "➕ BPR 작성 Renewal BTO08",
+          "➕ BPR 작성 Renewal BTO",
+          "➕ 야근ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ",
+          "➕ BPR 작성 Renewal CG01",
+          "➕ BPR 작성 Renewal CG02",
+          "➕ BPR 작성 Renewal CG",
+          "✏️ 내일 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ → 내일ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ",
+          "🗑 LA BPR 검토",
+          "🗑 가비아 활용 회의",
+          "🗑 EP TLC 홍성수 팀장 전달",
+          "🗑 QMS 개발 도안 추가 작성",
+          "🗑 관리사본 배포",
+          "🗑 TP BPR 검토"
+        ]
+      }
+    ]
+  }
+]
