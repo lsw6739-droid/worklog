@@ -1,0 +1,72 @@
+[
+  {
+    "time": "11:28",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "부서 업무 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "➕ 제조관리팀 권한 문의(보관관리팀)-실사 준비 시에 확인하기 어렵고 QA 도 2명, 제관도 2명이 구역을 나눠 돌기때문에 사원증 빌리기도 부족함이 있음-안보기는 애매함"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "➕ MP 2차 포장 타입 확인",
+          "✏️ 제조관리 회의_업무 순환 관련 → 제조관리 회의_업무 순환 관련(14시)",
+          "✏️ dp 분석결과 물어보기(조성민 팀장님) → DP 분석결과 물어보기(조성민 팀장님)-10/23",
+          "➕ MX 월요일 포장 끝나면 잔량 확인 요청(빠른 공유 필요함)",
+          "➕ LT 오후에 이승룡 선임님 연락(수주접수 수정+메신저 공유)",
+          "🗑 SOP 검토 이주영",
+          "🗑 문의사항 및 준비사항 진행",
+          "🗑 MX 소분일자 확인 후 유관부서 메일 공유",
+          "🗑 DP 재 소분 진행",
+          "🗑 BF, LT, 출고계획 수립 필요",
+          "🗑 LT 홍성민 책임님 전달해야함",
+          "🗑 가비아 교육(10시)",
+          "🗑 MX 포장 지시 진행(2개로 나눠서)",
+          "🗑 영향평가(2건 진행 필요)",
+          "🗑 bp 파손 이력확인",
+          "🗑 ca, bf 출고계획 확인",
+          "🗑 실사 담당자 설정 및 스케줄 호가인",
+          "🗑 포장지시(10/28~)",
+          "🗑 DP 수주접수 변경",
+          "🗑 부서업무회의 준비",
+          "🗑 LT126L010 Batch 제조 가능 여부 10/21(수) 확인-가능하다고 이인성팀장님 공유",
+          "🗑 -부서 업무 회의 때 뭐알려주신다햇는데-이인성, LT 관련인듯"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "오늘업무",
+        "employee": "김형성",
+        "details": [
+          "➕ BPR 작성 Renewal CP",
+          "➕ BPR 작성 Renewal IO01",
+          "➕ BPR 작성 Renewal IO02",
+          "➕ BPR 작성 Renewal IO03",
+          "➕ BPR 작성 Renewal IO",
+          "➕ BPR 작성 Renewal MI01",
+          "➕ BPR 작성 Renewal MI",
+          "🗑 EV01 MPI 검토",
+          "🗑 휴대용 시계 점검",
+          "🗑 BPR 작성 Renewal BTO04",
+          "🗑 BPR 작성 Renewal BTO05",
+          "🗑 BPR 작성 Renewal BTO06",
+          "🗑 BPR 작성 Renewal BTO07",
+          "🗑 BPR 작성 Renewal BTO08",
+          "🗑 BPR 작성 Renewal BTO",
+          "🗑 실사회의",
+          "🗑 MPI 개정 확인",
+          "🗑 관리사본 배포",
+          "🗑 BPR 작성 Renewal CG01",
+          "🗑 BPR 작성 Renewal CG02",
+          "🗑 BPR 작성 Renewal CG"
+        ]
+      }
+    ]
+  }
+]
