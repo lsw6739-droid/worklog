@@ -745,9 +745,11 @@ html[data-theme="dark"] .badge-warn{background:rgba(255,159,10,.18);color:#ff9f0
         </div>
         <div style="margin-top:14px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-            <span style="font-size:13px;font-weight:700">📝 비고</span>
-            <span style="font-size:11px;color:var(--text3)">감사 · 연차 · 단축근무 등 (날짜/기간 + 내용)</span>
-            <button class="btn btn-secondary btn-sm" onclick="wpAddNote()" style="margin-left:auto">+ 비고 추가</button>
+            <span style="font-size:13px;font-weight:700">📝 비고 <span id="wp-notes-month" style="font-weight:600;color:var(--accent)"></span></span>
+            <span style="font-size:11px;color:var(--text3)">감사 · 연차 · 단축근무 등 (날짜/기간 + 내용) · 근무계획 수립 전에도 저장할 수 있어요</span>
+            <span id="wp-notes-status" style="margin-left:auto;font-size:11px;color:var(--text3)"></span>
+            <button class="btn btn-secondary btn-sm" onclick="wpAddNote()">+ 비고 추가</button>
+            <button class="btn btn-primary btn-sm" onclick="wpSaveNotes()">💾 비고 저장</button>
           </div>
           <div id="wp-notes"></div>
         </div>
@@ -3596,7 +3598,7 @@ document.addEventListener('visibilitychange',function(){
 });
 
 // ─── 근무계획 플래너 ───
-let _wpYear, _wpMonth, _wpWorkdays=new Set(), _wpPlan=[], _wpEmps=[], _wpNotes=[], _wpOpenEi=-1;
+let _wpYear, _wpMonth, _wpWorkdays=new Set(), _wpPlan=[], _wpEmps=[], _wpNotes=[], _wpOpenEi=-1, _wpNotesDirty=false;
 const WP_DOW=['일','월','화','수','목','금','토'];
 function _wpToMin(t){ if(!t||!t.includes(':'))return 0; const[h,m]=t.split(':').map(Number); return h*60+m; }
 function _wpToStr(m){ return `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`; }
@@ -3623,6 +3625,8 @@ function _wpCheckout(h){
 function _wpCalcP(row){ let b=0,o=0; row.forEach(h=>{ if(h>0){ b+=Math.min(h,WP_STD); o+=Math.max(0,h-WP_STD); }}); return {base:+b.toFixed(1),ot:+o.toFixed(1),total:+(b+o).toFixed(1)}; }
 
 async function initWorkPlan(){
+  // 저장 안 한 비고를 쓰던 중 다른 탭에 갔다 온 경우, 다시 불러오면 입력 내용이 사라지므로 그대로 둔다
+  if(_wpNotesDirty && _wpYear) return;
   if(!allEmployees.length){ await loadUsers(); }
   await loadWorkSettings();
   document.getElementById('wp-lunch-start').value=WORK_SETTINGS.lunch_start||'11:50';
@@ -3634,6 +3638,7 @@ async function initWorkPlan(){
   await wpLoadMonth();
 }
 function wpChangeMonth(delta){
+  if(_wpNotesDirty && !confirm('저장하지 않은 비고가 있습니다. 저장 없이 다른 달로 이동할까요?')) return;
   _wpMonth+=delta; if(_wpMonth>12){_wpMonth=1;_wpYear++;} if(_wpMonth<1){_wpMonth=12;_wpYear--;}
   wpLoadMonth();
 }
@@ -3678,10 +3683,14 @@ async function wpLoadMonth(){
     const nrows=await nres.json();
     if(Array.isArray(nrows)&&nrows[0]&&Array.isArray(nrows[0].items)) _wpNotes=nrows[0].items;
   }catch(e){}
+  _wpNotesDirty=false;
+  document.getElementById('wp-notes-status').textContent='';
   wpRender();
   wpRenderNotes();
 }
 function wpRenderNotes(){
+  const mEl=document.getElementById('wp-notes-month');
+  if(mEl) mEl.textContent=`(${_wpYear}년 ${_wpMonth}월)`;
   const el=document.getElementById('wp-notes');
   if(!_wpNotes.length){ el.innerHTML='<div style="font-size:11px;color:var(--text3);padding:6px 2px">등록된 비고가 없습니다. "+ 비고 추가"로 입력하세요.</div>'; return; }
   el.innerHTML=_wpNotes.map((nt,i)=>`
@@ -3691,9 +3700,25 @@ function wpRenderNotes(){
       <button class="btn btn-secondary btn-sm" onclick="wpRemoveNote(${i})" style="border-color:var(--danger);color:var(--danger);flex-shrink:0">✕</button>
     </div>`).join('');
 }
-function wpAddNote(){ _wpNotes.push({label:'',text:''}); wpRenderNotes(); }
-function wpRemoveNote(i){ _wpNotes.splice(i,1); wpRenderNotes(); }
-function wpOnNote(i,k,v){ if(_wpNotes[i]) _wpNotes[i][k]=v; }
+function wpAddNote(){ _wpNotes.push({label:'',text:''}); _wpNotesDirty=true; wpRenderNotes(); }
+function wpRemoveNote(i){ _wpNotes.splice(i,1); _wpNotesDirty=true; wpRenderNotes(); }
+function wpOnNote(i,k,v){ if(_wpNotes[i]){ _wpNotes[i][k]=v; _wpNotesDirty=true; } }
+
+// 비고는 근무계획 수립 전에 참고하는 내용이라, 근무계획 저장(월목표 검사)과 분리해서 따로 저장한다
+async function _wpPersistNotes(ym){
+  const items=_wpNotes.filter(nt=>(nt.label||'').trim()||(nt.text||'').trim());
+  const res=await fetch(`${API}/work_plan_notes?on_conflict=ym`,{method:'POST',headers:{...H,'Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify([{ym,items,updated_at:new Date().toISOString()}])});
+  if(!res.ok) throw new Error(await res.text());
+  _wpNotesDirty=false;
+}
+async function wpSaveNotes(){
+  const ym=`${_wpYear}-${String(_wpMonth).padStart(2,'0')}`;
+  try{
+    await _wpPersistNotes(ym);
+    document.getElementById('wp-notes-status').textContent=`저장됨 ${new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}`;
+    showToast(`${ym} 비고 저장됨`,'success');
+  }catch(e){ showToast('비고 저장 실패 - DB 테이블(work_plan_notes) 확인','error'); }
+}
 function wpToggleDay(d){  // 날짜 헤더 클릭 = 전원 일괄 전환
   if(_wpWorkdays.has(d)){ _wpWorkdays.delete(d); _wpEmps.forEach((_,i)=>_wpPlan[i][d-1]=0); }
   else { _wpWorkdays.add(d); _wpEmps.forEach((_,i)=>_wpPlan[i][d-1]=WP_STD); }
@@ -3771,11 +3796,12 @@ async function wpSave(){
     // 근무일 달력 저장 (개인 "내 근무계획"과 목표·휴일 공유)
     const workdays=[..._wpWorkdays].sort((a,b)=>a-b);
     await fetch(`${API}/work_plan_calendar?on_conflict=ym`,{method:'POST',headers:{...H,'Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify([{ym,workdays,updated_at:new Date().toISOString()}])}).catch(()=>{});
-    // 비고 저장 (빈 행 제외)
-    const items=_wpNotes.filter(nt=>(nt.label||'').trim()||(nt.text||'').trim());
-    await fetch(`${API}/work_plan_notes?on_conflict=ym`,{method:'POST',headers:{...H,'Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify([{ym,items,updated_at:new Date().toISOString()}])}).catch(()=>{});
+    // 비고도 함께 저장 (빈 행 제외). 실패해도 근무계획 저장 자체는 유지하고 알려준다
+    let notesOk=true;
+    try{ await _wpPersistNotes(ym); }catch(e){ notesOk=false; }
     document.getElementById('wp-status').textContent=`저장됨 ${new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}`;
-    showToast(`${ym} 근무계획 저장됨`,'success');
+    if(notesOk) showToast(`${ym} 근무계획 저장됨`,'success');
+    else showToast(`${ym} 근무계획은 저장됐지만 비고 저장에 실패했습니다`,'error');
     loadWorkEnd(); // 사이드바 오늘 기본근무 종료 시각 갱신
   }catch(e){ showToast('저장 실패 - DB 테이블(work_plans) 확인','error'); }
 }
