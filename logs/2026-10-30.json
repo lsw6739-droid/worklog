@@ -50,5 +50,35 @@
         ]
       }
     ]
+  },
+  {
+    "time": "18:15",
+    "changes": [
+      {
+        "action": "added",
+        "title": "CC2610-001 / 신제품 Vonoprazan(VN) 기술이전(연구소→화성본사)",
+        "employee": "이상우",
+        "details": []
+      },
+      {
+        "action": "modified",
+        "title": "원료 수급 및 제조일정 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "➕ 건물별 QMS/ BMS 가능 컴퓨터 있는지?(담당자 및 QMS 작동 여부)-상우 확인"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-10-28 → 2026-10-30",
+          "➕ 27년 예산 관련 정리",
+          "➕ 전표 처리",
+          "➕ 포장지시"
+        ]
+      }
+    ]
   }
 ]
