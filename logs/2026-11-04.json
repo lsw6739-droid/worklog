@@ -66,5 +66,30 @@
         ]
       }
     ]
+  },
+  {
+    "time": "23:56",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "Weekly 업무 루틴",
+        "employee": "김형성",
+        "details": [
+          "✅ 점검기록서 작성 공유",
+          "✅ 저울 로그북 작성 공유"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "오늘업무",
+        "employee": "김형성",
+        "details": [
+          "기한: 2026-11-03 → 2026-11-04",
+          "➕ ED 수정사항 체크",
+          "➕ GMP Trend 교육 자료 수집",
+          "🗑 DI 검토"
+        ]
+      }
+    ]
   }
 ]
