@@ -76,5 +76,66 @@
         ]
       }
     ]
+  },
+  {
+    "time": "09:45",
+    "changes": [
+      {
+        "action": "added",
+        "title": "연간생산 프로그램(태규)",
+        "employee": "임승완",
+        "details": [
+          "품목 풀네임으로 정리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "금일 업무",
+        "employee": "김형성",
+        "details": [
+          "➕ EDM BPR 작성",
+          "↩️ TGH 회의",
+          "➕ 문서반납",
+          "↩️ IPC 공지",
+          "↩️ BPR 제출 공지",
+          "↩️ 저울 로그북 작성 공지",
+          "↩️ 점검기록서 공지",
+          "🗑 점검기록서 수립",
+          "🗑 QMS 추가 개발 보고",
+          "🗑 BF BPR 소급 수정 (다음주)",
+          "🗑 작성상황 일정 검토",
+          "🗑 관리사본 배포",
+          "🗑 BF 수율 소급수정 확인",
+          "🗑 밸팀 내부감사 확인"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "기한: 2026-11-09 → 2026-11-10"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "인수인게 계획(김동효<>이상우, 이주영)",
+        "employee": "임승완",
+        "details": [
+          "✅ - 제품 출하 접수",
+          "✅ - 2차 포장",
+          "🗑 - 교육 관리(명부 및 관리사본)",
+          "🗑 - SOP List 관리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "eBMR 프로그램(상우)",
+        "employee": "임승완",
+        "details": [
+          "제목: eBMR 프로그램 → eBMR 프로그램(상우)"
+        ]
+      }
+    ]
   }
 ]
