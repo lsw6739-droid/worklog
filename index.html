@@ -72,6 +72,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue'
 .sb-workend{flex-basis:100%;display:none;align-items:center;gap:6px;border-top:1px solid rgba(0,0,0,0.07);padding-top:9px;margin-top:-1px;font-size:11px;color:var(--text2)}
 .sb-workend.show{display:flex}
 body.viewer-mode .w-only{display:none!important}
+.v-banner{display:flex;align-items:center;gap:6px;margin:0 0 12px;padding:8px 12px;border-radius:8px;background:rgba(0,113,227,.08);border:1px solid rgba(0,113,227,.25);color:var(--accent);font-size:12px;font-weight:600}
+body.viewer-mode [inert]{opacity:.55}
 body.viewer-mode .cl-del,body.viewer-mode .cl-handle{display:none!important}
 body.viewer-mode .cl-check,body.viewer-mode .cl-text{pointer-events:none}
 .sb-workend b{margin-left:auto;font-size:13px;font-weight:700;color:var(--text);font-family:'JetBrains Mono',monospace}
@@ -648,7 +650,7 @@ html[data-theme="dark"] .badge-warn{background:rgba(255,159,10,.18);color:#ff9f0
             <span id="mp-month-title" style="font-size:15px;font-weight:700;min-width:96px;text-align:center"></span>
             <button class="btn btn-secondary btn-sm" onclick="mpChangeMonth(1)">›</button>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="mpSave()">💾 저장</button>
+          <button class="btn btn-primary btn-sm w-only" onclick="mpSave()">💾 저장</button>
           <button class="btn btn-secondary btn-sm" onclick="mpExportExcel()" style="border-color:var(--accent);color:var(--accent)">📊 엑셀 저장</button>
           <span id="mp-status" style="font-size:11px;color:var(--text3)"></span>
           <span id="mp-target" style="margin-left:auto;font-weight:700;color:var(--danger);font-size:14px;white-space:nowrap"></span>
@@ -1247,6 +1249,17 @@ const H={'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization'
 const VIEWER_ACCOUNT={id:'00000000-0000-0000-0000-000000000000',name:'viewer',emp_id:'1234',is_admin:true,is_viewer:true};
 function isViewer(){ try{ return !!(currentUser && currentUser.is_viewer); }catch(e){ return false; } }
 function viewerBlocked(){ if(!isViewer()) return false; showToast('열람 전용 계정은 저장·수정할 수 없습니다','error'); return true; }
+// 입력 화면(일지작성·근태·관리)은 통째로, 내 근무계획은 달력 입력부만 inert(클릭·포커스·타이핑 불가)로 잠그고 안내 띠를 붙인다
+function applyViewerLock(){
+  const msg='👁 열람 전용 계정입니다. 화면은 볼 수 있지만 입력·저장은 할 수 없습니다.';
+  ['page-write','page-attend','page-myplan','page-admin'].forEach(function(pid){
+    const pg=document.getElementById(pid); if(!pg) return;
+    const bn=document.createElement('div'); bn.className='v-banner'; bn.textContent=msg;
+    pg.insertBefore(bn,pg.firstChild);
+    if(pid!=='page-myplan') [].slice.call(pg.children).forEach(function(c){ if(c!==bn) c.setAttribute('inert',''); });
+  });
+  const mc=document.getElementById('mp-cal'); if(mc) mc.setAttribute('inert','');
+}
 // 마지막 안전장치: 열람 전용이면 DB로 가는 쓰기 요청(POST/PATCH/PUT/DELETE)을 전송 전에 차단
 const _nativeFetch=window.fetch.bind(window);
 window.fetch=function(input,init){
@@ -1419,8 +1432,7 @@ async function initApp(){
     document.body.classList.add('viewer-mode');
     if(roleEl) roleEl.textContent='열람 전용';
     document.getElementById('header-admin-tag').textContent='VIEW';
-    // 입력용 개인 탭과 설정(관리) 탭은 숨김
-    ['write','mylog','attend','myplan','donelog','admin'].forEach(function(pg){ const tb=document.querySelector('.tab[data-page="'+pg+'"]'); if(tb) tb.style.display='none'; });
+    applyViewerLock(); // 모든 탭은 관리자와 동일하게 보이되, 입력 화면은 잠금
   }
   const ym=today().slice(0,7);
   document.getElementById('log-date').value=today();
@@ -1435,7 +1447,8 @@ async function initApp(){
   await loadCategories();
   await loadTemplates();
   await loadAllEmployees(); // 모든 사용자가 담당자 목록 필요
-  if(!isViewer()){ loadDateLogs();loadTodos();loadMyAttends();loadNoticeBanner();loadWorkEnd(); }
+  loadDateLogs();loadTodos();loadMyAttends();
+  if(!isViewer()){ loadNoticeBanner();loadWorkEnd(); }
   if(currentUser.is_admin){
     loadUsers(); // 관리자 탭용 (권한 변경 기능 포함)
     loadGoals();loadNoticeHistory();
@@ -3969,12 +3982,12 @@ async function mpLoadMonth(){
   nv.innerHTML=valid.length?`<div style="font-size:12px;font-weight:700;margin-bottom:6px">📝 이달 비고</div>`+valid.map(nt=>`<div style="font-size:12px;color:var(--text2);padding:3px 0"><b style="color:var(--accent)">${esc(nt.label||'')}</b> ${esc(nt.text||'')}</div>`).join(''):'';
   mpRender();
 }
-function mpToggleDay(d){
+function mpToggleDay(d){ if(isViewer()) return;
   if(_mpWorkdays.has(d)){ _mpWorkdays.delete(d); _mpPlan[d-1]=0; }
   else { _mpWorkdays.add(d); _mpPlan[d-1]=WP_STD; }
   mpRender();
 }
-function mpOnHr(di,v){ _mpPlan[di]=parseFloat(v)||0; mpRender(); }
+function mpOnHr(di,v){ if(isViewer()){ mpRender(); return; } _mpPlan[di]=parseFloat(v)||0; mpRender(); }
 function mpRender(){
   document.getElementById('mp-month-title').textContent=`${_mpYear}년 ${_mpMonth}월`;
   const n=_wpDaysIn(_mpYear,_mpMonth), firstDow=_wpDow(_mpYear,_mpMonth,1);
@@ -3999,6 +4012,7 @@ function mpRender(){
   document.getElementById('mp-target').textContent=`월목표 ${target}h`;
 }
 async function mpSave(){
+  if(viewerBlocked()) return;
   const ym=`${_mpYear}-${String(_mpMonth).padStart(2,'0')}`;
   const n=_wpDaysIn(_mpYear,_mpMonth);
   // 월목표 미달 시 저장 차단 (회사 지정 근무일 기준)
