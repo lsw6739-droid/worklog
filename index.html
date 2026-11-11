@@ -71,6 +71,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue'
 .sb-user-card{margin:14px 12px 6px;background:#fff;border:1px solid rgba(0,0,0,0.08);border-radius:12px;padding:12px;display:flex;flex-wrap:wrap;align-items:center;gap:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
 .sb-workend{flex-basis:100%;display:none;align-items:center;gap:6px;border-top:1px solid rgba(0,0,0,0.07);padding-top:9px;margin-top:-1px;font-size:11px;color:var(--text2)}
 .sb-workend.show{display:flex}
+body.viewer-mode .w-only{display:none!important}
+body.viewer-mode .cl-del,body.viewer-mode .cl-handle{display:none!important}
+body.viewer-mode .cl-check,body.viewer-mode .cl-text{pointer-events:none}
 .sb-workend b{margin-left:auto;font-size:13px;font-weight:700;color:var(--text);font-family:'JetBrains Mono',monospace}
 .sb-workend .off{margin-left:auto;color:var(--text3)}
 .sb-avatar{width:36px;height:36px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;letter-spacing:-.5px}
@@ -718,7 +721,7 @@ html[data-theme="dark"] .badge-warn{background:rgba(255,159,10,.18);color:#ff9f0
             <span id="wp-month-title" style="font-size:15px;font-weight:700;min-width:96px;text-align:center"></span>
             <button class="btn btn-secondary btn-sm" onclick="wpChangeMonth(1)">›</button>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="wpSave()">💾 저장</button>
+          <button class="btn btn-primary btn-sm w-only" onclick="wpSave()">💾 저장</button>
           <button class="btn btn-secondary btn-sm" onclick="wpExportExcel()" style="border-color:var(--accent);color:var(--accent)">📊 엑셀 저장</button>
           <span id="wp-status" style="font-size:11px;color:var(--text3)"></span>
           <span id="wp-target" style="margin-left:auto;font-weight:700;color:var(--danger);font-size:14px;white-space:nowrap"></span>
@@ -731,7 +734,7 @@ html[data-theme="dark"] .badge-warn{background:rgba(255,159,10,.18);color:#ff9f0
           <span class="attend-half" style="white-space:nowrap">저녁 제외</span>
           <input type="time" id="wp-dinner-start" onchange="wpOnBreakChange()" style="width:auto;margin-bottom:0;padding:4px 6px">~
           <input type="time" id="wp-dinner-end" onchange="wpOnBreakChange()" style="width:auto;margin-bottom:0;padding:4px 6px">
-          <button class="btn btn-secondary btn-sm" onclick="wpSaveSettings()">제외시간 저장</button>
+          <button class="btn btn-secondary btn-sm w-only" onclick="wpSaveSettings()">제외시간 저장</button>
           <span id="wp-formula" style="margin-left:auto;font-size:11px;color:var(--text2)"></span>
         </div>
         <div style="font-size:11px;color:var(--text3);margin-bottom:10px">▲ 날짜 헤더 클릭 = 그 날 전원 근무일(●)/비근무일(○) 일괄 전환 · 이름 클릭 = 개인 달력 펼쳐 편집 · 색칸에 마우스 올리면 날짜·시간</div>
@@ -746,10 +749,10 @@ html[data-theme="dark"] .badge-warn{background:rgba(255,159,10,.18);color:#ff9f0
         <div style="margin-top:14px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
             <span style="font-size:13px;font-weight:700">📝 비고 <span id="wp-notes-month" style="font-weight:600;color:var(--accent)"></span></span>
-            <span style="font-size:11px;color:var(--text3)">감사 · 연차 · 단축근무 등 (날짜/기간 + 내용) · 근무계획 수립 전에도 저장할 수 있어요</span>
+            <span style="font-size:11px;color:var(--text3)">감사 · 연차 · 단축근무 등 (날짜/기간 + 내용)<span class="w-only"> · 근무계획 수립 전에도 저장할 수 있어요</span></span>
             <span id="wp-notes-status" style="margin-left:auto;font-size:11px;color:var(--text3)"></span>
-            <button class="btn btn-secondary btn-sm" onclick="wpAddNote()">+ 비고 추가</button>
-            <button class="btn btn-primary btn-sm" onclick="wpSaveNotes()">💾 비고 저장</button>
+            <button class="btn btn-secondary btn-sm w-only" onclick="wpAddNote()">+ 비고 추가</button>
+            <button class="btn btn-primary btn-sm w-only" onclick="wpSaveNotes()">💾 비고 저장</button>
           </div>
           <div id="wp-notes"></div>
         </div>
@@ -1136,7 +1139,7 @@ create policy "allow_all" on attends for all using (true);</pre>
     </div>
     <div class="btn-row">
       <button class="btn btn-secondary" onclick="closeModal('modal-todo-detail')">취소</button>
-      <button class="btn btn-primary" onclick="saveTodoDetail()">저장</button>
+      <button class="btn btn-primary w-only" onclick="saveTodoDetail()">저장</button>
     </div>
   </div>
 </div>
@@ -1236,6 +1239,26 @@ const SUPABASE_URL='https://uulemznemzjlgzqhrchb.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1bGVtem5lbXpqbGd6cWhyY2hiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MTc3MzQsImV4cCI6MjA5Mzk5MzczNH0.cy3jWrFez0pO0vl3nOOUMiv-511IzQiTcNxTK8Jejrg';
 const API=`${SUPABASE_URL}/rest/v1`;
 const H={'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Prefer':'return=representation'};
+
+// ─── 열람 전용(viewer) 계정 ───
+// 관리자 화면을 볼 수 있지만 저장·수정·삭제는 못 하는 임원 보고용 계정 (이름 viewer / 사번 1234).
+// DB 직원으로 등록하지 않는 가상 계정이라 직원 목록·팀 통계·인원수 기반 목표에 섞이지 않는다.
+// id는 어떤 행과도 매칭되지 않는 빈 UUID → 개인 데이터 조회는 모두 빈 결과가 된다.
+const VIEWER_ACCOUNT={id:'00000000-0000-0000-0000-000000000000',name:'viewer',emp_id:'1234',is_admin:true,is_viewer:true};
+function isViewer(){ try{ return !!(currentUser && currentUser.is_viewer); }catch(e){ return false; } }
+function viewerBlocked(){ if(!isViewer()) return false; showToast('열람 전용 계정은 저장·수정할 수 없습니다','error'); return true; }
+// 마지막 안전장치: 열람 전용이면 DB로 가는 쓰기 요청(POST/PATCH/PUT/DELETE)을 전송 전에 차단
+const _nativeFetch=window.fetch.bind(window);
+window.fetch=function(input,init){
+  if(isViewer()){
+    const method=String((init&&init.method)||(input&&input.method)||'GET').toUpperCase();
+    const url=typeof input==='string'?input:((input&&input.url)||'');
+    if(method!=='GET'&&method!=='HEAD'&&method!=='OPTIONS'&&url.indexOf(SUPABASE_URL)===0){
+      return Promise.reject(new Error('viewer-readonly'));
+    }
+  }
+  return _nativeFetch(input,init);
+};
 
 // PostgREST 기본 응답 제한(1000행)에 걸리지 않도록 전체 페이지를 끝까지 가져옴
 async function fetchAllRows(url, headers){
@@ -1361,18 +1384,22 @@ function toggleTheme(){applyTheme(localStorage.getItem('wl_theme')==='dark'?'mac
 
 window.addEventListener('load',()=>{setTimeout(()=>{const s=document.getElementById('splash');s.style.opacity='0';setTimeout(()=>{s.style.display='none';checkSession();},500);},1100);});
 
-function checkSession(){const saved=localStorage.getItem('wl_user');if(saved){currentUser=JSON.parse(saved);initApp();}else document.getElementById('login-screen').style.display='flex';}
+function checkSession(){const saved=localStorage.getItem('wl_user');if(saved){currentUser=JSON.parse(saved);if(currentUser&&currentUser.name===VIEWER_ACCOUNT.name&&currentUser.emp_id===VIEWER_ACCOUNT.emp_id)currentUser={...VIEWER_ACCOUNT};initApp();}else document.getElementById('login-screen').style.display='flex';}
 
 async function doLogin(){
   const name=document.getElementById('login-name').value.trim();
   const empId=document.getElementById('login-empid').value.trim();
   if(!name||!empId){showToast('이름과 사번을 입력하세요','error');return;}
-  try{
-    const res=await fetch(`${API}/employees?name=eq.${encodeURIComponent(name)}&emp_id=eq.${encodeURIComponent(empId)}&select=*`,{headers:H});
-    const data=await res.json();
-    if(!data||!data.length){showToast('등록되지 않은 직원입니다','error');return;}
-    currentUser=data[0];
-  }catch(e){currentUser={id:'demo-'+empId,name,emp_id:empId,is_admin:empId==='ADMIN'};}
+  if(name.toLowerCase()===VIEWER_ACCOUNT.name && empId===VIEWER_ACCOUNT.emp_id){
+    currentUser={...VIEWER_ACCOUNT};
+  } else {
+    try{
+      const res=await fetch(`${API}/employees?name=eq.${encodeURIComponent(name)}&emp_id=eq.${encodeURIComponent(empId)}&select=*`,{headers:H});
+      const data=await res.json();
+      if(!data||!data.length){showToast('등록되지 않은 직원입니다','error');return;}
+      currentUser=data[0];
+    }catch(e){currentUser={id:'demo-'+empId,name,emp_id:empId,is_admin:empId==='ADMIN'};}
+  }
   localStorage.setItem('wl_user',JSON.stringify(currentUser));
   document.getElementById('login-screen').style.display='none';
   initApp();
@@ -1382,12 +1409,19 @@ function doLogout(){localStorage.removeItem('wl_user');location.reload();}
 
 async function initApp(){
   document.getElementById('app').classList.add('visible');
-  document.getElementById('header-user').textContent=`${currentUser.name} (${currentUser.emp_id})`;
+  document.getElementById('header-user').textContent=isViewer()?currentUser.name:`${currentUser.name} (${currentUser.emp_id})`;
   const avatarEl=document.getElementById('header-avatar');
   if(avatarEl) avatarEl.textContent=currentUser.name.slice(0,1);
   const roleEl=document.getElementById('header-role');
   if(roleEl) roleEl.textContent=currentUser.is_admin?'관리자':'팀원';
   if(currentUser.is_admin){document.getElementById('header-admin-tag').style.display='inline';document.querySelectorAll('.admin-only').forEach(el=>el.style.display='');}
+  if(isViewer()){
+    document.body.classList.add('viewer-mode');
+    if(roleEl) roleEl.textContent='열람 전용';
+    document.getElementById('header-admin-tag').textContent='VIEW';
+    // 입력용 개인 탭과 설정(관리) 탭은 숨김
+    ['write','mylog','attend','myplan','donelog','admin'].forEach(function(pg){ const tb=document.querySelector('.tab[data-page="'+pg+'"]'); if(tb) tb.style.display='none'; });
+  }
   const ym=today().slice(0,7);
   document.getElementById('log-date').value=today();
   document.getElementById('view-date').value=today();
@@ -1401,7 +1435,7 @@ async function initApp(){
   await loadCategories();
   await loadTemplates();
   await loadAllEmployees(); // 모든 사용자가 담당자 목록 필요
-  loadDateLogs();loadTodos();loadMyAttends();loadNoticeBanner();loadWorkEnd();
+  if(!isViewer()){ loadDateLogs();loadTodos();loadMyAttends();loadNoticeBanner();loadWorkEnd(); }
   if(currentUser.is_admin){
     loadUsers(); // 관리자 탭용 (권한 변경 기능 포함)
     loadGoals();loadNoticeHistory();
@@ -1411,8 +1445,9 @@ async function initApp(){
     }, 300);
   }
 
-  // 30초마다 새 공지 확인 (폴링)
-  startNoticePolling();
+  // 30초마다 새 공지 확인 (폴링) — 열람 전용은 공지 수신 대상이 아님
+  if(!isViewer()) startNoticePolling();
+  if(isViewer()) switchPage('team'); // 개인 입력 탭이 숨겨져 있으므로 팀현황에서 시작
 }
 
 function switchPage(p){
@@ -2227,6 +2262,7 @@ async function toggleTodo(id,wasDone){
   }catch(e){showToast('변경 실패','error');}
 }
 async function deleteTodo(id){
+  if(viewerBlocked()) return;
   if(!confirm('이 할일을 삭제할까요?\n공유 중인 할일이면 담당자 모두의 목록에서도 함께 삭제됩니다.')) return;
   try{
     // 공유본(담당자 복사본)도 함께 삭제
@@ -2245,6 +2281,7 @@ async function deleteTodo(id){
 function toggleDoneSection(){doneSectionOpen=!doneSectionOpen;document.getElementById('todo-done-list').style.display=doneSectionOpen?'block':'none';document.getElementById('done-toggle-icon').textContent=doneSectionOpen?'▲':'▼';}
 
 function toggleTodoStatus(){
+  if(isViewer()) return;
   const btn=document.getElementById('detail-status-btn');
   const input=document.getElementById('detail-status');
   const cur=input.value;
@@ -2368,6 +2405,10 @@ async function openTodoDetail(id){
   const lbl=document.getElementById('detail-assignees-label');
   if(lbl) lbl.innerHTML='담당자 <span style="color:var(--text3);font-size:10px">(클릭으로 선택 · 복수 가능)</span>';
 
+  if(isViewer()){
+    ['detail-title','detail-content','detail-due-date','detail-note'].forEach(function(fid){ const fe=document.getElementById(fid); if(fe) fe.readOnly=true; });
+    const ci=document.getElementById('checklist-input'); if(ci) ci.disabled=true;
+  }
   openModal('modal-todo-detail');
   _subscribeTodoRealtime(t.id); // 실시간 구독 시작
 }
@@ -2381,6 +2422,7 @@ function renderAssigneeChips(){
 }
 
 function toggleAssignee(id){
+  if(isViewer()) return;
   const idx = selectedAssignees.indexOf(id);
   if(idx>=0) selectedAssignees.splice(idx,1);
   else selectedAssignees.push(id);
@@ -2420,6 +2462,7 @@ function renderChecklist(){
 }
 
 function addChecklistItem(){
+  if(isViewer()) return;
   const input = document.getElementById('checklist-input');
   const text = input.value.trim();
   if(!text) return;
@@ -2429,6 +2472,7 @@ function addChecklistItem(){
 }
 
 function addChecklistHeader(){
+  if(isViewer()) return;
   const input = document.getElementById('checklist-input');
   const text = input.value.trim() || '제목';
   _clOps.push({op:'add', id:_genClId(), type:'header', text});
@@ -2437,6 +2481,7 @@ function addChecklistHeader(){
 }
 
 function toggleClItem(id){
+  if(isViewer()) return;
   const item = currentChecklist.find(function(c){ return c.id===id; });
   if(!item || item.type === 'header') return; // 헤더는 체크 불가
   _clOps.push({op:'toggle', id:id, done: !item.done});
@@ -2444,12 +2489,14 @@ function toggleClItem(id){
 }
 
 function removeClItem(id){
+  if(isViewer()) return;
   _clOps.push({op:'remove', id:id});
   _clRecompute();
 }
 
 // ── 체크리스트 인라인 편집 ──
 function startClEdit(e, id){
+  if(isViewer()) return;
   e.stopPropagation();
   const span = e.currentTarget;
   if(span.querySelector('input')) return; // 이미 편집 중
@@ -2518,6 +2565,7 @@ function clDragEnd(e){
 }
 
 function clDragDrop(e, targetIdx){
+  if(isViewer()){ e.preventDefault(); return; }
   e.preventDefault();
   document.querySelectorAll('#detail-checklist .cl-item').forEach(function(el){
     el.classList.remove('cl-dragging','cl-insert-before','cl-insert-after');
@@ -2542,6 +2590,7 @@ function clDragDrop(e, targetIdx){
 }
 
 async function saveTodoDetail(){
+  if(isViewer()){ closeModal('modal-todo-detail'); return; } // 열람 전용: 저장 없이 닫기
   const rootId      = document.getElementById('detail-todo-id').value;
   const todoTitle   = document.getElementById('detail-title').value.trim();
   const todoContent = document.getElementById('detail-content').value.trim();
@@ -3633,6 +3682,7 @@ async function initWorkPlan(){
   document.getElementById('wp-lunch-end').value=WORK_SETTINGS.lunch_end||'12:50';
   document.getElementById('wp-dinner-start').value=WORK_SETTINGS.dinner_start||'17:30';
   document.getElementById('wp-dinner-end').value=WORK_SETTINGS.dinner_end||'18:00';
+  if(isViewer()) ['wp-lunch-start','wp-lunch-end','wp-dinner-start','wp-dinner-end'].forEach(function(tid){ document.getElementById(tid).disabled=true; });
   const t=new Date();
   _wpYear=t.getFullYear(); _wpMonth=t.getMonth()+1;
   await wpLoadMonth();
@@ -3692,17 +3742,17 @@ function wpRenderNotes(){
   const mEl=document.getElementById('wp-notes-month');
   if(mEl) mEl.textContent=`(${_wpYear}년 ${_wpMonth}월)`;
   const el=document.getElementById('wp-notes');
-  if(!_wpNotes.length){ el.innerHTML='<div style="font-size:11px;color:var(--text3);padding:6px 2px">등록된 비고가 없습니다. "+ 비고 추가"로 입력하세요.</div>'; return; }
+  if(!_wpNotes.length){ el.innerHTML='<div style="font-size:11px;color:var(--text3);padding:6px 2px">'+(isViewer()?'등록된 비고가 없습니다.':'등록된 비고가 없습니다. "+ 비고 추가"로 입력하세요.')+'</div>'; return; }
   el.innerHTML=_wpNotes.map((nt,i)=>`
     <div style="display:flex;gap:8px;margin-bottom:6px;align-items:center">
-      <input type="text" value="${esc(nt.label||'')}" placeholder="날짜/기간 (예: 6/10~11)" onchange="wpOnNote(${i},'label',this.value)" style="width:160px;margin-bottom:0;font-size:12px">
-      <input type="text" value="${esc(nt.text||'')}" placeholder="내용 (예: Maruho MX Audit)" onchange="wpOnNote(${i},'text',this.value)" style="flex:1;margin-bottom:0;font-size:12px">
-      <button class="btn btn-secondary btn-sm" onclick="wpRemoveNote(${i})" style="border-color:var(--danger);color:var(--danger);flex-shrink:0">✕</button>
+      <input type="text" value="${esc(nt.label||'')}" placeholder="날짜/기간 (예: 6/10~11)" onchange="wpOnNote(${i},'label',this.value)" ${isViewer()?'readonly':''} style="width:160px;margin-bottom:0;font-size:12px">
+      <input type="text" value="${esc(nt.text||'')}" placeholder="내용 (예: Maruho MX Audit)" onchange="wpOnNote(${i},'text',this.value)" ${isViewer()?'readonly':''} style="flex:1;margin-bottom:0;font-size:12px">
+      <button class="btn btn-secondary btn-sm w-only" onclick="wpRemoveNote(${i})" style="border-color:var(--danger);color:var(--danger);flex-shrink:0">✕</button>
     </div>`).join('');
 }
-function wpAddNote(){ _wpNotes.push({label:'',text:''}); _wpNotesDirty=true; wpRenderNotes(); }
-function wpRemoveNote(i){ _wpNotes.splice(i,1); _wpNotesDirty=true; wpRenderNotes(); }
-function wpOnNote(i,k,v){ if(_wpNotes[i]){ _wpNotes[i][k]=v; _wpNotesDirty=true; } }
+function wpAddNote(){ if(isViewer()) return; _wpNotes.push({label:'',text:''}); _wpNotesDirty=true; wpRenderNotes(); }
+function wpRemoveNote(i){ if(isViewer()) return; _wpNotes.splice(i,1); _wpNotesDirty=true; wpRenderNotes(); }
+function wpOnNote(i,k,v){ if(isViewer()) return; if(_wpNotes[i]){ _wpNotes[i][k]=v; _wpNotesDirty=true; } }
 
 // 비고는 근무계획 수립 전에 참고하는 내용이라, 근무계획 저장(월목표 검사)과 분리해서 따로 저장한다
 async function _wpPersistNotes(ym){
@@ -3712,6 +3762,7 @@ async function _wpPersistNotes(ym){
   _wpNotesDirty=false;
 }
 async function wpSaveNotes(){
+  if(viewerBlocked()) return;
   const ym=`${_wpYear}-${String(_wpMonth).padStart(2,'0')}`;
   try{
     await _wpPersistNotes(ym);
@@ -3719,14 +3770,14 @@ async function wpSaveNotes(){
     showToast(`${ym} 비고 저장됨`,'success');
   }catch(e){ showToast('비고 저장 실패 - DB 테이블(work_plan_notes) 확인','error'); }
 }
-function wpToggleDay(d){  // 날짜 헤더 클릭 = 전원 일괄 전환
+function wpToggleDay(d){ if(isViewer()) return;  // 날짜 헤더 클릭 = 전원 일괄 전환
   if(_wpWorkdays.has(d)){ _wpWorkdays.delete(d); _wpEmps.forEach((_,i)=>_wpPlan[i][d-1]=0); }
   else { _wpWorkdays.add(d); _wpEmps.forEach((_,i)=>_wpPlan[i][d-1]=WP_STD); }
   wpRender();
 }
-function wpOnHr(ei,di,v){ _wpPlan[ei][di]=parseFloat(v)||0; wpRender(); }
+function wpOnHr(ei,di,v){ if(isViewer()){ wpRender(); return; } _wpPlan[ei][di]=parseFloat(v)||0; wpRender(); }
 function wpToggleOpen(ei){ _wpOpenEi = _wpOpenEi===ei?-1:ei; wpRender(); }
-function wpCellToggle(ei,d){ _wpPlan[ei][d-1]=(_wpPlan[ei][d-1]>0)?0:WP_STD; wpRender(); }
+function wpCellToggle(ei,d){ if(isViewer()) return; _wpPlan[ei][d-1]=(_wpPlan[ei][d-1]>0)?0:WP_STD; wpRender(); }
 function wpRender(){
   document.getElementById('wp-month-title').textContent=`${_wpYear}년 ${_wpMonth}월`;
   const n=_wpDaysIn(_wpYear,_wpMonth), wdN=_wpWorkdays.size, target=wdN*WP_STD;
@@ -3778,6 +3829,7 @@ function wpEditHtml(ei){
   h+='</div></div>'; return h;
 }
 async function wpSave(){
+  if(viewerBlocked()) return;
   const ym=`${_wpYear}-${String(_wpMonth).padStart(2,'0')}`;
   const n=_wpDaysIn(_wpYear,_wpMonth);
   // 월목표 미달 검사 — 미달 인원이 있으면 저장 차단
@@ -3806,6 +3858,7 @@ async function wpSave(){
   }catch(e){ showToast('저장 실패 - DB 테이블(work_plans) 확인','error'); }
 }
 async function wpSaveSettings(){
+  if(viewerBlocked()) return;
   const body={ id:1,
     lunch_start:document.getElementById('wp-lunch-start').value, lunch_end:document.getElementById('wp-lunch-end').value,
     dinner_start:document.getElementById('wp-dinner-start').value, dinner_end:document.getElementById('wp-dinner-end').value,
