@@ -239,5 +239,154 @@
         ]
       }
     ]
+  },
+  {
+    "time": "17:16",
+    "changes": [
+      {
+        "action": "added",
+        "title": "실사 준비",
+        "employee": "이상우",
+        "details": [
+          "실사점검 체크리스트 일괄 점검사항 초기화 기능 추가",
+          "출하 문서 검토",
+          "생산 1동 로그북 비치"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "[공지] BP, TP Audit(Opella Healthcare/Brazil)실사 준비(11/25~26)_이주영",
+        "employee": "이상우",
+        "details": [
+          "✅ 제조관리팀 1차회의-11/13"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "[공지] BP, TP Audit(Opella Healthcare/Brazil)실사 준비(11/25~26)_이주영",
+        "employee": "이주영",
+        "details": [
+          "✅ 제조관리팀 1차회의-11/13"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "원료 수급 및 제조일정 회의 관련",
+        "employee": "임승완",
+        "details": [
+          "➕ BR125I010 녹십자 33g 부형제 처리 준비"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "[공지] BP, TP Audit(Opella Healthcare/Brazil)실사 준비(11/25~26)_이주영",
+        "employee": "김형성",
+        "details": [
+          "✅ 제조관리팀 1차회의-11/13"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "[공지] BP, TP Audit(Opella Healthcare/Brazil)실사 준비(11/25~26)_이주영",
+        "employee": "김경원",
+        "details": [
+          "✅ 제조관리팀 1차회의-11/13"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "TO DO LIST",
+        "employee": "임승완",
+        "details": [
+          "✅ TGH 삭제할것",
+          "➕ 영향평가 2건",
+          "✅ 실사 관련 회의(11시 30분)",
+          "✅ 예산 발표 연습",
+          "✅ 예산 관련 보고(15:30)",
+          "➕ 형성 사업과제 엑셀돌려보기",
+          "➕ ED 27년 Nichiiko 2월/ 7월 5g 씩 가능여부 확인",
+          "➕ CC2611-007 분쇄공정 분리 운영 품목에 대한 제조번호 및 관련 문서번호",
+          "➕ UP 회의 다시 잡기",
+          "➕ BR125I010 녹십자 33g 부형제 처리 준비(출고계획 고민)",
+          "✏️ 27년 연간일정 초안 공유(11/16-월) → 27년 연간일정 초안 공유(11/16-월)+수주접수내역+온고잉+표준품",
+          "➕ 10월 작성상황 모니터링 데이터 취합 완료되었습니다. 시간되실때 검토",
+          "🗑 UP 관련 회의(13:30)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "[공지] BP, TP Audit(Opella Healthcare/Brazil)실사 준비(11/25~26)_이주영",
+        "employee": "유태규",
+        "details": [
+          "✅ 제조관리팀 1차회의-11/13"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "금일 업무",
+        "employee": "김형성",
+        "details": [
+          "✅ BPR QA 접수",
+          "✅ 주간 업무 보고",
+          "✅ UP 회의",
+          "✅ ND01, ND02 MPI 검토 배포",
+          "✅ BPR 제출 공지",
+          "✅ IPC 공지",
+          "✅ 작성상황 용량 확인",
+          "✅ 작성상황 모니터링 데이터 팀장 보고",
+          "➕ ND MPI 검토",
+          "➕ EDM BPR 검토",
+          "➕ 내부감사 SOP 정독",
+          "➕ BP 공정시간 설정",
+          "➕ 휴대용 시계 점검"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "공수관리시스템",
+        "employee": "임승완",
+        "details": [
+          "✅ TO DO LIST 개별 스크롤 추가 요청"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "영수증 처리",
+        "employee": "임승완",
+        "details": [
+          "➕ 11/9-저녁식대(더마트)",
+          "➕ 11/12-저녁식대(싸용ㅇ)"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "[공지] BP, TP Audit(Opella Healthcare/Brazil)실사 준비(11/25~26)_이주영",
+        "employee": "김동효",
+        "details": [
+          "✅ 제조관리팀 1차회의-11/13"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "[공지] BP, TP Audit(Opella Healthcare/Brazil)실사 준비(11/25~26)_이주영",
+        "employee": "임승완",
+        "details": [
+          "✅ 제조관리팀 1차회의-11/13"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "Weekly 업무 루틴",
+        "employee": "김형성",
+        "details": [
+          "✅ PV 품목 이슈사항 보고",
+          "✅ QMS 개발 특이사항 보고",
+          "✅ 주말 IPC List 보고",
+          "✅ BPR QA 접수",
+          "✅ 점검기록서 작성 공유",
+          "✅ 저울 로그북 작성 공유"
+        ]
+      }
+    ]
   }
 ]
