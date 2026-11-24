@@ -1,0 +1,54 @@
+[
+  {
+    "time": "02:59",
+    "changes": [
+      {
+        "action": "modified",
+        "title": "[공지] BP, TP Audit(Opella Healthcare/Brazil)실사 준비(11/25~26)_이주영",
+        "employee": "이상우",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "2027 본인평가",
+        "employee": "이상우",
+        "details": [
+          "완료처리"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "금일 업무",
+        "employee": "김형성",
+        "details": [
+          "✅ 현장투어 (체크파일 와이파이 연결해서 사용하고 PDF로 다운받아 제조팀장 공유",
+          "✅ 관리사본 배포",
+          "✅ QA 문서 접수",
+          "✅ 3층 계단 치우기 및 잠구기",
+          "✅ 세척라벨 구매 담당자 확인",
+          "✅ AT MPI 검토",
+          "✅ MH BCR 사건 번호 기재",
+          "🗑 TN01 로그북 실사 전 작성 완료",
+          "🗑 BP, CA01 실시간 작성 요청",
+          "🗑 저울 점검 라벨 공유",
+          "🗑 점검기록서 확인",
+          "🗑 중간체 입출고 기록",
+          "🗑 BPR 위치 설정",
+          "🗑 검교정/정기점검",
+          "🗑 실시간 작성 공지"
+        ]
+      },
+      {
+        "action": "modified",
+        "title": "실사 준비",
+        "employee": "이상우",
+        "details": [
+          "완료처리",
+          "✅ 생산 1동 로그북 비치"
+        ]
+      }
+    ]
+  }
+]
